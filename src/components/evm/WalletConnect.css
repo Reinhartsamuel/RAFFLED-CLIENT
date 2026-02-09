@@ -1,0 +1,344 @@
+/* Wallet Connect Component Styles - Neo-Brutalist Theme */
+
+.wallet-connect-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.wallet-connect-btn:hover {
+  background-color: #DFFF00;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-1px, -1px);
+}
+
+.wallet-connect-btn:active {
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(1px, 1px);
+}
+
+.wallet-icon {
+  font-size: 1.1rem;
+}
+
+.wallet-text {
+  display: none;
+}
+
+@media (min-width: 640px) {
+  .wallet-text {
+    display: inline;
+  }
+}
+
+/* Connected Wallet */
+
+.wallet-connected {
+  position: relative;
+}
+
+.wallet-info-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.wallet-info-btn:hover {
+  background-color: #DFFF00;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-1px, -1px);
+}
+
+.wallet-address {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Wallet Menu */
+
+.wallet-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  padding: 1rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  min-width: 250px;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  z-index: 1000;
+  display: none;
+}
+
+.wallet-info-btn:focus ~ .wallet-menu,
+.wallet-menu:hover {
+  display: block;
+}
+
+.menu-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.menu-item .label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #000;
+  opacity: 0.6;
+  font-weight: 600;
+}
+
+.menu-item .value {
+  font-size: 0.875rem;
+  font-family: 'JetBrains Mono', monospace;
+  word-break: break-all;
+  color: #000;
+}
+
+.menu-divider {
+  height: 1px;
+  background-color: #000;
+  margin: 0.75rem 0;
+  opacity: 0.2;
+}
+
+.menu-action {
+  display: block;
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #000;
+  background-color: transparent;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.menu-action:hover {
+  background-color: #000;
+  color: #fff;
+}
+
+.menu-action.disconnect {
+  color: #ff0000;
+  border-color: #ff0000;
+}
+
+.menu-action.disconnect:hover {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+/* Chain Switch Button */
+
+.chain-switch-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border: 2px solid #ff8800;
+  background-color: #fffacd;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 3px 3px 0 rgba(255, 136, 0, 0.25);
+  transition: all 0.2s ease;
+  margin-right: 0.5rem;
+}
+
+.chain-switch-btn:hover {
+  box-shadow: 4px 4px 0 rgba(255, 136, 0, 0.4);
+  transform: translate(-1px, -1px);
+}
+
+.chain-switch-btn.warning {
+  border-color: #ff8800;
+  background-color: #fff8dc;
+}
+
+/* Status Dot */
+
+.status-dot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background-color: #ccc;
+  margin-right: 0.25rem;
+}
+
+.status-dot.connected-dot {
+  background-color: #00ff00;
+  box-shadow: 0 0 6px rgba(0, 255, 0, 0.6);
+}
+
+.status-dot.warning-dot {
+  background-color: #ff8800;
+  box-shadow: 0 0 6px rgba(255, 136, 0, 0.6);
+}
+
+/* Wallet Status Component */
+
+.wallet-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #000;
+  background-color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.wallet-status.disconnected {
+  border-color: #ccc;
+  color: #999;
+}
+
+.wallet-status.unsupported {
+  border-color: #ff8800;
+  background-color: #fff8dc;
+  color: #ff8800;
+}
+
+.wallet-status.connected {
+  border-color: #00ff00;
+  color: #00cc00;
+}
+
+.status-text {
+  font-weight: 600;
+}
+
+/* Minimal Button */
+
+.wallet-btn-minimal {
+  padding: 0.5rem 0.875rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.wallet-btn-minimal:hover {
+  background-color: #DFFF00;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-1px, -1px);
+}
+
+.wallet-btn-minimal.connected {
+  background-color: #f0f0f0;
+  border-color: #000;
+}
+
+/* Network Selector */
+
+.network-selector {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
+}
+
+.network-btn {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.network-btn:hover {
+  background-color: #DFFF00;
+  transform: translate(-1px, -1px);
+}
+
+.network-btn.active {
+  background-color: #DFFF00;
+  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.network-btn:not(:last-child) {
+  margin-right: -2px;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .wallet-connect-btn,
+  .wallet-info-btn {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .wallet-address {
+    display: none;
+  }
+
+  .network-selector {
+    flex-direction: column;
+  }
+
+  .network-btn {
+    font-size: 0.65rem;
+    padding: 0.5rem;
+  }
+
+  .network-btn:not(:last-child) {
+    margin-right: 0;
+    margin-bottom: -2px;
+  }
+}

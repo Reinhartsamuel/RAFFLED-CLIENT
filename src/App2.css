@@ -1,0 +1,22 @@
+/* appkit web component override to match neo-brutalism palette */
+appkit-button {
+  --w3m-button-bg: #DFFF00;
+  --w3m-button-text: #000000;
+  --w3m-button-border: #000000;
+  --w3m-button-border-radius: 0px;
+  --w3m-button-font-family: 'JetBrains Mono', monospace;
+  --w3m-button-font-size: 12px;
+  --w3m-button-font-weight: 900;
+  --w3m-button-text-transform: uppercase;
+  --w3m-button-letter-spacing: 0.1em;
+}
+
+/* native select arrow styling reset */
+.app2-select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23000' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 32px !important;
+}

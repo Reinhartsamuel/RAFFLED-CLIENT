@@ -1,0 +1,383 @@
+/* Create Raffle Modal */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #ffffff;
+  border: 2px solid #000000;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translate(-50%, -48%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, -50%);
+    opacity: 1;
+  }
+}
+
+.create-raffle-modal {
+  width: 90%;
+  max-width: 600px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-bottom: 2px solid #000000;
+  padding: 1.5rem;
+  background-color: #ffffff;
+}
+
+.modal-title {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000000;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  color: #000;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  color: #DFFF00;
+  transform: scale(1.2);
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  background-color: #ffffff;
+}
+
+/* Form */
+
+.raffle-form {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000000;
+}
+
+.form-group input,
+.form-group textarea {
+  border: 2px solid #000000;
+  padding: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.95rem;
+  background-color: #ffffff;
+  color: #000000;
+  transition: all 0.2s ease;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  background-color: #DFFF00;
+  box-shadow: 0 0 0 2px #000000;
+}
+
+.form-group input:disabled,
+.form-group textarea:disabled {
+  background-color: #f0f0f0;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.form-group small {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* Error Message */
+
+.error-message {
+  background-color: #ffe0e0;
+  border: 2px solid #cc0000;
+  padding: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: #cc0000;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  word-break: break-word;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Approval Section */
+
+.approval-section {
+  border: 2px solid #DFFF00;
+  padding: 1rem;
+  background-color: #fffef0;
+  margin: 1rem 0;
+}
+
+.approval-section h4 {
+  margin: 0 0 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000;
+}
+
+.approval-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  background-color: #e0ffe0;
+  border: 2px solid #000;
+  font-weight: 700;
+  color: #000;
+  text-transform: uppercase;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.approval-status.approved::before {
+  content: '✓';
+  color: #000;
+  font-weight: 700;
+}
+
+.btn-approve {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #DFFF00;
+  border: 2px solid #000000;
+  color: #000000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+}
+
+.btn-approve:hover:not(:disabled) {
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-2px, -2px);
+}
+
+.btn-approve:active:not(:disabled) {
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(1px, 1px);
+}
+
+.btn-approve:disabled {
+  background-color: #cccccc;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+.approval-hash {
+  display: block;
+  margin-top: 0.75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  color: #666;
+  word-break: break-all;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Buttons */
+
+.btn-create {
+  padding: 1rem;
+  background-color: #DFFF00;
+  border: 2px solid #000000;
+  color: #000000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+  margin-top: 1rem;
+}
+
+.btn-create:hover:not(:disabled) {
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-2px, -2px);
+}
+
+.btn-create:active:not(:disabled) {
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(1px, 1px);
+}
+
+.btn-create:disabled {
+  background-color: #cccccc;
+  color: #666;
+  cursor: not-allowed;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Success State */
+
+.success-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  text-align: center;
+  padding: 3rem 1.5rem;
+}
+
+.success-icon {
+  font-size: 3rem;
+  color: #000;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  animation: popIn 0.5s ease-out;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-state h3 {
+  margin: 0 0 1rem 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #000;
+}
+
+.success-state p {
+  margin: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+/* Responsive */
+
+@media (max-width: 640px) {
+  .create-raffle-modal {
+    width: 95%;
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 1rem;
+  }
+
+  .modal-title {
+    font-size: 1.25rem;
+  }
+
+  .modal-body {
+    padding: 1rem;
+  }
+
+  .raffle-form {
+    gap: 1rem;
+  }
+
+  .form-group input {
+    font-size: 1rem; /* Prevents zoom on iOS */
+  }
+}

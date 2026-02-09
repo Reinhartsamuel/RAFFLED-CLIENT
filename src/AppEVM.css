@@ -1,0 +1,308 @@
+/* AppEVM - Neo-Brutalist Theme */
+
+.app-evm {
+  min-height: 100vh;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: 'JetBrains Mono', monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+
+.app-header {
+  border-bottom: 2px solid #000000;
+  background-color: #ffffff;
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+}
+
+.logo-section h1 {
+  margin: 0;
+  line-height: 1;
+  letter-spacing: 0.05em;
+}
+
+.logo-section p {
+  margin: 0.5rem 0 0 0;
+}
+
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* View Tabs */
+
+.view-tabs {
+  display: flex;
+  gap: 0;
+  border: 2px solid #000;
+  background-color: #fff;
+}
+
+.view-tabs .tab {
+  flex: 1;
+  padding: 0.625rem 1rem;
+  border: none;
+  border-right: 2px solid #000;
+  background-color: #fff;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: all 0.2s ease;
+}
+
+.view-tabs .tab:last-child {
+  border-right: none;
+}
+
+.view-tabs .tab:hover {
+  background-color: #f0f0f0;
+}
+
+.view-tabs .tab.active {
+  background-color: #DFFF00;
+  font-weight: 700;
+}
+
+/* Main Content */
+
+.app-main {
+  flex: 1;
+  max-width: 1400px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+/* Connect Wallet Section */
+
+.connect-wallet-section {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.connect-card {
+  border: 2px solid #000;
+  padding: 2rem;
+  background-color: #ffffff;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.15);
+}
+
+.connect-card h2 {
+  margin: 0 0 1rem 0;
+  line-height: 1.1;
+}
+
+.connect-card p {
+  margin: 0;
+}
+
+/* Section Headers */
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #000;
+  padding-bottom: 1.5rem;
+}
+
+.section-header .header-text {
+  flex: 1;
+}
+
+.section-header h2 {
+  margin: 0;
+  line-height: 1.1;
+}
+
+/* Primary Button */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 2px solid #000;
+  background-color: #DFFF00;
+  color: #000;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-primary:hover {
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(-2px, -2px);
+}
+
+.btn-primary:active {
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
+  transform: translate(1px, 1px);
+}
+
+/* Empty State */
+
+.empty-state {
+  border: 2px dashed #000;
+  padding: 3rem 2rem;
+  background-color: #f9f9f9;
+  text-align: center;
+  margin: 2rem 0;
+}
+
+.empty-state p {
+  margin: 0;
+}
+
+/* Raffles Grid */
+
+.raffles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+/* Explore View */
+
+.explore-view section {
+  margin-bottom: 3rem;
+}
+
+/* Manage View */
+
+.manage-view section {
+  margin-bottom: 3rem;
+}
+
+/* Footer */
+
+.app-footer {
+  border-top: 2px solid #000;
+  background-color: #f9f9f9;
+  padding: 2rem 1rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.footer-links .link {
+  color: #000;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-links .link:hover {
+  color: #DFFF00;
+  text-decoration: underline;
+}
+
+.footer-links .separator {
+  color: #000;
+  opacity: 0.3;
+}
+
+/* Responsive */
+
+@media (max-width: 1024px) {
+  .header-content {
+    gap: 1rem;
+  }
+
+  .section-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .raffles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .logo-section h1 {
+    font-size: 1.5rem;
+  }
+
+  .header-controls {
+    width: 100%;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .view-tabs {
+    width: 100%;
+  }
+
+  .app-main {
+    padding: 1rem;
+  }
+
+  .connect-card {
+    padding: 1.5rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .footer-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
