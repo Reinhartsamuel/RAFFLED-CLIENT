@@ -25,4 +25,11 @@ export const solanaWeb3JsAdapter = new SolanaAdapter()
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
 
-export const getAuthToken = () => localStorage.getItem('access_token')
+export const getAuthToken = () => {
+  const token = localStorage.getItem('access_token')
+  // Return null if token is null, undefined, empty string, or the string "null"/"undefined"
+  if (!token || token === 'null' || token === 'undefined') {
+    return null
+  }
+  return token
+}

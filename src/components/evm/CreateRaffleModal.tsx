@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback } from 'react'
 import { useChainId } from 'wagmi'
 import { parseUnits, type Address } from 'viem'
@@ -88,21 +89,11 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
   // POST raffle to backend API
   const postRaffleToBackend = async (txHash: string) => {
     try {
-      const endsAt = new Date(Date.now() + Number(duration) * 86400 * 1000)
-        .toISOString()
-        .replace('T', ' ')
-        .slice(0, 19)
-
       const body = new FormData()
-      body.append('type', 'nft')
-      body.append('title', title)
-      body.append('description', description)
-      body.append('prize_tx_hash', txHash)
-      body.append('prize_asset_symbol', 'MockUSDC')
-      body.append('prize_amount', prizeAmount)
-      body.append('ticket_price_usd', ticketPrice)
-      body.append('max_tickets', maxCap)
-      body.append('ends_at', endsAt)
+      body.append('raffle_tx_hash', txHash);
+      body.append('description', description || '');
+      body.append('image', image || '');
+      
       if (image) {
         body.append('image', image)
       }

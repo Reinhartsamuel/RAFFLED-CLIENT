@@ -145,8 +145,9 @@
 /* Primary Button */
 
 .btn-primary {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
   border: 2px solid #000;
@@ -159,6 +160,25 @@
   box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+
+.btn-primary.w-full {
+  width: 100%;
+}
+
+.btn-primary .price-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.btn-primary .price-badge img {
+  width: 16px;
+  height: 16px;
 }
 
 .btn-primary:hover {
@@ -192,6 +212,127 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 1.5rem;
   margin: 2rem 0;
+}
+
+/* Raffle Card */
+
+.raffle-card {
+  border: 2px solid #000;
+  background-color: #fff;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.raffle-card:hover {
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.2);
+  transform: translate(-2px, -2px);
+}
+
+.raffle-card-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-bottom: 2px solid #000;
+}
+
+.raffle-card-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.raffle-card-stats {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.raffle-card-stats .stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.raffle-card-stats .stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.raffle-card-stats .stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.raffle-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid #eee;
+}
+
+.raffle-status {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #000;
+}
+
+.raffle-status.status-active {
+  background-color: #DFFF00;
+  color: #000;
+}
+
+.raffle-status.status-ended,
+.raffle-status.status-completed {
+  background-color: #f0f0f0;
+  color: #666;
+}
+
+/* Auth Banner */
+
+.auth-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  border-bottom: 2px solid #000;
+}
+
+.auth-banner.auth-ok {
+  background-color: #DFFF00;
+  color: #000;
+}
+
+.auth-banner.auth-error {
+  background-color: #ff4444;
+  color: #fff;
+}
+
+.auth-banner p {
+  margin: 0;
+}
+
+.auth-banner-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.875rem;
+  padding: 0.25rem;
+  color: inherit;
 }
 
 /* Explore View */
@@ -304,5 +445,430 @@
   .footer-links {
     flex-wrap: wrap;
     justify-content: center;
+  }
+}
+
+/* Raffle Detail Page */
+
+.raffle-detail-page {
+  min-height: 100vh;
+  background-color: #ffffff;
+  padding: 2rem 1rem;
+}
+
+.raffle-detail-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid #000;
+}
+
+.back-button {
+  background: none;
+  border: 2px solid #000;
+  padding: 0.625rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+}
+
+.back-button:hover {
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.2);
+  transform: translate(-2px, -2px);
+}
+
+.detail-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.detail-image-section {
+  position: sticky;
+  top: 2rem;
+  height: fit-content;
+}
+
+.detail-image {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border: 2px solid #000;
+  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.15);
+}
+
+.detail-image-placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px dashed #000;
+  background-color: #f9f9f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.detail-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.detail-card {
+  border: 2px solid #000;
+  padding: 1.5rem;
+  background-color: #fff;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.prize-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.detail-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stat-item .stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.stat-item .stat-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #000;
+}
+
+.progress-container {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 12px;
+  border: 2px solid #000;
+  background-color: #fff;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #DFFF00;
+  transition: width 0.3s ease;
+}
+
+.connect-prompt {
+  border: 2px dashed #000;
+  padding: 1.5rem;
+  text-align: center;
+  background-color: #f9f9f9;
+}
+
+.contract-info {
+  padding: 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+/* Responsive Detail Page */
+
+@media (max-width: 1024px) {
+  .detail-content-grid {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .detail-image-section {
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .raffle-detail-page {
+    padding: 1rem;
+  }
+
+  .detail-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .detail-card {
+    padding: 1rem;
+  }
+
+  .detail-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Buy Tickets Modal */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.buy-tickets-modal {
+  background-color: #fff;
+  border: 3px solid #000;
+  box-shadow: 8px 8px 0 rgba(0, 0, 0, 0.3);
+  max-width: 500px;
+  width: 100%;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #000;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  transform: scale(1.1);
+}
+
+.modal-prize-image {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid #000;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f9f9f9;
+}
+
+.modal-prize-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.prize-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.modal-prize-title {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ticket-counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.counter-btn {
+  width: 48px;
+  height: 48px;
+  border: 2px solid #000;
+  background-color: #fff;
+  font-size: 1.5rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.counter-btn:hover:not(:disabled) {
+  background-color: #DFFF00;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.2);
+  transform: translate(-1px, -1px);
+}
+
+.counter-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.counter-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid #000;
+  background-color: #fff;
+  min-width: 150px;
+  justify-content: center;
+}
+
+.ticket-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.win-chance {
+  text-align: center;
+  padding: 0.75rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+}
+
+.balance-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+}
+
+.btn-purchase {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  border: 3px solid #000;
+  background: linear-gradient(135deg, #ff6b35 0%, #ff4500 100%);
+  color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 5px 5px 0 rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  text-transform: uppercase;
+}
+
+.btn-purchase:hover:not(:disabled) {
+  box-shadow: 7px 7px 0 rgba(0, 0, 0, 0.3);
+  transform: translate(-2px, -2px);
+}
+
+.btn-purchase:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.price-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.usdc-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.error-message,
+.success-message {
+  text-align: center;
+  padding: 0.75rem;
+  border: 2px solid;
+  background-color: #fff;
+}
+
+.error-message {
+  border-color: #ff4444;
+  color: #ff4444;
+}
+
+.success-message {
+  border-color: #00cc00;
+  color: #00cc00;
+}
+
+@media (max-width: 640px) {
+  .buy-tickets-modal {
+    padding: 1.5rem;
+  }
+
+  .modal-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .ticket-counter {
+    gap: 0.75rem;
+  }
+
+  .counter-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .counter-display {
+    min-width: 120px;
+    padding: 0.5rem 1rem;
   }
 }
