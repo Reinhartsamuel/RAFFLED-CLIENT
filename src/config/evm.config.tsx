@@ -13,7 +13,7 @@ export const CONTRACTS = {
     base: (import.meta.env.VITE_RAFFLE_MANAGER_ADDRESS_BASE || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
   MockUSDC: {
-    baseSepolia: '0x49f49CfE89050a8F8E48d3A31E33a8e26Bc80D1d' as const,
+    baseSepolia: (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA || '0x0000000000000000000000000000000000000000') as `0x${string}`,
     base: '0x49f49CfE89050a8F8E48d3A31E33a8e26Bc80D1d' as const,
   },
 } as const

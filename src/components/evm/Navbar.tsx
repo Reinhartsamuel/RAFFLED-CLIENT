@@ -96,7 +96,7 @@ export function Navbar() {
               <span className="text-safety-lime">.</span>
               EVM
             </h1>
-            <p className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50">
+            <p className="font-jetbrains text-xs uppercase tracking-widest text-white/40">
               On-chain raffles powered by Chainlink VRF
             </p>
           </div>
@@ -114,7 +114,7 @@ export function Navbar() {
               </button>
             )}
             {isConnected && authStatus === 'ok' && (
-              <span className="font-jetbrains text-xs text-pure-black/50">
+              <span className="font-jetbrains text-xs text-white/40">
                 Authenticated
               </span>
             )}

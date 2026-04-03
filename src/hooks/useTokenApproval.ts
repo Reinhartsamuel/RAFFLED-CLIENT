@@ -1,6 +1,7 @@
 import { useReadContract, useWriteContract, useAccount } from 'wagmi'
 import { type Address, parseUnits } from 'viem'
 import ERC20ABI from '../abis/ERC20.json'
+import ERC721ABI from '../abis/ERC721.json'
 
 /**
  * Hook to manage ERC20 token approvals
@@ -127,6 +128,64 @@ export function useTokenDecimals(tokenAddress: Address | undefined) {
   })
 
   return decimals || 18
+}
+
+/**
+ * Hook to manage ERC-721 NFT approvals.
+ * Used for approving an NFT to be transferred by the RaffleManager before creating a raffle.
+ */
+export function useNFTApproval(
+  nftAddress: Address | undefined,
+  spenderAddress: Address | undefined,
+  tokenId: bigint | undefined
+) {
+  const { writeContractAsync, isPending } = useWriteContract()
+
+  // Read the currently approved address for this tokenId
+  const { data: approvedAddress, refetch: refetchApproved } = useReadContract({
+    address: nftAddress,
+    abi: ERC721ABI,
+    functionName: 'getApproved',
+    args: tokenId !== undefined ? [tokenId] : undefined,
+    query: {
+      enabled: !!nftAddress && tokenId !== undefined,
+    },
+  })
+
+  /**
+   * Returns true if spenderAddress is already approved for this tokenId.
+   */
+  const isApproved = (): boolean => {
+    if (!spenderAddress) return false
+    return (approvedAddress as Address | undefined)?.toLowerCase() === spenderAddress.toLowerCase()
+  }
+
+  /**
+   * Approve the spender to transfer the given tokenId.
+   */
+  const approveNFT = async (): Promise<string> => {
+    if (!nftAddress || !spenderAddress || tokenId === undefined) {
+      throw new Error('NFT address, spender address, and token ID are required')
+    }
+
+    const txHash = await writeContractAsync({
+      address: nftAddress,
+      abi: ERC721ABI,
+      functionName: 'approve',
+      args: [spenderAddress, tokenId],
+    })
+
+    await refetchApproved()
+    return txHash
+  }
+
+  return {
+    isApproved,
+    approveNFT,
+    isPending,
+    approvedAddress: approvedAddress as Address | undefined,
+    refetchApproved,
+  }
 }
 
 /**

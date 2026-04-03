@@ -33,11 +33,12 @@
 
 html {
   scroll-behavior: auto;
+  background-color: #191919;
 }
 
 body {
   font-family: 'JetBrains Mono', monospace;
-  background-color: #FFFFFF;
+  background-color: #191919;
   color: #000000;
 }
 

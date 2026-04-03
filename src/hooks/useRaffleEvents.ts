@@ -2,13 +2,14 @@ import { useWatchContractEvent, useChainId } from 'wagmi'
 import { type Address } from 'viem'
 import { getRaffleManagerAddress } from '../config/evm.config'
 import RaffleManagerABI from '../abis/RaffleManager.json'
+import { PrizeType } from '../types/evm.types'
 
 /**
- * Watch for RaffleCreated events
- * Triggered when a new raffle is created
+ * Watch for RaffleCreated events (RaffleManager3).
+ * The event now includes prizeType and prizeAmountOrTokenId instead of prizeAmount.
  */
 export function useWatchRaffleCreated(
-  onNewRaffle: (raffleId: bigint, host: Address, prizeAsset: Address, prizeAmount: bigint) => void
+  onNewRaffle: (raffleId: bigint, host: Address, prizeAsset: Address, prizeType: PrizeType, prizeAmountOrTokenId: bigint) => void
 ) {
   const chainId = useChainId()
   const raffleManagerAddress = getRaffleManagerAddress(chainId) as Address
@@ -21,7 +22,7 @@ export function useWatchRaffleCreated(
       logs.forEach((log: any) => {
         const args = log.args as any
         if (args) {
-          onNewRaffle(args.raffleId, args.host, args.prizeAsset, args.prizeAmount)
+          onNewRaffle(args.raffleId, args.host, args.prizeAsset, args.prizeType, args.prizeAmountOrTokenId)
         }
       })
     },
@@ -30,7 +31,6 @@ export function useWatchRaffleCreated(
 
 /**
  * Watch for TicketPurchased events for a specific raffle
- * Triggered when someone buys tickets
  */
 export function useWatchTicketPurchased(
   raffleId: number | undefined,
@@ -57,7 +57,6 @@ export function useWatchTicketPurchased(
 
 /**
  * Watch for WinnerPicked events for a specific raffle
- * Triggered when VRF callback selects a winner
  */
 export function useWatchWinnerPicked(
   raffleId: number | undefined,
@@ -83,57 +82,7 @@ export function useWatchWinnerPicked(
 }
 
 /**
- * Watch for RaffleCancelled events
- * Triggered when a raffle is cancelled
- */
-export function useWatchRaffleCancelled(
-  raffleId: number | undefined,
-  onCancelled: () => void
-) {
-  const chainId = useChainId()
-  const raffleManagerAddress = getRaffleManagerAddress(chainId) as Address
-
-  useWatchContractEvent({
-    address: raffleManagerAddress,
-    abi: RaffleManagerABI as any,
-    eventName: 'RaffleCancelled' as any,
-    args: raffleId !== undefined ? { raffleId: BigInt(raffleId) } : undefined,
-    onLogs: () => {
-      onCancelled()
-    },
-  })
-}
-
-/**
- * Watch for RefundClaimed events
- * Triggered when someone claims a refund
- */
-export function useWatchRefundClaimed(
-  raffleId: number | undefined,
-  onRefundClaimed: (claimer: Address, amount: bigint) => void
-) {
-  const chainId = useChainId()
-  const raffleManagerAddress = getRaffleManagerAddress(chainId) as Address
-
-  useWatchContractEvent({
-    address: raffleManagerAddress,
-    abi: RaffleManagerABI as any,
-    eventName: 'RefundClaimed' as any,
-    args: raffleId !== undefined ? { raffleId: BigInt(raffleId) } : undefined,
-    onLogs: (logs: any[]) => {
-      logs.forEach((log: any) => {
-        const args = log.args as any
-        if (args) {
-          onRefundClaimed(args.claimer, args.amount)
-        }
-      })
-    },
-  })
-}
-
-/**
  * Watch for VRFRequested events
- * Triggered when Chainlink VRF is requested for winner selection
  */
 export function useWatchVRFRequested(
   raffleId: number | undefined,

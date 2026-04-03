@@ -2,183 +2,194 @@
   {
     "type": "constructor",
     "inputs": [
-      {
-        "name": "_vrfCoordinator",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_keyHash",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      },
-      {
-        "name": "_subId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "_vrfCoordinator", "type": "address", "internalType": "address" },
+      { "name": "_keyHash", "type": "bytes32", "internalType": "bytes32" },
+      { "name": "_subId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_paymentToken", "type": "address", "internalType": "address" },
+      { "name": "_treasury", "type": "address", "internalType": "address" }
     ],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "cancelRaffle",
-    "inputs": [
-      {
-        "name": "_raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "name": "applyFeeChange",
+    "inputs": [],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
     "name": "checkUpkeep",
-    "inputs": [
-      {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
+    "inputs": [{ "name": "", "type": "bytes", "internalType": "bytes" }],
     "outputs": [
-      {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      },
-      {
-        "name": "",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+      { "name": "", "type": "bool", "internalType": "bool" },
+      { "name": "", "type": "bytes", "internalType": "bytes" }
     ],
     "stateMutability": "view"
   },
   {
     "type": "function",
-    "name": "claimRefund",
+    "name": "createRaffleERC20",
     "inputs": [
-      {
-        "name": "_raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "_asset", "type": "address", "internalType": "address" },
+      { "name": "_amount", "type": "uint256", "internalType": "uint256" },
+      { "name": "_ticketPrice", "type": "uint256", "internalType": "uint256" },
+      { "name": "_maxCap", "type": "uint256", "internalType": "uint256" },
+      { "name": "_duration", "type": "uint256", "internalType": "uint256" }
     ],
-    "outputs": [],
+    "outputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
-    "name": "createRaffle",
+    "name": "createRaffleERC721",
     "inputs": [
-      {
-        "name": "_asset",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_amount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_paymentAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "_ticketPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_maxCap",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_duration",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "_nft", "type": "address", "internalType": "address" },
+      { "name": "_tokenId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_ticketPrice", "type": "uint256", "internalType": "uint256" },
+      { "name": "_maxCap", "type": "uint256", "internalType": "uint256" },
+      { "name": "_duration", "type": "uint256", "internalType": "uint256" }
     ],
-    "outputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "outputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "nonpayable"
   },
   {
     "type": "function",
     "name": "enterRaffle",
     "inputs": [
-      {
-        "name": "_raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "_ticketCount",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "_raffleId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_ticketCount", "type": "uint256", "internalType": "uint256" }
     ],
     "outputs": [],
-    "stateMutability": "payable"
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "feeChangeEffectiveAt",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "FEE_TIMELOCK",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getRaffle",
+    "inputs": [{ "name": "_raffleId", "type": "uint256", "internalType": "uint256" }],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple",
+        "internalType": "struct RaffleManager3.RaffleData",
+        "components": [
+          { "name": "host", "type": "address", "internalType": "address" },
+          { "name": "expiry", "type": "uint48", "internalType": "uint48" },
+          { "name": "status", "type": "uint8", "internalType": "enum RaffleManager3.RaffleStatus" },
+          { "name": "underfilled", "type": "bool", "internalType": "bool" },
+          { "name": "prizeType", "type": "uint8", "internalType": "enum RaffleManager3.PrizeType" },
+          { "name": "prizeAsset", "type": "address", "internalType": "address" },
+          { "name": "ticketsSold", "type": "uint96", "internalType": "uint96" },
+          { "name": "prizeAmountOrTokenId", "type": "uint256", "internalType": "uint256" },
+          { "name": "ticketPrice", "type": "uint256", "internalType": "uint256" },
+          { "name": "maxCap", "type": "uint256", "internalType": "uint256" }
+        ]
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "manualFulfillWinner",
+    "inputs": [
+      { "name": "_raffleId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_winnerIndex", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "manualFulfillWinnerByRandomWord",
+    "inputs": [
+      { "name": "_raffleId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_randomWord", "type": "uint256", "internalType": "uint256" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "MAX_PLATFORM_FEE_BPS",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "onERC721Received",
+    "inputs": [
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "address", "internalType": "address" },
+      { "name": "", "type": "uint256", "internalType": "uint256" },
+      { "name": "", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [{ "name": "", "type": "bytes4", "internalType": "bytes4" }],
+    "stateMutability": "pure"
   },
   {
     "type": "function",
     "name": "owner",
     "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "participants",
     "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "", "type": "uint256", "internalType": "uint256" },
+      { "name": "", "type": "uint256", "internalType": "uint256" }
     ],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "paymentToken",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "pendingFeeBps",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "performUpkeep",
-    "inputs": [
-      {
-        "name": "performData",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
-    ],
+    "inputs": [{ "name": "performData", "type": "bytes", "internalType": "bytes" }],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "platformFeeBps",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "proposeFeeChange",
+    "inputs": [{ "name": "_newFeeBps", "type": "uint256", "internalType": "uint256" }],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
@@ -186,71 +197,24 @@
     "type": "function",
     "name": "raffleCount",
     "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "outputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "raffles",
-    "inputs": [
-      {
-        "name": "",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ],
+    "inputs": [{ "name": "", "type": "uint256", "internalType": "uint256" }],
     "outputs": [
-      {
-        "name": "host",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "expiry",
-        "type": "uint48",
-        "internalType": "uint48"
-      },
-      {
-        "name": "status",
-        "type": "uint8",
-        "internalType": "enum RaffleManager.RaffleStatus"
-      },
-      {
-        "name": "prizeAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "ticketsSold",
-        "type": "uint96",
-        "internalType": "uint96"
-      },
-      {
-        "name": "paymentAsset",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "prizeAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "ticketPrice",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "maxCap",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "host", "type": "address", "internalType": "address" },
+      { "name": "expiry", "type": "uint48", "internalType": "uint48" },
+      { "name": "status", "type": "uint8", "internalType": "enum RaffleManager3.RaffleStatus" },
+      { "name": "underfilled", "type": "bool", "internalType": "bool" },
+      { "name": "prizeType", "type": "uint8", "internalType": "enum RaffleManager3.PrizeType" },
+      { "name": "prizeAsset", "type": "address", "internalType": "address" },
+      { "name": "ticketsSold", "type": "uint96", "internalType": "uint96" },
+      { "name": "prizeAmountOrTokenId", "type": "uint256", "internalType": "uint256" },
+      { "name": "ticketPrice", "type": "uint256", "internalType": "uint256" },
+      { "name": "maxCap", "type": "uint256", "internalType": "uint256" }
     ],
     "stateMutability": "view"
   },
@@ -258,16 +222,8 @@
     "type": "function",
     "name": "rawFulfillRandomWords",
     "inputs": [
-      {
-        "name": "requestId",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "randomWords",
-        "type": "uint256[]",
-        "internalType": "uint256[]"
-      }
+      { "name": "requestId", "type": "uint256", "internalType": "uint256" },
+      { "name": "randomWords", "type": "uint256[]", "internalType": "uint256[]" }
     ],
     "outputs": [],
     "stateMutability": "nonpayable"
@@ -283,57 +239,56 @@
     "type": "function",
     "name": "s_vrfCoordinator",
     "inputs": [],
-    "outputs": [
-      {
-        "name": "",
-        "type": "address",
-        "internalType": "contract IVRFCoordinatorV2Plus"
-      }
-    ],
+    "outputs": [{ "name": "", "type": "address", "internalType": "contract IVRFCoordinatorV2Plus" }],
     "stateMutability": "view"
   },
   {
     "type": "function",
     "name": "transferOwnership",
-    "inputs": [
-      {
-        "name": "newOwner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ],
+    "inputs": [{ "name": "newOwner", "type": "address", "internalType": "address" }],
     "outputs": [],
     "stateMutability": "nonpayable"
   },
   {
+    "type": "function",
+    "name": "treasury",
+    "inputs": [],
+    "outputs": [{ "name": "", "type": "address", "internalType": "address" }],
+    "stateMutability": "view"
+  },
+  {
     "type": "event",
-    "name": "OwnershipTransferred",
+    "name": "FeeChangeApplied",
     "inputs": [
-      {
-        "name": "previousOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "newOwner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+      { "name": "oldFeeBps", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "newFeeBps", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "RaffleCancelled",
+    "name": "FeeChangeProposed",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      }
+      { "name": "newFeeBps", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "effectiveAt", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "OwnershipTransferred",
+    "inputs": [
+      { "name": "previousOwner", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "newOwner", "type": "address", "indexed": true, "internalType": "address" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "PlatformFeeCollected",
+    "inputs": [
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "amount", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   },
@@ -341,67 +296,22 @@
     "type": "event",
     "name": "RaffleCreated",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "host",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "prizeAsset",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "prizeAmount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      },
-      {
-        "name": "paymentAsset",
-        "type": "address",
-        "indexed": false,
-        "internalType": "address"
-      },
-      {
-        "name": "expiry",
-        "type": "uint48",
-        "indexed": false,
-        "internalType": "uint48"
-      }
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "host", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "prizeAsset", "type": "address", "indexed": false, "internalType": "address" },
+      { "name": "prizeType", "type": "uint8", "indexed": false, "internalType": "enum RaffleManager3.PrizeType" },
+      { "name": "prizeAmountOrTokenId", "type": "uint256", "indexed": false, "internalType": "uint256" },
+      { "name": "expiry", "type": "uint48", "indexed": false, "internalType": "uint48" },
+      { "name": "prizeSymbol", "type": "string", "indexed": false, "internalType": "string" },
+      { "name": "decimals", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   },
   {
     "type": "event",
-    "name": "RefundClaimed",
+    "name": "RaffleExpired",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "claimer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "amount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" }
     ],
     "anonymous": false
   },
@@ -409,24 +319,19 @@
     "type": "event",
     "name": "TicketPurchased",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "buyer",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      },
-      {
-        "name": "ticketCount",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "buyer", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "ticketCount", "type": "uint256", "indexed": false, "internalType": "uint256" }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "UnderfilledPrizeReturned",
+    "inputs": [
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "host", "type": "address", "indexed": true, "internalType": "address" },
+      { "name": "prizeAmountOrTokenId", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   },
@@ -434,18 +339,8 @@
     "type": "event",
     "name": "VRFRequested",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "requestId",
-        "type": "uint256",
-        "indexed": false,
-        "internalType": "uint256"
-      }
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "requestId", "type": "uint256", "indexed": false, "internalType": "uint256" }
     ],
     "anonymous": false
   },
@@ -453,52 +348,28 @@
     "type": "event",
     "name": "WinnerPicked",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "indexed": true,
-        "internalType": "uint256"
-      },
-      {
-        "name": "winner",
-        "type": "address",
-        "indexed": true,
-        "internalType": "address"
-      }
+      { "name": "raffleId", "type": "uint256", "indexed": true, "internalType": "uint256" },
+      { "name": "winner", "type": "address", "indexed": true, "internalType": "address" }
     ],
     "anonymous": false
   },
   {
     "type": "error",
-    "name": "CannotCancelFilledRaffle",
+    "name": "FeeTimelockNotElapsed",
+    "inputs": [{ "name": "effectiveAt", "type": "uint256", "internalType": "uint256" }]
+  },
+  {
+    "type": "error",
+    "name": "FeeTooHigh",
     "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
+      { "name": "requested", "type": "uint256", "internalType": "uint256" },
+      { "name": "max", "type": "uint256", "internalType": "uint256" }
     ]
   },
   {
     "type": "error",
-    "name": "ETHTransferFailed",
-    "inputs": []
-  },
-  {
-    "type": "error",
-    "name": "InsufficientPayment",
-    "inputs": [
-      {
-        "name": "expected",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "received",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
+    "name": "HostCannotEnter",
+    "inputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }]
   },
   {
     "type": "error",
@@ -508,78 +379,40 @@
   {
     "type": "error",
     "name": "MaxCapReached",
-    "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
+    "inputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }]
   },
   {
     "type": "error",
-    "name": "NoRefundAvailable",
+    "name": "NoFeeChangePending",
     "inputs": []
   },
   {
     "type": "error",
     "name": "OnlyCoordinatorCanFulfill",
     "inputs": [
-      {
-        "name": "have",
-        "type": "address",
-        "internalType": "address"
-      },
-      {
-        "name": "want",
-        "type": "address",
-        "internalType": "address"
-      }
+      { "name": "have", "type": "address", "internalType": "address" },
+      { "name": "want", "type": "address", "internalType": "address" }
     ]
   },
   {
     "type": "error",
     "name": "OwnableInvalidOwner",
-    "inputs": [
-      {
-        "name": "owner",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+    "inputs": [{ "name": "owner", "type": "address", "internalType": "address" }]
   },
   {
     "type": "error",
     "name": "OwnableUnauthorizedAccount",
-    "inputs": [
-      {
-        "name": "account",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
+    "inputs": [{ "name": "account", "type": "address", "internalType": "address" }]
   },
   {
     "type": "error",
     "name": "RaffleNotExpired",
-    "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
+    "inputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }]
   },
   {
     "type": "error",
     "name": "RaffleNotOpen",
-    "inputs": [
-      {
-        "name": "raffleId",
-        "type": "uint256",
-        "internalType": "uint256"
-      }
-    ]
+    "inputs": [{ "name": "raffleId", "type": "uint256", "internalType": "uint256" }]
   },
   {
     "type": "error",
@@ -589,17 +422,6 @@
   {
     "type": "error",
     "name": "SafeERC20FailedOperation",
-    "inputs": [
-      {
-        "name": "token",
-        "type": "address",
-        "internalType": "address"
-      }
-    ]
-  },
-  {
-    "type": "error",
-    "name": "UnexpectedETHPayment",
-    "inputs": []
+    "inputs": [{ "name": "token", "type": "address", "internalType": "address" }]
   }
 ]

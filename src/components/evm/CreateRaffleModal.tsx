@@ -2,11 +2,12 @@
 import { useState, useCallback } from 'react'
 import { useChainId } from 'wagmi'
 import { parseUnits, type Address } from 'viem'
-import { useCreateRaffle } from '../../hooks/useRaffleContract'
-import { useTokenApproval, useTokenDecimals, useTokenBalance } from '../../hooks/useTokenApproval'
+import { useCreateRaffleERC20, useCreateRaffleERC721 } from '../../hooks/useRaffleContract'
+import { useTokenApproval, useTokenDecimals, useTokenBalance, useNFTApproval } from '../../hooks/useTokenApproval'
 import { getRaffleManagerAddress, getMockUSDCAddress } from '../../config/evm.config'
 import { API_BASE_URL, getAuthToken } from '../../config/index'
 import { TransactionReceipt } from './TransactionReceipt'
+import { PrizeType } from '../../types/evm.types'
 import './CreateRaffleModal.css'
 
 interface CreateRaffleModalProps {
@@ -20,64 +21,100 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
   const chainId = useChainId()
   const raffleManagerAddress = getRaffleManagerAddress(chainId)
 
-  // Form state
+  // Prize type selector
+  const [prizeType, setPrizeType] = useState<PrizeType>(PrizeType.ERC20)
+
+  // Common form state
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File | null>(null)
-  const [prizeAsset, setPrizeAsset] = useState<Address>(getMockUSDCAddress(chainId))
-  const [prizeAmount, setPrizeAmount] = useState('')
-  const [paymentAsset, setPaymentAsset] = useState('0x0000000000000000000000000000000000000000')
   const [ticketPrice, setTicketPrice] = useState('')
   const [maxCap, setMaxCap] = useState('')
   const [duration, setDuration] = useState('') // in days
 
-  // Token info
-  const prizeDecimals = useTokenDecimals(prizeAsset) || 18
+  // ERC-20 specific
+  const [prizeAsset, setPrizeAsset] = useState<Address>(getMockUSDCAddress(chainId))
+  const [prizeAmount, setPrizeAmount] = useState('')
 
-  // Always call the hook, but only use if it's a valid non-ETH address
-  const isValidPaymentAddress = paymentAsset.startsWith('0x') && paymentAsset.length === 42 && paymentAsset !== '0x0000000000000000000000000000000000000000'
-  const paymentTokenDecimals = useTokenDecimals(isValidPaymentAddress ? (paymentAsset as Address) : undefined) || 18
-  const paymentDecimals = paymentAsset === '0x0000000000000000000000000000000000000000' ? 18 : paymentTokenDecimals
+  // ERC-721 specific
+  const [nftAsset, setNftAsset] = useState<Address>('' as Address)
+  const [tokenId, setTokenId] = useState('')
 
-  const { balance: prizeBalance } = useTokenBalance(prizeAsset)
+  // Payment token is always USDC (6 decimals) in RaffleManager3
+  const paymentDecimals = 6
 
-  // Approval state
-  const approval = useTokenApproval(prizeAsset, raffleManagerAddress)
+  // ERC-20 token info
+  const prizeDecimals = useTokenDecimals(prizeType === PrizeType.ERC20 ? prizeAsset : undefined) || 18
+  const { balance: prizeBalance } = useTokenBalance(prizeType === PrizeType.ERC20 ? prizeAsset : undefined)
+
+  // ERC-20 approval
+  const erc20Approval = useTokenApproval(
+    prizeType === PrizeType.ERC20 ? prizeAsset : undefined,
+    raffleManagerAddress as Address
+  )
+
+  // ERC-721 approval
+  const tokenIdBigInt = tokenId && /^\d+$/.test(tokenId) ? BigInt(tokenId) : undefined
+  const nftApproval = useNFTApproval(
+    prizeType === PrizeType.ERC721 ? nftAsset || undefined : undefined,
+    raffleManagerAddress as Address,
+    tokenIdBigInt
+  )
+
+  // Approval UI state
   const [approvalStep, setApprovalStep] = useState<ApprovalStep>('not_started')
   const [approvalHash, setApprovalHash] = useState<string>('')
 
-  // Create raffle state
-  const { createRaffle, isPending: isCreating } = useCreateRaffle()
+  // Create raffle hooks
+  const { createRaffleERC20, isPending: isCreatingERC20 } = useCreateRaffleERC20()
+  const { createRaffleERC721, isPending: isCreatingERC721 } = useCreateRaffleERC721()
+  const isCreating = isCreatingERC20 || isCreatingERC721
+
   const [createStep, setCreateStep] = useState<CreateStep>('idle')
   const [createHash, setCreateHash] = useState<string>('')
   const [error, setError] = useState('')
 
-  // Check if approval is needed
-  const needsApproval = useCallback(() => {
-    if (!prizeAmount) return false
+  // Check if ERC-20 approval is needed
+  const needsERC20Approval = useCallback(() => {
+    if (prizeType !== PrizeType.ERC20 || !prizeAmount) return false
     try {
       const decimals = typeof prizeDecimals === 'number' ? prizeDecimals : 18
       const prizeAmountBig = parseUnits(prizeAmount, decimals)
-      return !approval.hasAllowance(prizeAmountBig)
+      return !erc20Approval.hasAllowance(prizeAmountBig)
     } catch {
       return false
     }
-  }, [prizeAmount, prizeDecimals, approval])
+  }, [prizeType, prizeAmount, prizeDecimals, erc20Approval])
+
+  // Check if ERC-721 approval is needed
+  const needsNFTApproval = useCallback(() => {
+    if (prizeType !== PrizeType.ERC721 || !nftAsset || tokenIdBigInt === undefined) return false
+    return !nftApproval.isApproved()
+  }, [prizeType, nftAsset, tokenIdBigInt, nftApproval])
+
+  const needsApproval = prizeType === PrizeType.ERC20 ? needsERC20Approval() : needsNFTApproval()
 
   // Handle approve
   const handleApprove = async () => {
-    if (!prizeAmount) {
-      setError('Enter prize amount')
-      return
-    }
-
     try {
       setError('')
       setApprovalStep('approving')
-      const decimals = typeof prizeDecimals === 'number' ? prizeDecimals : 18
-      const hash = await approval.approve(prizeAmount, decimals)
+
+      let hash: string
+      if (prizeType === PrizeType.ERC20) {
+        if (!prizeAmount) { setError('Enter prize amount'); setApprovalStep('not_started'); return }
+        const decimals = typeof prizeDecimals === 'number' ? prizeDecimals : 18
+        hash = await erc20Approval.approve(prizeAmount, decimals)
+      } else {
+        if (!nftAsset || tokenIdBigInt === undefined) {
+          setError('Enter NFT contract address and token ID')
+          setApprovalStep('not_started')
+          return
+        }
+        hash = await nftApproval.approveNFT()
+      }
+
       setApprovalHash(hash)
-      console.log('Approval Transaction Hash:', hash)
       setApprovalStep('approved')
     } catch (err: any) {
       console.error('Approval error:', err)
@@ -90,10 +127,9 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
   const postRaffleToBackend = async (txHash: string) => {
     try {
       const body = new FormData()
-      body.append('raffle_tx_hash', txHash);
-      body.append('description', description || '');
-      body.append('image', image || '');
-      
+      body.append('raffle_tx_hash', txHash)
+      body.append('description', description || '')
+
       if (image) {
         body.append('image', image)
       }
@@ -122,8 +158,18 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
 
   // Handle create raffle
   const handleCreateRaffle = async () => {
-    if (!title || !prizeAsset || !prizeAmount || !paymentAsset || !ticketPrice || !maxCap || !duration) {
-      setError('Fill in all fields (title is required)')
+    if (!title || !ticketPrice || !maxCap || !duration) {
+      setError('Fill in all required fields')
+      return
+    }
+
+    if (prizeType === PrizeType.ERC20 && (!prizeAsset || !prizeAmount)) {
+      setError('Enter prize token address and amount')
+      return
+    }
+
+    if (prizeType === PrizeType.ERC721 && (!nftAsset || !tokenId)) {
+      setError('Enter NFT contract address and token ID')
       return
     }
 
@@ -131,27 +177,34 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
       setError('')
       setCreateStep('pending')
 
-      // Convert duration from days to seconds
       const durationSeconds = Number(duration) * 86400
-      const prizeDecimalsNum = typeof prizeDecimals === 'number' ? prizeDecimals : 18
-      const paymentDecimalsNum = typeof paymentDecimals === 'number' ? paymentDecimals : 18
+      let hash: string
 
-      const hash = await createRaffle({
-        prizeAsset,
-        prizeAmount,
-        prizeDecimals: prizeDecimalsNum,
-        paymentAsset: paymentAsset as Address,
-        ticketPrice,
-        ticketDecimals: paymentDecimalsNum,
-        maxCap: Number(maxCap),
-        duration: durationSeconds,
-      })
+      if (prizeType === PrizeType.ERC20) {
+        const prizeDecimalsNum = typeof prizeDecimals === 'number' ? prizeDecimals : 18
+        hash = await createRaffleERC20({
+          prizeAsset,
+          prizeAmount,
+          prizeDecimals: prizeDecimalsNum,
+          ticketPrice,
+          ticketDecimals: paymentDecimals,
+          maxCap: Number(maxCap),
+          duration: durationSeconds,
+        })
+      } else {
+        hash = await createRaffleERC721({
+          nftAsset,
+          tokenId: BigInt(tokenId),
+          ticketPrice,
+          ticketDecimals: paymentDecimals,
+          maxCap: Number(maxCap),
+          duration: durationSeconds,
+        })
+      }
 
       setCreateHash(hash)
-      console.log('Create Raffle Transaction Hash:', hash)
       setCreateStep('success')
 
-      // POST to backend after successful on-chain creation
       await postRaffleToBackend(hash)
     } catch (err: any) {
       console.error('Create raffle error:', err)
@@ -160,18 +213,18 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
     }
   }
 
-  const isApprovalPending = approvalStep === 'approving' || approval.isPending
+  const isApprovalPending = approvalStep === 'approving' || erc20Approval.isPending || nftApproval.isPending
   const isApproved = approvalStep === 'approved'
-  const needsApprovalFlag = needsApproval()
+
   const canCreateRaffle =
     title &&
-    prizeAsset &&
-    prizeAmount &&
-    paymentAsset &&
     ticketPrice &&
     maxCap &&
     duration &&
-    (!needsApprovalFlag || isApproved)
+    (prizeType === PrizeType.ERC20
+      ? prizeAsset && prizeAmount
+      : nftAsset && tokenId) &&
+    (!needsApproval || isApproved)
 
   return (
     <>
@@ -195,6 +248,30 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
           <>
             <div className="modal-body">
               <form className="raffle-form" onSubmit={(e) => e.preventDefault()}>
+
+                {/* Prize Type Selector */}
+                <div className="form-group">
+                  <label>Prize Type *</label>
+                  <div className="prize-type-selector">
+                    <button
+                      type="button"
+                      className={`prize-type-btn ${prizeType === PrizeType.ERC20 ? 'active' : ''}`}
+                      onClick={() => { setPrizeType(PrizeType.ERC20); setApprovalStep('not_started') }}
+                      disabled={isApprovalPending || isCreating}
+                    >
+                      ERC-20 Token
+                    </button>
+                    <button
+                      type="button"
+                      className={`prize-type-btn ${prizeType === PrizeType.ERC721 ? 'active' : ''}`}
+                      onClick={() => { setPrizeType(PrizeType.ERC721); setApprovalStep('not_started') }}
+                      disabled={isApprovalPending || isCreating}
+                    >
+                      NFT (ERC-721)
+                    </button>
+                  </div>
+                </div>
+
                 {/* Title */}
                 <div className="form-group">
                   <label>Title *</label>
@@ -230,66 +307,87 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
                   />
                 </div>
 
-                {/* Prize Asset */}
-                <div className="form-group">
-                  <label>Prize Token Address</label>
-                  <input
-                    type="text"
-                    value={prizeAsset}
-                    onChange={(e) => setPrizeAsset(e.target.value as Address)}
-                    placeholder="0x49f49CfE89050a8F8E48d3A31E33a8e26Bc80D1d"
-                    disabled={isApprovalPending || isCreating}
-                  />
-                  <small>Default: MockUSDC on {chainId === 84532 ? 'Base Sepolia' : 'Base'}</small>
-                </div>
+                {/* ERC-20 Prize Fields */}
+                {prizeType === PrizeType.ERC20 && (
+                  <>
+                    <div className="form-group">
+                      <label>Prize Token Address *</label>
+                      <input
+                        type="text"
+                        value={prizeAsset}
+                        onChange={(e) => setPrizeAsset(e.target.value as Address)}
+                        placeholder="0x..."
+                        disabled={isApprovalPending || isCreating}
+                      />
+                      <small>Default: MockUSDC on {chainId === 84532 ? 'Base Sepolia' : 'Base'}</small>
+                    </div>
 
-                {/* Prize Amount */}
-                <div className="form-group">
-                  <label>Prize Amount</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={prizeAmount}
-                    onChange={(e) => setPrizeAmount(e.target.value)}
-                    placeholder="100"
-                    disabled={isApprovalPending || isCreating}
-                  />
-                  {prizeBalance && (
-                    <small>
-                      Balance: {(Number(prizeBalance) / 10 ** (typeof prizeDecimals === 'number' ? prizeDecimals : 18)).toFixed(2)}
-                    </small>
-                  )}
-                </div>
+                    <div className="form-group">
+                      <label>Prize Amount *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={prizeAmount}
+                        onChange={(e) => setPrizeAmount(e.target.value)}
+                        placeholder="100"
+                        disabled={isApprovalPending || isCreating}
+                      />
+                      {prizeBalance && (
+                        <small>
+                          Balance: {(Number(prizeBalance) / 10 ** (typeof prizeDecimals === 'number' ? prizeDecimals : 18)).toFixed(2)}
+                        </small>
+                      )}
+                    </div>
+                  </>
+                )}
 
-                {/* Payment Asset */}
-                <div className="form-group">
-                  <label>Payment Token (ETH for address(0))</label>
-                  <input
-                    type="text"
-                    value={paymentAsset}
-                    onChange={(e) => setPaymentAsset(e.target.value)}
-                    placeholder="0x0000000000000000000000000000000000000000"
-                    disabled={isApprovalPending || isCreating}
-                  />
-                  <small>Use 0x0000... for ETH, or ERC20 address</small>
-                </div>
+                {/* ERC-721 Prize Fields */}
+                {prizeType === PrizeType.ERC721 && (
+                  <>
+                    <div className="form-group">
+                      <label>NFT Contract Address *</label>
+                      <input
+                        type="text"
+                        value={nftAsset}
+                        onChange={(e) => setNftAsset(e.target.value as Address)}
+                        placeholder="0x..."
+                        disabled={isApprovalPending || isCreating}
+                      />
+                    </div>
 
-                {/* Ticket Price */}
+                    <div className="form-group">
+                      <label>Token ID *</label>
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        value={tokenId}
+                        onChange={(e) => setTokenId(e.target.value)}
+                        placeholder="42"
+                        disabled={isApprovalPending || isCreating}
+                      />
+                      <small>The token ID of the NFT you want to raffle</small>
+                    </div>
+                  </>
+                )}
+
+                {/* Ticket Price — always in USDC */}
                 <div className="form-group">
-                  <label>Ticket Price</label>
+                  <label>Ticket Price (USDC) *</label>
                   <input
                     type="number"
                     step="0.0001"
                     value={ticketPrice}
                     onChange={(e) => setTicketPrice(e.target.value)}
-                    placeholder="0.01"
+                    placeholder="1"
                     disabled={isApprovalPending || isCreating}
                   />
+                  <small>Tickets are always paid in USDC</small>
                 </div>
 
                 {/* Max Cap */}
                 <div className="form-group">
-                  <label>Maximum Tickets</label>
+                  <label>Maximum Tickets *</label>
                   <input
                     type="number"
                     value={maxCap}
@@ -301,7 +399,7 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
 
                 {/* Duration */}
                 <div className="form-group">
-                  <label>Duration (Days)</label>
+                  <label>Duration (Days) *</label>
                   <input
                     type="number"
                     value={duration}
@@ -315,9 +413,11 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
                 {error && <div className="error-message">{error}</div>}
 
                 {/* Approval Section */}
-                {needsApprovalFlag && (
+                {needsApproval && (
                   <div className="approval-section">
-                    <h4>Step 1: Approve Prize Token</h4>
+                    <h4>
+                      Step 1: {prizeType === PrizeType.ERC20 ? 'Approve Prize Token' : 'Approve NFT Transfer'}
+                    </h4>
                     {isApproved ? (
                       <div className="approval-status approved">
                         <span>✓ Approved</span>
@@ -329,7 +429,7 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
                         onClick={handleApprove}
                         disabled={isApprovalPending}
                       >
-                        {isApprovalPending ? 'Approving...' : 'Approve Tokens'}
+                        {isApprovalPending ? 'Approving...' : prizeType === PrizeType.ERC20 ? 'Approve Tokens' : 'Approve NFT'}
                       </button>
                     )}
                     {approvalHash && (

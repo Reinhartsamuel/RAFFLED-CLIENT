@@ -1,28 +1,26 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { useAppKitAccount } from '@reown/appkit/react'
-import { formatUnits } from 'viem'
 import { wagmiConfig, queryClient, networks } from './config/evm.config'
 import { API_BASE_URL, getAuthToken } from './config/index'
 import { WalletConnect } from './components/evm/WalletConnect'
 import { CreateRaffleModal } from './components/evm/CreateRaffleModal'
 import { useRaffleCount } from './hooks/useRaffleContract'
-import { Layout } from './components/evm/Layout'
+import { Layout, DashboardSidebar } from './components/evm/Layout'
 import RaffleDetail from './pages/RaffleDetail'
 import './AppEVM.css'
 import { BackendRaffle } from './interfaces/BackendRaffle'
 import { RaffleCard } from './components/evm/RaffleCard'
-
+import posterImg from './assets/poster.webp'
 
 
 export function HomePage() {
-  const navigate = useNavigate()
   const { isConnected } = useAppKitAccount()
   const { data: raffleCount, refetch: refetchRaffleCount } = useRaffleCount()
 
-  const [view, setView] = useState<'explore' | 'manage'>('explore')
+  const [activeFilter, setActiveFilter] = useState('home')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [raffles, setRaffles] = useState<BackendRaffle[]>([])
   const [rafflesLoading, setRafflesLoading] = useState(false)
@@ -62,16 +60,20 @@ export function HomePage() {
 
   const totalRaffles = Number(raffleCount || 0)
 
+  const sidebar = isConnected ? (
+    <DashboardSidebar activeFilter={activeFilter} onFilterChange={setActiveFilter} />
+  ) : undefined
+
   return (
-    <Layout>
+    <Layout sidebar={sidebar}>
       {!isConnected ? (
         <section className="connect-wallet-section">
           <div className="connect-card">
             <h2 className="font-syne font-black text-3xl mb-4">Connect Your Wallet</h2>
-            <p className="font-jetbrains text-sm text-pure-black/70 mb-6">
+            <p className="font-jetbrains text-sm text-white/60 mb-6">
               Connect to Base network to create raffles and buy tickets with smart contract integration
             </p>
-            <p className="font-jetbrains text-xs text-pure-black/50 mb-8">
+            <p className="font-jetbrains text-xs text-white/40 mb-8">
               Supported networks: {networks.map((n) => n.name).join(', ')}
             </p>
             <WalletConnect />
@@ -79,91 +81,89 @@ export function HomePage() {
         </section>
       ) : (
         <>
-          {/* View Tabs */}
-          <nav className="view-tabs font-jetbrains" style={{ marginBottom: '2rem' }}>
-            <button
-              className={`tab ${view === 'explore' ? 'active' : ''}`}
-              onClick={() => setView('explore')}
-            >
-              Explore
-            </button>
-            <button
-              className={`tab ${view === 'manage' ? 'active' : ''}`}
-              onClick={() => setView('manage')}
-            >
-              Manage
-            </button>
-          </nav>
+          {/* Dashboard Header */}
+          <div className="dashboard-header">
+            <h2 className="font-syne font-black text-2xl">Dashboard</h2>
+            {activeToken && (
+              <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+                <span className="font-jetbrains text-sm font-bold">+ Create Raffle</span>
+              </button>
+            )}
+          </div>
 
-          {view === 'explore' && (
-            <section className="explore-view">
-              <header className="section-header">
-                <div className="header-text">
-                  <p className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-1">
-                    Browse
-                  </p>
-                  <h2 className="font-syne font-black text-2xl">
-                    Active Raffles ({totalRaffles})
-                  </h2>
-                </div>
-              </header>
+          {/* Getting Started Cards */}
+          <div className="getting-started">
+            <div className="getting-started-header">
+              <h3 className="font-syne font-bold text-lg">Getting started</h3>
+            </div>
+            <div className="getting-started-grid">
+              <div className="getting-started-card getting-started-card--done">
+                <div className="getting-started-card-icon">✌️</div>
+                <h4 className="font-syne font-bold text-sm">Welcome aboard</h4>
+                <p className="font-jetbrains text-xs text-white/40">Connect your wallet.</p>
+                <span className="getting-started-check">✓</span>
+              </div>
+              <div className="getting-started-card getting-started-card--done">
+                <div className="getting-started-card-icon">🔑</div>
+                <h4 className="font-syne font-bold text-sm">Authenticated</h4>
+                <p className="font-jetbrains text-xs text-white/40">Sign in with Base.</p>
+                <span className="getting-started-check">✓</span>
+              </div>
+              <div className="getting-started-card">
+                <div className="getting-started-card-icon">🎟️</div>
+                <h4 className="font-syne font-bold text-sm">First raffle</h4>
+                <p className="font-jetbrains text-xs text-white/40">Create your first raffle.</p>
+              </div>
+              <div className="getting-started-card">
+                <div className="getting-started-card-icon">🏆</div>
+                <h4 className="font-syne font-bold text-sm">First winner</h4>
+                <p className="font-jetbrains text-xs text-white/40">Draw your first winner.</p>
+              </div>
+            </div>
+          </div>
 
-              {rafflesLoading ? (
-                <div className="empty-state">
-                  <p className="font-jetbrains text-sm text-pure-black/60">
-                    Loading raffles...
-                  </p>
-                </div>
-              ) : raffles.length === 0 ? (
-                <div className="empty-state">
-                  <p className="font-jetbrains text-sm text-pure-black/60">
-                    No raffles yet. Create one to get started!
-                  </p>
-                </div>
-              ) : (
-                <div className="raffles-grid">
-                  {raffles?.map((raffle) => (
-                    <RaffleCard raffle={raffle} key={raffle.id} />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+          {/* Poster Banner */}
+          <div className="poster-banner">
+            <img src={posterImg} alt="The Future of Raffles" className="poster-banner-img" />
+            <div className="poster-banner-overlay">
+              <p className="font-jetbrains text-sm">We're here to bring on-chain raffles to everyone.</p>
+              <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
+                <span className="font-jetbrains text-sm font-bold">Create your first raffle</span>
+              </button>
+            </div>
+          </div>
 
-          {view === 'manage' && (
-            <section className="manage-view">
-              <header className="section-header">
-                <div className="header-text">
-                  <p className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-1">
-                    Creator Dashboard
-                  </p>
-                  <h2 className="font-syne font-black text-2xl">Your Raffles</h2>
-                </div>
-                {activeToken && (
-                  <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-                    <span className="font-jetbrains text-sm font-bold">+ Create Raffle</span>
-                  </button>
-                )}
-              </header>
+          {/* Active Raffles Section */}
+          <section className="dashboard-section">
+            <header className="section-header">
+              <div className="header-text">
+                <h2 className="font-syne font-black text-xl">
+                  Active Raffles
+                  <span className="section-count">{totalRaffles}</span>
+                </h2>
+              </div>
+            </header>
 
-              {raffles.length === 0 ? (
-                <div className="empty-state">
-                  <p className="font-jetbrains text-sm text-pure-black/60">
-                    You haven't created any raffles yet
-                  </p>
-                </div>
-              ) : (
-                <div className="raffles-grid">
-                  {raffles?.map((raffle) => (
-                    <RaffleCard
-                      key={raffle.id}
-                      raffle={raffle}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )}
+            {rafflesLoading ? (
+              <div className="empty-state">
+                <p className="font-jetbrains text-sm text-white/50">
+                  Loading raffles...
+                </p>
+              </div>
+            ) : raffles.length === 0 ? (
+              <div className="empty-state">
+                <p className="font-jetbrains text-sm text-white/50">
+                  No raffles yet. Create one to get started!
+                </p>
+              </div>
+            ) : (
+              <div className="raffles-grid">
+                {raffles?.map((raffle) => (
+                  <RaffleCard raffle={raffle} key={raffle.id} />
+                ))}
+              </div>
+            )}
+          </section>
         </>
       )}
 

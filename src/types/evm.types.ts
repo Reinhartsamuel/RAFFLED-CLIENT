@@ -1,26 +1,44 @@
 import type { Address } from 'viem'
 
 /**
- * Raffle status enum
+ * Raffle status enum — RaffleManager3 only has OPEN and COMPLETED.
  */
 export enum RaffleStatus {
   OPEN = 0,
-  CANCELLED = 1,
-  COMPLETED = 2,
+  COMPLETED = 1,
 }
 
 /**
- * On-chain raffle data structure
+ * Prize type enum — distinguishes ERC-20 token prizes from ERC-721 NFT prizes.
+ */
+export enum PrizeType {
+  ERC20 = 0,
+  ERC721 = 1,
+}
+
+/**
+ * On-chain raffle data structure (RaffleManager3 layout).
+ * Tuple indices returned by raffles(id):
+ * [0] host
+ * [1] expiry
+ * [2] status
+ * [3] underfilled
+ * [4] prizeType       ← NEW in v3
+ * [5] prizeAsset
+ * [6] ticketsSold
+ * [7] prizeAmountOrTokenId  ← renamed from prizeAmount
+ * [8] ticketPrice
+ * [9] maxCap
  */
 export interface OnChainRaffle {
   raffleId: number
   host: Address
   expiry: number // Unix timestamp
   status: RaffleStatus
+  prizeType: PrizeType
   prizeAsset: Address
   ticketsSold: number
-  paymentAsset: Address // address(0) for ETH
-  prizeAmount: bigint
+  prizeAmountOrTokenId: bigint // ERC-20 amount OR ERC-721 tokenId
   ticketPrice: bigint
   maxCap: number
 }
@@ -70,9 +88,10 @@ export enum ApprovalStep {
  * Create raffle form data
  */
 export interface CreateRaffleFormData {
+  prizeType: PrizeType
   prizeAsset: Address | ''
-  prizeAmount: string
-  paymentAsset: Address | ''
+  prizeAmount: string       // ERC-20 only
+  prizeTokenId: string      // ERC-721 only
   ticketPrice: string
   maxCap: string
   duration: string // in days
@@ -91,14 +110,14 @@ export interface PurchaseTicketsFormData {
 }
 
 /**
- * Raffle event types
+ * RaffleCreated event (RaffleManager3)
  */
 export interface RaffleCreatedEvent {
   raffleId: bigint
   host: Address
   prizeAsset: Address
-  prizeAmount: bigint
-  paymentAsset: Address
+  prizeType: PrizeType
+  prizeAmountOrTokenId: bigint
   expiry: number
 }
 
@@ -113,20 +132,6 @@ export interface TicketPurchasedEvent {
 export interface WinnerPickedEvent {
   raffleId: bigint
   winner: Address
-  blockNumber: number
-  transactionHash: string
-}
-
-export interface RaffleCancelledEvent {
-  raffleId: bigint
-  blockNumber: number
-  transactionHash: string
-}
-
-export interface RefundClaimedEvent {
-  raffleId: bigint
-  claimer: Address
-  amount: bigint
   blockNumber: number
   transactionHash: string
 }

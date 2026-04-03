@@ -5,14 +5,15 @@ import { formatUnits } from 'viem'
 import { API_BASE_URL, getAuthToken } from '../config/index'
 import { Layout } from '../components/evm/Layout'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
-import { useConnection, useConfig, usePublicClient } from 'wagmi'
+import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 
 interface RaffleDetailData {
   id: number
   title: string
   description: string
-  prize_amount: string
+  prize_type?: 'erc20' | 'erc721'
+  prize_amount: string  // ERC-20: token amount; ERC-721: token ID (as string)
   prize_asset_symbol: string
   prize_asset_decimals?: number
   ticket_price_usd: string
@@ -34,10 +35,8 @@ interface RaffleDetailData {
 export function RaffleDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isConnected } = useAppKitAccount()
-  const { address } = useConnection()
+  const { isConnected, address } = useAppKitAccount()
   const config = useConfig()
-  const publicClient = usePublicClient()
 
   const [raffle, setRaffle] = useState<RaffleDetailData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -70,34 +69,24 @@ export function RaffleDetail() {
         console.log('Fetched raffle detail:', data)
         setRaffle(data.raffle || null)
 
-        // Fetch user balance for the payment asset
-        if (address && data.raffle?.payment_asset && publicClient) {
+        // Fetch user USDC balance (RaffleManager2 uses a fixed paymentToken, always ERC20)
+        if (address && data.raffle?.payment_asset && config) {
           try {
-            const paymentAsset = data.raffle.payment_asset
-            const isNativeToken = paymentAsset === '0x0000000000000000000000000000000000000000'
-
-            if (isNativeToken) {
-              // Fetch native ETH balance
-              const balance = await publicClient.getBalance({ address })
-              setBalanceData(balance)
-            } else {
-              // Fetch ERC20 token balance using balanceOf
-              const balance = await readContract(config, {
-                address: paymentAsset as `0x${string}`,
-                abi: [
-                  {
-                    name: 'balanceOf',
-                    type: 'function',
-                    stateMutability: 'view',
-                    inputs: [{ name: 'account', type: 'address' }],
-                    outputs: [{ name: 'balance', type: 'uint256' }],
-                  },
-                ],
-                functionName: 'balanceOf',
-                args: [address],
-              })
-              setBalanceData(balance as bigint)
-            }
+            const balance = await readContract(config, {
+              address: data.raffle.payment_asset as `0x${string}`,
+              abi: [
+                {
+                  name: 'balanceOf',
+                  type: 'function',
+                  stateMutability: 'view',
+                  inputs: [{ name: 'account', type: 'address' }],
+                  outputs: [{ name: 'balance', type: 'uint256' }],
+                },
+              ],
+              functionName: 'balanceOf',
+              args: [address],
+            })
+            setBalanceData(balance as bigint)
           } catch (balanceError) {
             console.error('Error fetching balance:', balanceError)
           }
@@ -113,7 +102,7 @@ export function RaffleDetail() {
     if (id) {
       fetchRaffleDetail()
     }
-  }, [id, address, config, publicClient])
+  }, [id, address, config])
 
   if (loading) {
     return (
@@ -121,7 +110,7 @@ export function RaffleDetail() {
         <div className="raffle-detail-page">
           <div className="raffle-detail-container">
             <div className="empty-state">
-              <p className="font-jetbrains text-sm text-pure-black/60">
+              <p className="font-jetbrains text-sm text-white/50">
                 Loading raffle details...
               </p>
             </div>
@@ -137,7 +126,7 @@ export function RaffleDetail() {
         <div className="raffle-detail-page">
           <div className="raffle-detail-container">
             <div className="empty-state">
-              <p className="font-jetbrains text-sm text-pure-black/60">
+              <p className="font-jetbrains text-sm text-white/50">
                 {error || 'Raffle not found'}
               </p>
               <button className="btn-primary mt-4" onClick={() => navigate('/app')}>
@@ -213,7 +202,7 @@ export function RaffleDetail() {
               />
             ) : (
               <div className="detail-image-placeholder">
-                <span className="font-jetbrains text-pure-black/40">No Image</span>
+                <span className="font-jetbrains text-white/30">No Image</span>
               </div>
             )}
           </div>
@@ -223,29 +212,40 @@ export function RaffleDetail() {
             <h1 className="font-syne font-black text-4xl mb-4">{raffle.title}</h1>
 
             {raffle.description && (
-              <p className="font-jetbrains text-sm text-pure-black/70 mb-6">
+              <p className="font-jetbrains text-sm text-white/60 mb-6">
                 {raffle.description}
               </p>
             )}
 
             {/* Prize Info */}
             <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-3">
-                Prize Pool
+              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
+                {raffle.prize_type === 'erc721' ? 'NFT Prize' : 'Prize Pool'}
               </h3>
               <div className="prize-amount">
-                <span className="font-syne font-bold text-3xl">
-                  {formatUnits(BigInt(raffle.prize_amount || 0), raffle.prize_asset_decimals || 6)}
-                </span>
-                <span className="font-jetbrains text-xl text-pure-black/70 ml-2">
-                  {raffle.prize_asset_symbol}
-                </span>
+                {raffle.prize_type === 'erc721' ? (
+                  <>
+                    <span className="nft-badge font-jetbrains text-sm font-bold mr-2">NFT</span>
+                    <span className="font-syne font-bold text-3xl">
+                      {raffle.prize_asset_symbol || 'NFT'} #{raffle.prize_amount}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="font-syne font-bold text-3xl">
+                      {formatUnits(BigInt(raffle.prize_amount || 0), raffle.prize_asset_decimals || 6)}
+                    </span>
+                    <span className="font-jetbrains text-xl text-white/60 ml-2">
+                      {raffle.prize_asset_symbol}
+                    </span>
+                  </>
+                )}
               </div>
             </div>
 
             {/* Ticket Info */}
             <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-3">
+              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
                 Ticket Information
               </h3>
               <div className="detail-stats-grid">
@@ -269,7 +269,7 @@ export function RaffleDetail() {
                     style={{ width: `${ticketsSoldPercent}%` }}
                   />
                 </div>
-                <span className="font-jetbrains text-xs text-pure-black/50">
+                <span className="font-jetbrains text-xs text-white/40">
                   {ticketsSoldPercent.toFixed(1)}% sold
                 </span>
               </div>
@@ -277,7 +277,7 @@ export function RaffleDetail() {
 
             {/* Timeline */}
             <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-3">
+              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
                 Timeline
               </h3>
               <div className="detail-stats-grid">
@@ -299,7 +299,7 @@ export function RaffleDetail() {
             </div>
 
             <div className="balance-display">
-              <span className="font-jetbrains text-xs text-pure-black/50">
+              <span className="font-jetbrains text-xs text-white/40">
                 Available Balance:
               </span>
               <span className="font-jetbrains text-xs font-bold">
@@ -325,7 +325,7 @@ export function RaffleDetail() {
               </button>
             ) : (
               <div className="connect-prompt">
-                <p className="font-jetbrains text-xs text-pure-black/60 mb-3">
+                <p className="font-jetbrains text-xs text-white/50 mb-3">
                   Connect your wallet to buy tickets
                 </p>
               </div>
@@ -334,11 +334,11 @@ export function RaffleDetail() {
             {/* Additional Info */}
             {raffle.contract_address && (
               <div className="detail-card mt-6">
-                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-3">
+                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
                   Contract Details
                 </h3>
                 <div className="contract-info">
-                  <span className="font-jetbrains text-xs text-pure-black/40" style={{ wordBreak: 'break-all' }}>
+                  <span className="font-jetbrains text-xs text-white/30" style={{ wordBreak: 'break-all' }}>
                     {raffle.contract_address}
                   </span>
                 </div>
@@ -347,11 +347,11 @@ export function RaffleDetail() {
 
             {raffle.prize_tx_hash && (
               <div className="detail-card mt-4">
-                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-3">
+                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
                   Prize Transaction
                 </h3>
                 <div className="contract-info">
-                  <span className="font-jetbrains text-xs text-pure-black/40" style={{ wordBreak: 'break-all' }}>
+                  <span className="font-jetbrains text-xs text-white/30" style={{ wordBreak: 'break-all' }}>
                     {raffle.prize_tx_hash}
                   </span>
                 </div>

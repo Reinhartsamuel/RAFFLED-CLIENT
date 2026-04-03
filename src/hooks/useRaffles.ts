@@ -5,17 +5,17 @@ import { useRaffleCount } from './useRaffleContract'
 import { queryClient } from '../config/evm.config'
 
 /**
- * Raffle data structure parsed from on-chain
+ * Raffle data structure parsed from on-chain (RaffleManager3 layout)
  */
 export interface ParsedRaffle {
   raffleId: number
   host: Address
   expiry: number
-  status: 0 | 1 | 2 // 0=OPEN, 1=CANCELLED, 2=COMPLETED
+  status: 0 | 1 // 0=OPEN, 1=COMPLETED
+  prizeType: 0 | 1  // 0=ERC20, 1=ERC721
   prizeAsset: Address
   ticketsSold: number
-  paymentAsset: Address
-  prizeAmount: bigint
+  prizeAmountOrTokenId: bigint
   ticketPrice: bigint
   maxCap: number
   timeRemaining: number // seconds
@@ -141,7 +141,7 @@ export function useRaffleStats() {
     activeRaffles: raffles.filter((r) => !r.isExpired).length,
     endedRaffles: raffles.filter((r) => r.isExpired).length,
     userCreatedRaffles: raffles.filter((r) => r.host === userAddress).length,
-    totalPrizePool: raffles.reduce((sum, r) => sum + r.prizeAmount, 0n),
+    totalPrizePool: raffles.reduce((sum, r) => sum + r.prizeAmountOrTokenId, 0n),
   }
 }
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useConnection, usePublicClient } from 'wagmi'
+import { useWriteContract, useWaitForTransactionReceipt, usePublicClient, useAccount } from 'wagmi'
 import { formatUnits } from 'viem'
 import { RAFFLE_MANAGER_ADDRESS } from '../../config/contracts'
 import RaffleManagerABI from '../../abis/RaffleManager.json'
@@ -33,7 +33,7 @@ export function BuyTicketsModal({
   onClose,
   onSuccess,
 }: BuyTicketsModalProps) {
-  const { address } = useConnection()
+  const { address } = useAccount()
   const publicClient = usePublicClient()
   const [ticketCount, setTicketCount] = useState(1)
   const [isPurchasing, setIsPurchasing] = useState(false)
@@ -44,14 +44,9 @@ export function BuyTicketsModal({
     hash,
   })
 
-  // Calculate total price
-  // ticketPrice is already in the smallest unit (e.g., 1000000 for 1 USDC with 6 decimals)
+  // ticketPrice is already in smallest unit (e.g. 1000000 for 1 USDC with 6 decimals)
   const ticketPriceBigInt = BigInt(ticketPrice)
   const totalPrice = ticketPriceBigInt * BigInt(ticketCount)
-  console.log(ticketCount,'ticketCount')
-  console.log(ticketPrice,'ticketPrice (raw)')
-  console.log(ticketPriceBigInt,'ticketPriceBigInt')
-  console.log(totalPrice,'totalPrice')
   const totalPriceFormatted = formatUnits(totalPrice, paymentAssetDecimals)
 
   // Calculate win chance
@@ -104,51 +99,41 @@ export function BuyTicketsModal({
       console.log('Total price:', totalPriceFormatted, paymentAssetSymbol)
       console.log('Total price (raw):', totalPrice.toString())
 
-      // Check if payment is in native token (ETH)
-      const isNativePayment = paymentAsset === '0x0000000000000000000000000000000000000000'
+      // Step 1: Approve USDC spend (RaffleManager2 is USDC-only, always ERC20)
+      setCurrentStep('approving')
+      console.log('📝 Step 1/2: Approving USDC spend...')
+      console.log('Token address:', paymentAsset)
+      console.log('Spender (RaffleManager):', RAFFLE_MANAGER_ADDRESS)
+      console.log('Amount to approve:', totalPrice.toString())
 
-      if (!isNativePayment) {
-        // For ERC20 tokens, need to approve first
-        setCurrentStep('approving')
-        console.log('📝 Step 1/2: Approving token spend...')
-        console.log('Token address:', paymentAsset)
-        console.log('Spender (RaffleManager):', RAFFLE_MANAGER_ADDRESS)
-        console.log('Amount to approve:', totalPrice.toString())
+      const approveHash = writeContract({
+        address: paymentAsset as `0x${string}`,
+        abi: [
+          {
+            name: 'approve',
+            type: 'function',
+            stateMutability: 'nonpayable',
+            inputs: [
+              { name: 'spender', type: 'address' },
+              { name: 'amount', type: 'uint256' },
+            ],
+            outputs: [{ name: '', type: 'bool' }],
+          },
+        ],
+        functionName: 'approve',
+        args: [RAFFLE_MANAGER_ADDRESS, totalPrice],
+      })
 
-        const approveHash = writeContract({
-          address: paymentAsset as `0x${string}`,
-          abi: [
-            {
-              name: 'approve',
-              type: 'function',
-              stateMutability: 'nonpayable',
-              inputs: [
-                { name: 'spender', type: 'address' },
-                { name: 'amount', type: 'uint256' }
-              ],
-              outputs: [{ name: '', type: 'bool' }]
-            }
-          ],
-          functionName: 'approve',
-          args: [RAFFLE_MANAGER_ADDRESS, totalPrice],
-        })
+      console.log('✅ Approval transaction hash:', approveHash)
+      console.log('⏳ Waiting for approval confirmation...')
 
-        console.log('✅ Approval transaction hash:', approveHash)
-        console.log('⏳ Waiting for approval confirmation...')
-
-        // Wait for approval transaction to be mined
-        if (approveHash) {
-          const receipt = await publicClient.waitForTransactionReceipt({
-            hash: approveHash
-          })
-          console.log('✅ Approval confirmed! Receipt:', receipt)
-          console.log('Block number:', receipt.blockNumber)
-          console.log('Gas used:', receipt.gasUsed.toString())
-        }
+      if (approveHash) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash: approveHash })
+        console.log('✅ Approval confirmed! Receipt:', receipt)
       }
 
-      // Calculate gas limit based on ticket count (base: 100k + 50k per ticket)
-      const estimatedGas = BigInt(100000 + (50000 * ticketCount))
+      // Step 2: Enter raffle (not payable in RaffleManager2)
+      const estimatedGas = BigInt(100000 + 50000 * ticketCount)
 
       setCurrentStep('purchasing')
       console.log('🎫 Step 2/2: Entering raffle...')
@@ -157,7 +142,6 @@ export function BuyTicketsModal({
         abi: RaffleManagerABI,
         functionName: 'enterRaffle',
         args: [BigInt(raffleId), BigInt(ticketCount)],
-        value: isNativePayment ? totalPrice : undefined,
         gas: estimatedGas,
       })
 
@@ -196,7 +180,7 @@ export function BuyTicketsModal({
             <img src={prizeImage} alt={prizeTitle} />
           ) : (
             <div className="prize-placeholder">
-              <span className="font-jetbrains text-pure-black/40">No Image</span>
+              <span className="font-jetbrains text-white/30">No Image</span>
             </div>
           )}
         </div>
@@ -204,7 +188,7 @@ export function BuyTicketsModal({
         {/* Prize Title */}
         <div className="modal-prize-title">
           <h3 className="font-syne font-bold text-lg">{prizeTitle}</h3>
-          <p className="font-jetbrains text-xs text-pure-black/50 uppercase">
+          <p className="font-jetbrains text-xs text-white/40 uppercase">
             Collection
           </p>
         </div>
@@ -233,14 +217,14 @@ export function BuyTicketsModal({
 
         {/* Win Chance */}
         <div className="win-chance">
-          <span className="font-jetbrains text-xs text-pure-black/60">
+          <span className="font-jetbrains text-xs text-white/50">
             YOUR CHANCE TO WIN: {winChance}%
           </span>
         </div>
 
         {/* Balance Display */}
         <div className="balance-display">
-          <span className="font-jetbrains text-xs text-pure-black/50">
+          <span className="font-jetbrains text-xs text-white/40">
             Available Balance:
           </span>
           <span className="font-jetbrains text-xs font-bold">
@@ -276,7 +260,7 @@ export function BuyTicketsModal({
         {/* Error Message */}
         {!hasEnoughBalance && (
           <div className="error-message">
-            <span className="font-jetbrains text-xs text-red-600">
+            <span className="font-jetbrains text-xs text-red-400">
               Insufficient {paymentAssetSymbol} balance
             </span>
           </div>
@@ -285,7 +269,7 @@ export function BuyTicketsModal({
         {/* Success Message */}
         {isSuccess && hash && (
           <div className="success-message">
-            <span className="font-jetbrains text-xs text-green-600">
+            <span className="font-jetbrains text-xs text-green-400">
               ✓ Tickets purchased successfully!
             </span>
           </div>

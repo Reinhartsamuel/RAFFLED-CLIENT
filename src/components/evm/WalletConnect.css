@@ -1,32 +1,30 @@
-/* Wallet Connect Component Styles - Neo-Brutalist Theme */
+/* Wallet Connect Component Styles - Dark Neo-Brutalist Theme */
 
 .wallet-connect-btn {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  border: 2px solid #000;
-  background-color: #fff;
-  color: #000;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
 }
 
 .wallet-connect-btn:hover {
-  background-color: #DFFF00;
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
-  transform: translate(-1px, -1px);
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .wallet-connect-btn:active {
-  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.25);
-  transform: translate(1px, 1px);
+  transform: scale(0.98);
 }
 
 .wallet-icon {
@@ -54,21 +52,20 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border: 2px solid #000;
-  background-color: #fff;
-  color: #000;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
+  transition: all 0.15s ease;
 }
 
 .wallet-info-btn:hover {
-  background-color: #DFFF00;
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
-  transform: translate(-1px, -1px);
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .wallet-address {
@@ -85,10 +82,10 @@
   right: 0;
   margin-top: 0.5rem;
   padding: 1rem;
-  border: 2px solid #000;
-  background-color: #fff;
+  border: 1px solid #444;
+  background-color: #232323;
   min-width: 250px;
-  box-shadow: 6px 6px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
   z-index: 1000;
   display: none;
 }
@@ -109,8 +106,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: #000;
-  opacity: 0.6;
+  color: rgba(255, 255, 255, 0.4);
   font-weight: 600;
 }
 
@@ -118,45 +114,45 @@
   font-size: 0.875rem;
   font-family: 'JetBrains Mono', monospace;
   word-break: break-all;
-  color: #000;
+  color: #fff;
 }
 
 .menu-divider {
   height: 1px;
-  background-color: #000;
+  background-color: #333;
   margin: 0.75rem 0;
-  opacity: 0.2;
 }
 
 .menu-action {
   display: block;
   width: 100%;
   padding: 0.625rem 0.75rem;
-  border: 1px solid #000;
+  border: 1px solid #444;
   background-color: transparent;
-  color: #000;
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   cursor: pointer;
   text-align: left;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   margin-bottom: 0.5rem;
 }
 
 .menu-action:hover {
-  background-color: #000;
-  color: #fff;
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .menu-action.disconnect {
-  color: #ff0000;
-  border-color: #ff0000;
+  color: #ff4444;
+  border-color: #ff4444;
 }
 
 .menu-action.disconnect:hover {
-  background-color: #ff0000;
+  background-color: #ff4444;
   color: #fff;
 }
 
@@ -167,28 +163,25 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.625rem 0.875rem;
-  border: 2px solid #ff8800;
-  background-color: #fffacd;
-  color: #000;
+  border: 1px solid #ff8800;
+  background-color: rgba(255, 136, 0, 0.1);
+  color: #ff8800;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  box-shadow: 3px 3px 0 rgba(255, 136, 0, 0.25);
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
   margin-right: 0.5rem;
 }
 
 .chain-switch-btn:hover {
-  box-shadow: 4px 4px 0 rgba(255, 136, 0, 0.4);
-  transform: translate(-1px, -1px);
+  background-color: rgba(255, 136, 0, 0.2);
 }
 
 .chain-switch-btn.warning {
   border-color: #ff8800;
-  background-color: #fff8dc;
 }
 
 /* Status Dot */
@@ -198,13 +191,13 @@
   width: 0.5rem;
   height: 0.5rem;
   border-radius: 50%;
-  background-color: #ccc;
+  background-color: #555;
   margin-right: 0.25rem;
 }
 
 .status-dot.connected-dot {
-  background-color: #00ff00;
-  box-shadow: 0 0 6px rgba(0, 255, 0, 0.6);
+  background-color: #4ade80;
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.6);
 }
 
 .status-dot.warning-dot {
@@ -219,28 +212,29 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid #000;
-  background-color: #fff;
+  border: 1px solid #444;
+  background-color: #232323;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  color: #fff;
 }
 
 .wallet-status.disconnected {
-  border-color: #ccc;
-  color: #999;
+  border-color: #444;
+  color: #666;
 }
 
 .wallet-status.unsupported {
   border-color: #ff8800;
-  background-color: #fff8dc;
+  background-color: rgba(255, 136, 0, 0.1);
   color: #ff8800;
 }
 
 .wallet-status.connected {
-  border-color: #00ff00;
-  color: #00cc00;
+  border-color: #4ade80;
+  color: #4ade80;
 }
 
 .status-text {
@@ -251,28 +245,27 @@
 
 .wallet-btn-minimal {
   padding: 0.5rem 0.875rem;
-  border: 2px solid #000;
-  background-color: #fff;
-  color: #000;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.2s ease;
-  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.2);
+  transition: all 0.15s ease;
 }
 
 .wallet-btn-minimal:hover {
-  background-color: #DFFF00;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.25);
-  transform: translate(-1px, -1px);
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .wallet-btn-minimal.connected {
-  background-color: #f0f0f0;
-  border-color: #000;
+  background-color: #2a2a2a;
+  border-color: #444;
 }
 
 /* Network Selector */
@@ -281,38 +274,39 @@
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 2px solid #000;
-  background-color: #fff;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.15);
+  border: 1px solid #444;
+  background-color: #232323;
 }
 
 .network-btn {
   flex: 1;
   padding: 0.5rem 0.75rem;
-  border: 2px solid #000;
-  background-color: #fff;
-  color: #000;
+  border: 1px solid #444;
+  background-color: #333;
+  color: #fff;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.7rem;
   font-weight: 600;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .network-btn:hover {
-  background-color: #DFFF00;
-  transform: translate(-1px, -1px);
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .network-btn.active {
-  background-color: #DFFF00;
-  box-shadow: inset 2px 2px 0 rgba(0, 0, 0, 0.1);
+  background-color: #FF90E8;
+  color: #000;
+  border-color: #FF90E8;
 }
 
 .network-btn:not(:last-child) {
-  margin-right: -2px;
+  margin-right: -1px;
 }
 
 /* Responsive */
@@ -339,6 +333,6 @@
 
   .network-btn:not(:last-child) {
     margin-right: 0;
-    margin-bottom: -2px;
+    margin-bottom: -1px;
   }
 }
