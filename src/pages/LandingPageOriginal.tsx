@@ -1,126 +1,125 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Ticker } from '../components/landing/Ticker';
+import { motion } from 'framer-motion';
 import { HeroSection } from '../components/landing/HeroSection';
 import { FeatureSection } from '../components/landing/FeatureSection';
 import { Footer } from '../components/landing/Footer';
+import { Button } from '../components/landing/Button';
 import useLenis from '../hooks/useLenis';
+import { staggerContainer, staggerItem } from '../utils/animations';
 
 export const LandingPageOriginal = () => {
   const navigate = useNavigate();
-  // Initialize Lenis smooth scroll
   useLenis();
 
-  // Reset scroll position on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg-white">
-      {/* Sticky Header Container */}
-      <header className="sticky top-0 z-50">
-        {/* Ticker */}
-        <Ticker />
+    <div className="min-h-screen bg-[#050505] text-[#F5F5F5]">
 
-        {/* Navigation */}
-        <nav className="bg-bg-white/80 backdrop-blur-md border-b border-pure-black/10">
-          <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-            <a href="/" className="font-syne font-extrabold text-xl text-pure-black">
-              RAFFLED
+      {/* Sticky Nav */}
+      <header className="sticky top-0 z-50 bg-[#050505]/80 backdrop-blur-xl border-b border-[#1f1f1f]">
+        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+          <a href="/" className="font-sans font-bold text-lg tracking-tight text-[#F5F5F5] select-none">
+            RAFFLED<span className="text-[#FFB800]">.</span>
+          </a>
+          <nav className="flex items-center gap-6">
+            <a href="#features" className="font-mono text-xs uppercase tracking-wider text-[#555555] hover:text-[#FFB800] transition-colors hidden md:block">
+              Features
             </a>
-            <div className="flex items-center gap-6">
-              <a
-                href="#features"
-                className="font-jetbrains text-xs uppercase tracking-wider text-pure-black/70 hover:text-pure-black transition-colors hidden md:block"
-              >
-                Features
-              </a>
-              <a
-                href="#how-it-works"
-                className="font-jetbrains text-xs uppercase tracking-wider text-pure-black/70 hover:text-pure-black transition-colors hidden md:block"
-              >
-                How It Works
-              </a>
-              <button
-                onClick={() => navigate('/app-2')}
-                className="font-jetbrains font-semibold text-xs uppercase tracking-wider px-4 py-2 border border-pure-black bg-bg-white hover:bg-pure-black/[0.05] transition-colors hidden md:block"
-              >
-                App v2
-              </button>
-              <button
-                onClick={() => navigate('/app')}
-                className="font-jetbrains font-semibold text-xs uppercase tracking-wider px-4 py-2 bg-safety-lime rounded-lg hover:bg-[#d4f000] transition-colors"
-              >
-                Launch App
-              </button>
-            </div>
-          </div>
-        </nav>
+            <a href="#how-it-works" className="font-mono text-xs uppercase tracking-wider text-[#555555] hover:text-[#FFB800] transition-colors hidden md:block">
+              How It Works
+            </a>
+            <Button variant="primary" size="sm" onClick={() => navigate('/app')}>
+              Launch App
+            </Button>
+          </nav>
+        </div>
       </header>
 
       {/* Main Content */}
       <main>
-        {/* Hero Section */}
+        {/* Hero */}
         <HeroSection onEnterApp={() => navigate('/app')} />
 
-        {/* Feature Section */}
+        {/* Features */}
         <div id="features">
           <FeatureSection />
         </div>
 
-        {/* How It Works Section */}
-        <section id="how-it-works" className="py-20 md:py-28 bg-gradient-to-b from-safety-lime/20 to-safety-lime/5">
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 md:mb-16">
-              <span className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/50 mb-4 block">
-                How It Works
+        {/* How It Works */}
+        <section id="how-it-works" className="py-24 md:py-32 bg-[#050505] relative">
+          <div className="max-w-5xl mx-auto px-6">
+            <motion.div
+              className="text-center mb-16"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#555555] mb-4 block">
+                Simple Process
               </span>
-              <h2 className="font-syne font-extrabold text-3xl md:text-4xl text-pure-black">
-                3 Simple Steps
+              <h2 className="font-sans font-bold text-4xl md:text-5xl text-[#F5F5F5]">
+                3 Steps to Win
               </h2>
-            </div>
+            </motion.div>
 
-            <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-5 md:gap-6">
-              {/* Step 1 */}
-              <div className="bg-bg-white rounded-2xl p-6 md:p-8 border border-pure-black/10 hover:shadow-xl transition-shadow">
-                <div className="w-14 h-14 bg-cyan-accent rounded-xl flex items-center justify-center mb-5">
-                  <span className="font-syne font-extrabold text-2xl text-pure-black">1</span>
-                </div>
-                <h3 className="font-syne font-bold text-xl mb-3 text-pure-black">
-                  Connect Wallet
-                </h3>
-                <p className="font-jetbrains text-sm text-pure-black/60 leading-relaxed">
-                  Link your Solana or EVM wallet. We support Phantom, Solflare, MetaMask, and more.
-                </p>
-              </div>
-
-              {/* Step 2 */}
-              <div className="bg-bg-white rounded-2xl p-6 md:p-8 border border-pure-black/10 hover:shadow-xl transition-shadow">
-                <div className="w-14 h-14 bg-safety-lime rounded-xl flex items-center justify-center mb-5">
-                  <span className="font-syne font-extrabold text-2xl text-pure-black">2</span>
-                </div>
-                <h3 className="font-syne font-bold text-xl mb-3 text-pure-black">
-                  Buy Tickets
-                </h3>
-                <p className="font-jetbrains text-sm text-pure-black/60 leading-relaxed">
-                  Choose a raffle and purchase tickets. More tickets = higher chance to win.
-                </p>
-              </div>
-
-              {/* Step 3 */}
-              <div className="bg-bg-white rounded-2xl p-6 md:p-8 border border-pure-black/10 hover:shadow-xl transition-shadow">
-                <div className="w-14 h-14 bg-cyan-accent rounded-xl flex items-center justify-center mb-5">
-                  <span className="font-syne font-extrabold text-2xl text-pure-black">3</span>
-                </div>
-                <h3 className="font-syne font-bold text-xl mb-3 text-pure-black">
-                  Win Prizes
-                </h3>
-                <p className="font-jetbrains text-sm text-pure-black/60 leading-relaxed">
-                  VRF selects the winner. Prizes are sent automatically to your wallet.
-                </p>
-              </div>
-            </div>
+            <motion.div
+              className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+              variants={staggerContainer}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true, margin: '-60px' }}
+            >
+              {[
+                {
+                  step: '01',
+                  title: 'Connect Wallet',
+                  description: 'Link your EVM wallet. MetaMask, Coinbase Wallet, and more supported.',
+                  accent: '#FFB800',
+                },
+                {
+                  step: '02',
+                  title: 'Buy Tickets',
+                  description: 'Choose a raffle and purchase tickets with USDC. More tickets = higher win chance.',
+                  accent: '#FF8C00',
+                },
+                {
+                  step: '03',
+                  title: 'Win Prizes',
+                  description: 'Chainlink VRF selects the winner on-chain. Prizes sent automatically.',
+                  accent: '#FF6B00',
+                },
+              ].map((item) => (
+                <motion.div
+                  key={item.step}
+                  variants={staggerItem}
+                  className="relative p-7 rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] group hover:border-[#2a2a2a] transition-colors"
+                >
+                  {/* Step number */}
+                  <div
+                    className="font-mono font-bold text-5xl leading-none mb-6 opacity-20 group-hover:opacity-40 transition-opacity"
+                    style={{ color: item.accent }}
+                  >
+                    {item.step}
+                  </div>
+                  <h3 className="font-sans font-bold text-lg text-[#F5F5F5] mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="font-mono text-sm text-[#555555] leading-relaxed">
+                    {item.description}
+                  </p>
+                  {/* Bottom accent */}
+                  <div
+                    className="absolute bottom-0 left-7 right-7 h-px opacity-0 group-hover:opacity-100 transition-opacity"
+                    style={{ background: `linear-gradient(90deg, transparent, ${item.accent}, transparent)` }}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
         </section>
 
@@ -128,13 +127,12 @@ export const LandingPageOriginal = () => {
         <Footer onEnterApp={() => navigate('/app')} />
       </main>
 
-      {/* Mobile Floating Button */}
-      <button
-        onClick={() => navigate('/app')}
-        className="md:hidden fixed bottom-6 right-6 z-50 font-jetbrains font-semibold text-sm uppercase tracking-wider px-5 py-3 bg-safety-lime rounded-full shadow-lg hover:shadow-xl transition-shadow"
-      >
-        Enter App
-      </button>
+      {/* Mobile floating CTA */}
+      <div className="md:hidden fixed bottom-6 right-6 z-50">
+        <Button variant="primary" size="md" onClick={() => navigate('/app')}>
+          Launch App
+        </Button>
+      </div>
     </div>
   );
 };

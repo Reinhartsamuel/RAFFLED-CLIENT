@@ -1,7 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect } from 'wagmi'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { API_BASE_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
 
@@ -15,8 +16,6 @@ export function Navbar() {
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [autoAuthRan, setAutoAuthRan] = useState(false)
-
-  const activeToken = useMemo(() => getAuthToken(), [authStatus])
 
   const handleSignIn = async (auto = false) => {
     if (!isConnected || !address) {
@@ -88,49 +87,67 @@ export function Navbar() {
   return (
     <>
       {/* Header */}
-      <header className="app-header">
-        <div className="header-content">
-          <div className="logo-section" style={{ cursor: 'pointer' }} onClick={() => navigate('/app')}>
-            <h1 className="logo font-syne font-black text-2xl">
-              RAFFLED
-              <span className="text-safety-lime">.</span>
-              EVM
+      <header className="bg-[#050505]/90 backdrop-blur-xl border-b border-[#1f1f1f] sticky top-0 z-50">
+        <div className="px-6 py-3.5 flex items-center justify-between gap-4">
+          {/* Logo */}
+          <div
+            className="flex flex-col cursor-pointer select-none"
+            onClick={() => navigate('/app')}
+          >
+            <h1 className="font-sans font-bold text-xl tracking-tight text-[#F5F5F5] leading-none">
+              RAFFLED<span className="text-[#FFB800]">.</span>
             </h1>
-            <p className="font-jetbrains text-xs uppercase tracking-widest text-white/40">
-              On-chain raffles powered by Chainlink VRF
+            <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5">
+              On-chain · Chainlink VRF
             </p>
           </div>
 
-          <div className="header-controls">
+          {/* Controls */}
+          <div className="flex items-center gap-3">
             {isConnected && authStatus !== 'ok' && (
               <button
-                className="btn-primary"
+                className="font-mono font-semibold text-xs uppercase tracking-wider px-4 py-2 rounded-md bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={() => handleSignIn(false)}
                 disabled={authStatus === 'loading'}
               >
-                <span className="font-jetbrains text-xs font-bold">
-                  {authStatus === 'loading' ? 'Signing...' : 'Sign In'}
-                </span>
+                {authStatus === 'loading' ? 'Signing...' : 'Sign In'}
               </button>
             )}
             {isConnected && authStatus === 'ok' && (
-              <span className="font-jetbrains text-xs text-white/40">
+              <span className="font-mono text-xs text-[#22C55E] flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
                 Authenticated
               </span>
             )}
-
             <WalletConnect />
           </div>
         </div>
       </header>
 
-      {/* Auth Message */}
-      {authMessage && (
-        <div className={`auth-banner ${authStatus === 'ok' ? 'auth-ok' : 'auth-error'}`}>
-          <p className="font-jetbrains text-xs">{authMessage}</p>
-          <button className="auth-banner-close" onClick={() => setAuthMessage(null)}>✕</button>
-        </div>
-      )}
+      {/* Auth Message Banner */}
+      <AnimatePresence>
+        {authMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -8, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className={`flex items-center justify-between px-6 py-2.5 font-mono text-xs border-b ${
+              authStatus === 'ok'
+                ? 'bg-[#22C55E]/10 text-[#22C55E] border-[#22C55E]/20'
+                : 'bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/20'
+            }`}
+          >
+            <span>{authMessage}</span>
+            <button
+              onClick={() => setAuthMessage(null)}
+              className="opacity-60 hover:opacity-100 transition-opacity ml-4 text-base leading-none"
+            >
+              ×
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

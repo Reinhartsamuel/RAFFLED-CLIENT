@@ -2,18 +2,20 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { formatUnits } from 'viem'
+import { motion } from 'framer-motion'
 import { API_BASE_URL, getAuthToken } from '../config/index'
 import { Layout } from '../components/evm/Layout'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
+import { staggerContainer, staggerItem, fadeInUp } from '../utils/animations'
 
 interface RaffleDetailData {
   id: number
   title: string
   description: string
   prize_type?: 'erc20' | 'erc721'
-  prize_amount: string  // ERC-20: token amount; ERC-721: token ID (as string)
+  prize_amount: string
   prize_asset_symbol: string
   prize_asset_decimals?: number
   ticket_price_usd: string
@@ -43,9 +45,7 @@ export function RaffleDetail() {
   const [error, setError] = useState<string | null>(null)
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [balanceData, setBalanceData] = useState<bigint | null>(null)
-  // const { data: balanceData } = useBalance({
-  //     address: address,
-  //   })
+
   useEffect(() => {
     const fetchRaffleDetail = async () => {
       try {
@@ -53,7 +53,7 @@ export function RaffleDetail() {
         setError(null)
 
         const authToken = getAuthToken()
-        const res = await fetch(`${API_BASE_URL}/raffles/${id}`, {
+        const res = await fetch(`${API_BASE_URL}/raffles/${id as string}`, {
           method: 'GET',
           headers: {
             ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -62,18 +62,17 @@ export function RaffleDetail() {
           },
         })
 
-        if (!res.ok) {
-          throw new Error('Failed to fetch raffle details')
-        }
+        if (!res.ok) throw new Error('Failed to fetch raffle details')
+
         const data = await res.json()
         console.log('Fetched raffle detail:', data)
         setRaffle(data.raffle || null)
 
-        // Fetch user USDC balance (RaffleManager2 uses a fixed paymentToken, always ERC20)
         if (address && data.raffle?.payment_asset && config) {
           try {
+            const paymentAssetAddr = data.raffle.payment_asset as `0x${string}`
             const balance = await readContract(config, {
-              address: data.raffle.payment_asset as `0x${string}`,
+              address: paymentAssetAddr,
               abi: [
                 {
                   name: 'balanceOf',
@@ -84,7 +83,7 @@ export function RaffleDetail() {
                 },
               ],
               functionName: 'balanceOf',
-              args: [address],
+              args: [address as `0x${string}`],
             })
             setBalanceData(balance as bigint)
           } catch (balanceError) {
@@ -99,21 +98,15 @@ export function RaffleDetail() {
       }
     }
 
-    if (id) {
-      fetchRaffleDetail()
-    }
+    if (id) fetchRaffleDetail()
   }, [id, address, config])
 
   if (loading) {
     return (
       <Layout>
-        <div className="raffle-detail-page">
-          <div className="raffle-detail-container">
-            <div className="empty-state">
-              <p className="font-jetbrains text-sm text-white/50">
-                Loading raffle details...
-              </p>
-            </div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
+            Loading raffle...
           </div>
         </div>
       </Layout>
@@ -123,17 +116,14 @@ export function RaffleDetail() {
   if (error || !raffle) {
     return (
       <Layout>
-        <div className="raffle-detail-page">
-          <div className="raffle-detail-container">
-            <div className="empty-state">
-              <p className="font-jetbrains text-sm text-white/50">
-                {error || 'Raffle not found'}
-              </p>
-              <button className="btn-primary mt-4" onClick={() => navigate('/app')}>
-                <span className="font-jetbrains text-sm font-bold">Back to Raffles</span>
-              </button>
-            </div>
-          </div>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 p-8">
+          <p className="font-mono text-sm text-[#555555]">{error || 'Raffle not found'}</p>
+          <button
+            className="font-mono text-xs uppercase tracking-wider px-5 py-2.5 border border-[#2a2a2a] text-[#555555] hover:border-[#FFB800] hover:text-[#FFB800] rounded-lg transition-all"
+            onClick={() => navigate('/app')}
+          >
+            ← Back to Raffles
+          </button>
         </div>
       </Layout>
     )
@@ -143,23 +133,11 @@ export function RaffleDetail() {
     ? ((raffle.tickets_sold || 0) / raffle.max_tickets) * 100
     : 0
 
-  // Determine if raffle is active based on end time and tickets sold
   const now = new Date()
   const endTime = new Date(raffle.ends_at)
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
-
-  // console.log('🎯 Raffle Status Debug:', {
-  //   isSoldOut,
-  //   isExpired,
-  //   isActive,
-  //   ticketsSold: raffle.tickets_sold,
-  //   maxTickets: raffle.max_tickets,
-  //   endsAt: raffle.ends_at,
-  //   ticket_price: raffle.ticket_price_usd,
-  //   paymentAssetSymbol: raffle.payment_asset_symbol
-  // })
 
   const getRaffleStatusText = () => {
     if (isSoldOut) return 'Sold Out'
@@ -175,191 +153,206 @@ export function RaffleDetail() {
 
   return (
     <Layout>
-      <div className="raffle-detail-page">
-        <div className="raffle-detail-container">
-        {/* Header with Back Button */}
-        <div className="detail-header">
+      <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+
+        {/* Header */}
+        <motion.div
+          variants={fadeInUp}
+          initial="initial"
+          animate="animate"
+          className="flex items-center justify-between mb-8 pb-5 border-b border-[#1f1f1f]"
+        >
           <button
-            className="back-button font-jetbrains"
+            className="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#2a2a2a] text-[#999999] hover:border-[#FFB800] hover:text-[#FFB800] rounded-lg transition-all duration-200"
             onClick={() => navigate('/app')}
           >
-            ← Back to Raffles
+            ← Back
           </button>
-          <span className={`raffle-status status-${isActive ? 'active' : 'ended'}`}>
+          <span className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full ${
+            isActive
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/30'
+              : 'bg-[#1f1f1f] text-[#555555] border border-[#1f1f1f]'
+          }`}>
+            {isActive && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#22C55E] mr-1.5 align-middle animate-pulse" />}
             {getRaffleStatusText()}
           </span>
-        </div>
+        </motion.div>
 
-        {/* Main Content Grid */}
-        <div className="detail-content-grid">
-          {/* Left Column - Image */}
-          <div className="detail-image-section">
+        {/* Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+          {/* Left — Image */}
+          <motion.div
+            variants={fadeInUp}
+            initial="initial"
+            animate="animate"
+            className="lg:sticky lg:top-24 h-fit"
+          >
             {raffle.image_url ? (
               <img
                 src={raffle.image_url}
                 alt={raffle.title}
-                className="detail-image"
+                className="w-full aspect-square object-cover rounded-xl border border-[#1f1f1f]"
               />
             ) : (
-              <div className="detail-image-placeholder">
-                <span className="font-jetbrains text-white/30">No Image</span>
+              <div className="w-full aspect-square rounded-xl border border-dashed border-[#2a2a2a] bg-[#0a0a0a] flex items-center justify-center">
+                <span className="font-mono text-xs text-[#333333]">No Image</span>
               </div>
             )}
-          </div>
+          </motion.div>
 
-          {/* Right Column - Details */}
-          <div className="detail-info-section">
-            <h1 className="font-syne font-black text-4xl mb-4">{raffle.title}</h1>
-
-            {raffle.description && (
-              <p className="font-jetbrains text-sm text-white/60 mb-6">
-                {raffle.description}
-              </p>
-            )}
+          {/* Right — Details */}
+          <motion.div
+            className="space-y-4"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {/* Title + Description */}
+            <motion.div variants={staggerItem}>
+              <h1 className="font-sans font-bold text-3xl text-[#F5F5F5] mb-3">{raffle.title}</h1>
+              {raffle.description && (
+                <p className="font-mono text-sm text-[#555555] leading-relaxed">{raffle.description}</p>
+              )}
+            </motion.div>
 
             {/* Prize Info */}
-            <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
+            <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-3">
                 {raffle.prize_type === 'erc721' ? 'NFT Prize' : 'Prize Pool'}
-              </h3>
-              <div className="prize-amount">
+              </p>
+              <div className="flex items-baseline gap-2">
                 {raffle.prize_type === 'erc721' ? (
                   <>
-                    <span className="nft-badge font-jetbrains text-sm font-bold mr-2">NFT</span>
-                    <span className="font-syne font-bold text-3xl">
+                    <span className="inline-flex items-center px-2 py-1 border border-[#FFB800]/40 bg-[#FFB800]/10 text-[#FFB800] font-mono text-xs font-bold rounded mr-1">NFT</span>
+                    <span className="font-sans font-bold text-3xl text-[#F5F5F5]">
                       {raffle.prize_asset_symbol || 'NFT'} #{raffle.prize_amount}
                     </span>
                   </>
                 ) : (
                   <>
-                    <span className="font-syne font-bold text-3xl">
+                    <span
+                      className="font-sans font-bold text-4xl"
+                      style={{
+                        background: 'linear-gradient(135deg, #FF6B00, #FFB800)',
+                        WebkitBackgroundClip: 'text',
+                        WebkitTextFillColor: 'transparent',
+                        backgroundClip: 'text',
+                      }}
+                    >
                       {formatUnits(BigInt(raffle.prize_amount || 0), raffle.prize_asset_decimals || 6)}
                     </span>
-                    <span className="font-jetbrains text-xl text-white/60 ml-2">
-                      {raffle.prize_asset_symbol}
-                    </span>
+                    <span className="font-mono text-xl text-[#555555]">{raffle.prize_asset_symbol}</span>
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Ticket Info */}
-            <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
-                Ticket Information
-              </h3>
-              <div className="detail-stats-grid">
-                <div className="stat-item">
-                  <span className="stat-label">Price per Ticket</span>
-                  <span className="stat-value">${raffle.ticket_price_usd}</span>
+            <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-4">Ticket Information</p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Price per Ticket</p>
+                  <p className="font-mono text-base font-semibold text-[#F5F5F5]">${raffle.ticket_price_usd}</p>
                 </div>
-                <div className="stat-item">
-                  <span className="stat-label">Tickets Sold</span>
-                  <span className="stat-value">
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Tickets Sold</p>
+                  <p className="font-mono text-base font-semibold text-[#F5F5F5]">
                     {raffle.tickets_sold || 0} / {raffle.max_tickets}
-                  </span>
+                  </p>
                 </div>
               </div>
-
-              {/* Progress Bar */}
-              <div className="progress-container">
-                <div className="progress-bar">
+              {/* Progress */}
+              <div className="space-y-1.5">
+                <div className="h-2 w-full rounded-full bg-[#1a1a1a] overflow-hidden">
                   <div
-                    className="progress-fill"
-                    style={{ width: `${ticketsSoldPercent}%` }}
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${ticketsSoldPercent}%`,
+                      background: 'linear-gradient(90deg, #FF6B00, #FFB800)',
+                    }}
                   />
                 </div>
-                <span className="font-jetbrains text-xs text-white/40">
-                  {ticketsSoldPercent.toFixed(1)}% sold
-                </span>
+                <p className="font-mono text-[10px] text-[#333333]">{ticketsSoldPercent.toFixed(1)}% sold</p>
               </div>
-            </div>
+            </motion.div>
 
             {/* Timeline */}
-            <div className="detail-card mb-6">
-              <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
-                Timeline
-              </h3>
-              <div className="detail-stats-grid">
+            <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-4">Timeline</p>
+              <div className="grid grid-cols-2 gap-4">
                 {raffle.created_at && (
-                  <div className="stat-item">
-                    <span className="stat-label">Created</span>
-                    <span className="stat-value">
-                      {new Date(raffle.created_at).toLocaleDateString()}
-                    </span>
+                  <div>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Created</p>
+                    <p className="font-mono text-sm text-[#F5F5F5]">{new Date(raffle.created_at).toLocaleDateString()}</p>
                   </div>
                 )}
-                <div className="stat-item">
-                  <span className="stat-label">Ends</span>
-                  <span className="stat-value">
-                    {new Date(raffle.ends_at).toLocaleDateString()}
-                  </span>
+                <div>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Ends</p>
+                  <p className="font-mono text-sm text-[#F5F5F5]">{new Date(raffle.ends_at).toLocaleDateString()}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            <div className="balance-display">
-              <span className="font-jetbrains text-xs text-white/40">
-                Available Balance:
+            {/* Balance */}
+            <motion.div variants={staggerItem} className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#1f1f1f] bg-[#111111]">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#555555]">Your Balance</span>
+              <span className="font-mono text-sm font-semibold text-[#F5F5F5]">
+                {balanceData ? formatUnits(balanceData, raffle.payment_asset_decimals || 6) : '0'}{' '}
+                <span className="text-[#555555]">{raffle.payment_asset_symbol || 'USDC'}</span>
               </span>
-              <span className="font-jetbrains text-xs font-bold">
-                {balanceData ? formatUnits(balanceData, raffle.payment_asset_decimals || 6) : '0'} {raffle.payment_asset_symbol || 'USDC'}
-              </span>
-            </div>
-            {/* Action Button */}
-            {isConnected ? (
-              <button
-                className="btn-primary w-full"
-                disabled={!isActive}
-                onClick={() => setShowBuyModal(true)}
-              >
-                <span className="font-jetbrains text-sm font-bold">
-                  {getButtonText()}
-                </span>
-                <div className="price-badge">
-                  <img src="/USDC.svg" alt={raffle.payment_asset_symbol || 'USDC'} />
-                  <span className="font-jetbrains text-xs font-bold">
-                    {formatUnits(BigInt(raffle.ticket_price_amount || 0), raffle.payment_asset_decimals || 6)}
-                  </span>
+            </motion.div>
+
+            {/* Buy Button */}
+            <motion.div variants={staggerItem}>
+              {isConnected ? (
+                <button
+                  className={`w-full flex items-center justify-between px-6 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.35)]'
+                      : 'bg-[#111111] text-[#555555] cursor-not-allowed border border-[#1f1f1f]'
+                  }`}
+                  disabled={!isActive}
+                  onClick={() => setShowBuyModal(true)}
+                >
+                  <span>{getButtonText()}</span>
+                  {isActive && (
+                    <div className="flex items-center gap-2 bg-[#050505]/15 rounded-md px-3 py-1">
+                      <img src="/USDC.svg" alt={raffle.payment_asset_symbol || 'USDC'} className="w-4 h-4" />
+                      <span className="text-xs font-bold">
+                        {formatUnits(BigInt(raffle.ticket_price_amount || 0), raffle.payment_asset_decimals || 6)}
+                      </span>
+                    </div>
+                  )}
+                </button>
+              ) : (
+                <div className="border border-dashed border-[#2a2a2a] rounded-lg p-4 text-center">
+                  <p className="font-mono text-xs text-[#333333]">Connect your wallet to buy tickets</p>
                 </div>
-              </button>
-            ) : (
-              <div className="connect-prompt">
-                <p className="font-jetbrains text-xs text-white/50 mb-3">
-                  Connect your wallet to buy tickets
-                </p>
-              </div>
-            )}
+              )}
+            </motion.div>
 
-            {/* Additional Info */}
+            {/* Contract Details */}
             {raffle.contract_address && (
-              <div className="detail-card mt-6">
-                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
-                  Contract Details
-                </h3>
-                <div className="contract-info">
-                  <span className="font-jetbrains text-xs text-white/30" style={{ wordBreak: 'break-all' }}>
-                    {raffle.contract_address}
-                  </span>
+              <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-3">Contract</p>
+                <div className="bg-[#111111] border border-[#1f1f1f] rounded-lg p-3">
+                  <span className="font-mono text-xs text-[#555555] break-all">{raffle.contract_address}</span>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {raffle.prize_tx_hash && (
-              <div className="detail-card mt-4">
-                <h3 className="font-jetbrains text-xs uppercase tracking-widest text-white/40 mb-3">
-                  Prize Transaction
-                </h3>
-                <div className="contract-info">
-                  <span className="font-jetbrains text-xs text-white/30" style={{ wordBreak: 'break-all' }}>
-                    {raffle.prize_tx_hash}
-                  </span>
+              <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-3">Prize Transaction</p>
+                <div className="bg-[#111111] border border-[#1f1f1f] rounded-lg p-3">
+                  <span className="font-mono text-xs text-[#555555] break-all">{raffle.prize_tx_hash}</span>
                 </div>
-              </div>
+              </motion.div>
             )}
-          </div>
+          </motion.div>
         </div>
-      </div>
       </div>
 
       {/* Buy Tickets Modal */}
@@ -377,7 +370,6 @@ export function RaffleDetail() {
           ticketsSold={raffle.tickets_sold || 0}
           onClose={() => setShowBuyModal(false)}
           onSuccess={() => {
-            // Refresh raffle data after successful purchase
             window.location.reload()
           }}
         />

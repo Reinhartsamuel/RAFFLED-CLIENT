@@ -1,133 +1,130 @@
-import { useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion, useInView, type Variants } from 'framer-motion';
+import { useRef } from 'react';
 import solanaLogo from '../../assets/solanaLogoMark.png';
 import baseLogo from '../../assets/base-logo.webp';
-
-gsap.registerPlugin(ScrollTrigger);
 
 const features = [
   {
     title: 'DUAL-CHAIN',
-    description: 'Deploy raffles on Base (EVM) or Solana (SVM). Bridge support coming soon.',
+    description: 'Deploy raffles on Base (EVM). Solana integration coming soon.',
     icon: '⚡',
-    accent: 'bg-safety-lime',
   },
   {
     title: 'VRF SECURED',
-    description: 'Chainlink VRF on Base. Orao VRF on Solana. Provably fair randomness.',
+    description: 'Chainlink VRF on Base for provably fair, tamper-proof randomness.',
     icon: '🔐',
-    accent: 'bg-cyan-accent',
   },
   {
     title: 'INSTANT PAYOUTS',
-    description: 'Winners receive funds automatically. No waiting, no claims needed.',
-    icon: '💸',
-    accent: 'bg-safety-lime',
+    description: 'Winners receive funds automatically. No waiting, no manual claims.',
+    icon: '◎',
   },
   {
     title: 'TRANSPARENT',
-    description: 'All raffle logic on-chain. Verify every ticket, every winner.',
-    icon: '👁️',
-    accent: 'bg-cyan-accent',
+    description: 'All raffle logic is on-chain. Verify every ticket and every winner.',
+    icon: '◈',
   },
 ];
 
+const cardVariants: Variants = {
+  hidden: { opacity: 0, y: 24 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: i * 0.08, ease: 'easeOut' },
+  }),
+};
+
 export const FeatureSection = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const cardsRef = useRef<HTMLDivElement[]>([]);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const cards = cardsRef.current;
-
-    gsap.set(cards, { y: 60, opacity: 0 });
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: containerRef.current,
-        start: 'top 75%',
-        toggleActions: 'play none none reverse',
-      },
-    });
-
-    tl.to(cards, {
-      y: 0,
-      opacity: 1,
-      duration: 0.01,
-      stagger: 0.08,
-      ease: 'power2.out',
-    });
-
-    return () => {
-      tl.kill();
-    };
-  }, []);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
-    <section className="py-20 md:py-28 bg-bg-white border-b-2 border-pure-black">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        {/* Section Header - Centered */}
-        <div className="text-center mb-12 md:mb-16">
-          <span className="inline-block font-jetbrains text-xs uppercase tracking-widest text-pure-black/40 mb-4 font-light">
+    <section className="py-24 md:py-32 bg-[#050505] relative overflow-hidden">
+      {/* Subtle top border glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-20 bg-gradient-to-b from-[#FFB800]/20 to-transparent" />
+
+      <div className="max-w-6xl mx-auto px-6">
+        {/* Section header */}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.6 }}
+        >
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-[#555555] mb-4 block">
             Why Raffled
           </span>
-          <h2 className="font-syne font-black text-4xl md:text-5xl lg:text-6xl text-pure-black leading-tight">
-            The Future of{' '}
-            <span className="bg-safety-lime px-2 border-2 border-pure-black inline-block">
-              On-Chain
+          <h2 className="font-sans font-bold text-4xl md:text-5xl text-[#F5F5F5] leading-tight">
+            The future of{' '}
+            <span
+              style={{
+                background: 'linear-gradient(135deg, #FF6B00, #FFB800)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              on-chain
             </span>{' '}
-            Raffles
+            raffles
           </h2>
-        </div>
+        </motion.div>
 
-        {/* Feature Cards Grid - Full width with max constraint */}
-        <div ref={containerRef} className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6">
-          {features.map((feature, index) => (
+        {/* Feature Cards */}
+        <div ref={ref} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {features.map((feature, i) => (
             <motion.div
               key={feature.title}
-              ref={(el) => {
-                if (el) cardsRef.current[index] = el;
-              }}
-              whileHover={{ x: -4, y: -4 }}
-              className="p-6 md:p-8 group cursor-pointer bg-bg-white border-2 border-pure-black shadow-brutal hover:shadow-brutal-lg transition-all duration-150"
+              custom={i}
+              variants={cardVariants}
+              initial="hidden"
+              animate={isInView ? 'visible' : 'hidden'}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="group p-7 rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] hover:border-[#FFB800]/25 hover:bg-[#0d0d0d] transition-colors duration-300 cursor-default"
             >
               {/* Icon */}
-              <div
-                className={`w-14 h-14 ${feature.accent} border-2 border-pure-black flex items-center justify-center text-2xl mb-6`}
-              >
-                {feature.icon}
+              <div className="w-12 h-12 rounded-lg bg-[#FFB800]/10 border border-[#FFB800]/20 flex items-center justify-center text-xl mb-5 group-hover:bg-[#FFB800]/15 transition-colors">
+                <span>{feature.icon}</span>
               </div>
 
               {/* Title */}
-              <h3 className="font-syne font-black text-xl md:text-2xl text-pure-black mb-3 tracking-tight">
+              <h3 className="font-mono font-bold text-sm uppercase tracking-wider text-[#F5F5F5] mb-2.5">
                 {feature.title}
               </h3>
 
               {/* Description */}
-              <p className="font-jetbrains text-sm text-pure-black/50 leading-relaxed font-light">
+              <p className="font-mono text-sm text-[#555555] leading-relaxed">
                 {feature.description}
               </p>
+
+              {/* Hover accent line */}
+              <div className="mt-5 h-px w-0 bg-gradient-to-r from-[#FF6B00] to-[#FFB800] group-hover:w-full transition-all duration-500" />
             </motion.div>
           ))}
         </div>
 
-        {/* Network Logos */}
-        <div className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-6">
-          <span className="font-jetbrains text-xs uppercase tracking-widest text-pure-black/40 font-light">
+        {/* Network logos */}
+        <motion.div
+          className="mt-16 flex flex-col sm:flex-row items-center justify-center gap-5"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+        >
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#333333]">
             Powered by
           </span>
-          <div className="flex items-center gap-4">
-            <div className="p-4 bg-bg-white border-2 border-pure-black shadow-brutal-sm hover:shadow-brutal transition-all">
-              <img src={baseLogo} alt="Base" className="h-8 w-auto" />
+          <div className="flex items-center gap-3">
+            <div className="px-5 py-3 rounded-lg border border-[#1f1f1f] bg-[#0a0a0a] hover:border-[#2a2a2a] transition-colors">
+              <img src={baseLogo} alt="Base" className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity" />
             </div>
-            <div className="p-4 bg-bg-white border-2 border-pure-black shadow-brutal-sm hover:shadow-brutal transition-all">
-              <img src={solanaLogo} alt="Solana" className="h-8 w-auto" />
+            <div className="px-5 py-3 rounded-lg border border-[#1f1f1f] bg-[#0a0a0a] hover:border-[#2a2a2a] transition-colors">
+              <img src={solanaLogo} alt="Solana" className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity" />
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   );

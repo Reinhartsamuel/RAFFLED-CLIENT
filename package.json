@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/geist-mono": "^5.2.7",
+    "@fontsource/geist-sans": "^5.2.5",
     "@gsap/react": "^2.1.2",
     "@reown/appkit": "1.8.16",
     "@reown/appkit-adapter-solana": "1.8.16",

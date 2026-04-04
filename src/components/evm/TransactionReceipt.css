@@ -1,10 +1,10 @@
-/* Transaction Receipt Component */
+/* Transaction Receipt Component - Dark Tech Theme */
 
 .transaction-receipt {
   position: fixed;
   bottom: 0;
   right: 0;
-  max-width: 500px;
+  max-width: 480px;
   width: calc(100% - 2rem);
   margin: 1rem;
   z-index: 1000;
@@ -12,23 +12,18 @@
 }
 
 @keyframes slideUp {
-  from {
-    transform: translateY(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .receipt-card {
-  border: 1px solid #444;
-  background-color: #232323;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
-  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid #1f1f1f;
+  background-color: #0a0a0a;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  font-family: 'Geist Mono', monospace;
   padding: 1.5rem;
-  color: #fff;
+  color: #F5F5F5;
+  border-radius: 14px;
 }
 
 .receipt-header {
@@ -36,113 +31,113 @@
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  margin-bottom: 1.5rem;
-  border-bottom: 1px solid #333;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid #1f1f1f;
   padding-bottom: 1rem;
 }
 
 .receipt-title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #fff;
+  letter-spacing: 0.08em;
+  color: #F5F5F5;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   cursor: pointer;
   padding: 0;
-  color: rgba(255, 255, 255, 0.6);
+  color: #555555;
   width: 2rem;
   height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.15s ease;
+  border-radius: 6px;
 }
 
 .close-btn:hover {
-  color: #FF90E8;
-  transform: scale(1.1);
+  color: #F5F5F5;
+  background-color: #1a1a1a;
 }
 
 /* Loading State */
 
 .receipt-state.loading {
   text-align: center;
-  padding: 2rem 0;
+  padding: 1.75rem 0;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   margin: 0 auto 1rem;
-  border: 3px solid #444;
-  border-top-color: #FF90E8;
+  border: 2px solid #1f1f1f;
+  border-top-color: #FFB800;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
 
 .receipt-state.loading p {
-  margin: 0 0 1rem 0;
-  font-size: 0.9rem;
+  margin: 0 0 0.75rem 0;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.06em;
+  color: #555555;
 }
 
 /* Success State */
 
 .receipt-state.success {
-  padding: 1rem 0;
+  padding: 0.75rem 0;
 }
 
 .success-icon {
-  font-size: 2rem;
-  color: #4ade80;
+  font-size: 1.75rem;
+  color: #22C55E;
   text-align: center;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .success-text {
-  margin: 0 0 1.5rem 0;
+  margin: 0 0 1.25rem 0;
   text-align: center;
-  font-size: 1rem;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #fff;
+  letter-spacing: 0.06em;
+  color: #F5F5F5;
 }
 
 /* Receipt Details */
 
 .receipt-details {
-  background-color: #1a1a1a;
-  border: 1px solid #333;
+  background-color: #111111;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
   padding: 1rem;
-  margin: 1.5rem 0;
-  max-height: 300px;
+  margin: 1.25rem 0;
+  max-height: 280px;
   overflow-y: auto;
 }
 
 .detail-group {
   display: grid;
-  grid-template-columns: 150px 1fr;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #333;
+  grid-template-columns: 130px 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.875rem;
+  border-bottom: 1px solid #1f1f1f;
   align-items: flex-start;
 }
 
@@ -155,23 +150,24 @@
 .detail-group label {
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  color: #555555;
 }
 
 .detail-group code {
   word-break: break-all;
-  background-color: #232323;
-  padding: 0.5rem;
-  border: 1px solid #333;
-  font-size: 0.8rem;
+  background-color: #0a0a0a;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #1f1f1f;
+  border-radius: 4px;
+  font-size: 0.75rem;
   display: block;
-  color: #fff;
+  color: #F5F5F5;
 }
 
 .status-success {
-  color: #4ade80 !important;
+  color: #22C55E !important;
   font-weight: 700;
 }
 
@@ -187,92 +183,96 @@
   flex: 1;
   display: block;
   word-break: break-all;
-  background-color: #1a1a1a;
-  padding: 0.75rem;
-  border: 1px solid #333;
-  font-size: 0.8rem;
+  background-color: #111111;
+  padding: 0.625rem;
+  border: 1px solid #1f1f1f;
+  border-radius: 6px;
+  font-size: 0.75rem;
   line-height: 1.4;
-  max-height: 150px;
+  max-height: 130px;
   overflow-y: auto;
-  color: #fff;
+  color: #999999;
 }
 
 .copy-btn {
   flex-shrink: 0;
   background: none;
-  border: 1px solid #444;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
   padding: 0.5rem 0.75rem;
   cursor: pointer;
-  font-size: 1rem;
+  font-size: 0.9rem;
   transition: all 0.15s ease;
-  color: #fff;
+  color: #555555;
 }
 
 .copy-btn:hover {
-  background-color: #FF90E8;
-  color: #000;
-  border-color: #FF90E8;
+  background-color: #FFB800;
+  color: #050505;
+  border-color: #FFB800;
 }
 
 /* Block Explorer Link */
 
 .block-explorer-link {
   display: inline-block;
-  margin-top: 1rem;
-  padding: 0.75rem 1.25rem;
-  background-color: #FF90E8;
+  margin-top: 0.875rem;
+  padding: 0.7rem 1.1rem;
+  background-color: #FFB800;
   border: none;
-  color: #000;
+  border-radius: 8px;
+  color: #050505;
   text-decoration: none;
   font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .block-explorer-link:hover {
-  background-color: #ffa8ee;
-  transform: scale(1.01);
+  background-color: #FFCC33;
+  box-shadow: 0 0 16px rgba(255, 184, 0, 0.3);
 }
 
 /* Error State */
 
 .receipt-state.error {
   text-align: center;
-  padding: 1.5rem 0;
+  padding: 1.25rem 0;
 }
 
 .error-icon {
-  font-size: 2rem;
-  color: #ff4444;
+  font-size: 1.75rem;
+  color: #EF4444;
   text-align: center;
   margin-bottom: 0.5rem;
   font-weight: 700;
 }
 
 .error-text {
-  margin: 0 0 1rem 0;
-  font-size: 1rem;
+  margin: 0 0 0.875rem 0;
+  font-size: 0.875rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #ff4444;
+  letter-spacing: 0.06em;
+  color: #EF4444;
 }
 
 .error-details {
-  background-color: rgba(255, 68, 68, 0.1);
-  border: 1px solid #ff4444;
-  padding: 1rem;
-  margin: 1rem 0;
+  background-color: rgba(239, 68, 68, 0.06);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  margin: 0.875rem 0;
   text-align: left;
 }
 
 .error-details p {
   margin: 0;
-  color: #ff4444;
-  font-size: 0.9rem;
+  color: #EF4444;
+  font-size: 0.8rem;
   word-break: break-word;
 }
 
@@ -286,7 +286,7 @@
   }
 
   .receipt-card {
-    padding: 1rem;
+    padding: 1.25rem;
   }
 
   .detail-group {
@@ -294,6 +294,6 @@
   }
 
   .detail-group label {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.2rem;
   }
 }

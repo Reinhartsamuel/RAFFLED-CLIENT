@@ -2,7 +2,6 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useChainId, useSwitchChain } from 'wagmi'
 import { baseSepolia, base } from '@reown/appkit/networks'
 import { formatAddress, isSupportedChain } from '../../utils/evm.utils'
-import './WalletConnect.css'
 
 export function WalletConnect() {
   const { open } = useAppKit()
@@ -14,55 +13,38 @@ export function WalletConnect() {
 
   if (!isConnected) {
     return (
-      <button className="wallet-connect-btn" onClick={() => open({ view: 'Connect' })}>
-        <span className="wallet-icon">🔗</span>
-        <span className="wallet-text">Connect Wallet</span>
+      <button
+        className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs uppercase tracking-wider hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200"
+        onClick={() => open({ view: 'Connect' })}
+      >
+        <span className="text-base leading-none">⬡</span>
+        <span>Connect Wallet</span>
       </button>
     )
   }
 
   return (
-    <div className="wallet-connected">
+    <div className="flex items-center gap-2">
       {!isSupported && (
         <button
-          className="chain-switch-btn warning"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B] font-mono text-xs hover:bg-[#F59E0B]/20 transition-all duration-200"
           onClick={() => switchChain({ chainId: baseSepolia.id })}
         >
-          <span className="status-dot warning-dot"></span>
+          <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
           Switch to Base
         </button>
       )}
 
       <button
-        className="wallet-info-btn"
+        className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs hover:border-[#FFB800]/40 transition-all duration-200"
         onClick={() => open({ view: 'Account' })}
         title={address}
       >
-        <span className="wallet-icon">👤</span>
-        <span className="wallet-address">{address ? formatAddress(address as `0x${string}`) : 'Unknown'}</span>
+        <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+        <span className="text-[#999999]">
+          {address ? formatAddress(address as `0x${string}`) : 'Unknown'}
+        </span>
       </button>
-
-      {address && (
-        <div className="wallet-menu">
-          <div className="menu-item">
-            <span className="label">Address:</span>
-            <span className="value">{address}</span>
-          </div>
-          <div className="menu-divider"></div>
-          <button
-            className="menu-action"
-            onClick={() => open({ view: 'Networks' })}
-          >
-            Switch Network
-          </button>
-          <button
-            className="menu-action disconnect"
-            onClick={() => open({ view: 'Account' })}
-          >
-            Disconnect
-          </button>
-        </div>
-      )}
     </div>
   )
 }
@@ -76,7 +58,10 @@ export function WalletConnectMinimal() {
 
   if (!isConnected) {
     return (
-      <button className="wallet-btn-minimal" onClick={() => open({ view: 'Connect' })}>
+      <button
+        className="px-3 py-1.5 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200"
+        onClick={() => open({ view: 'Connect' })}
+      >
         Connect
       </button>
     )
@@ -84,10 +69,13 @@ export function WalletConnectMinimal() {
 
   return (
     <button
-      className="wallet-btn-minimal connected"
+      className="flex items-center gap-2 px-3 py-1.5 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] font-mono text-xs hover:border-[#FFB800]/40 transition-all duration-200"
       onClick={() => open({ view: 'Account' })}
     >
-      {address ? formatAddress(address as `0x${string}`, 3) : 'Connected'}
+      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+      <span className="text-[#999999]">
+        {address ? formatAddress(address as `0x${string}`, 3) : 'Connected'}
+      </span>
     </button>
   )
 }
@@ -102,26 +90,26 @@ export function WalletStatus() {
 
   if (!isConnected) {
     return (
-      <div className="wallet-status disconnected">
-        <span className="status-dot"></span>
-        <span className="status-text">Not Connected</span>
+      <div className="flex items-center gap-1.5 font-mono text-xs text-[#555555]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#555555]" />
+        Not Connected
       </div>
     )
   }
 
   if (!isSupported) {
     return (
-      <div className="wallet-status unsupported">
-        <span className="status-dot warning-dot"></span>
-        <span className="status-text">Unsupported Network</span>
+      <div className="flex items-center gap-1.5 font-mono text-xs text-[#F59E0B]">
+        <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
+        Unsupported Network
       </div>
     )
   }
 
   return (
-    <div className="wallet-status connected">
-      <span className="status-dot connected-dot"></span>
-      <span className="status-text">Connected</span>
+    <div className="flex items-center gap-1.5 font-mono text-xs text-[#22C55E]">
+      <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
+      Connected
     </div>
   )
 }
@@ -134,15 +122,23 @@ export function NetworkSelector() {
   const { switchChain } = useSwitchChain()
 
   return (
-    <div className="network-selector">
+    <div className="flex items-center gap-2">
       <button
-        className={`network-btn ${chainId === baseSepolia.id ? 'active' : ''}`}
+        className={`px-3 py-1.5 rounded-md border font-mono text-xs transition-all duration-200 ${
+          chainId === baseSepolia.id
+            ? 'border-[#FFB800] bg-[#FFB800]/10 text-[#FFB800]'
+            : 'border-[#2a2a2a] bg-[#0a0a0a] text-[#555555] hover:border-[#FFB800]/40 hover:text-[#F5F5F5]'
+        }`}
         onClick={() => switchChain({ chainId: baseSepolia.id })}
       >
         Base Sepolia
       </button>
       <button
-        className={`network-btn ${chainId === base.id ? 'active' : ''}`}
+        className={`px-3 py-1.5 rounded-md border font-mono text-xs transition-all duration-200 ${
+          chainId === base.id
+            ? 'border-[#FFB800] bg-[#FFB800]/10 text-[#FFB800]'
+            : 'border-[#2a2a2a] bg-[#0a0a0a] text-[#555555] hover:border-[#FFB800]/40 hover:text-[#F5F5F5]'
+        }`}
         onClick={() => switchChain({ chainId: base.id })}
       >
         Base

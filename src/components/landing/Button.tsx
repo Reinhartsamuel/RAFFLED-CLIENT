@@ -1,7 +1,7 @@
-import { useRef, type ReactNode, type ButtonHTMLAttributes } from 'react';
-import { useJitterEffect } from '../../hooks/useGSAP';
+import { type ReactNode } from 'react';
+import { motion, type HTMLMotionProps } from 'framer-motion';
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   children: ReactNode;
   variant?: 'primary' | 'secondary' | 'outline';
   size?: 'sm' | 'md' | 'lg';
@@ -14,40 +14,28 @@ export const Button = ({
   className = '',
   ...props
 }: ButtonProps) => {
-  const { elementRef, startJitter, stopJitter } = useJitterEffect();
-  const buttonRef = useRef<HTMLButtonElement>(null);
-
-  const baseStyles =
-    'font-jetbrains font-black uppercase tracking-wider border-2 border-pure-black transition-all duration-150';
-
   const variants = {
-    primary:
-      'bg-safety-lime text-pure-black shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none',
-    secondary:
-      'bg-cyan-accent text-pure-black shadow-brutal hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-sm active:translate-x-[4px] active:translate-y-[4px] active:shadow-none',
-    outline:
-      'bg-bg-white text-pure-black shadow-brutal hover:bg-pure-black hover:text-bg-white hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-brutal-sm',
+    primary: 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.25)] hover:shadow-[0_0_30px_rgba(255,184,0,0.4)]',
+    secondary: 'bg-[#FF6B00] text-white hover:bg-[#FF8C00] shadow-[0_0_20px_rgba(255,107,0,0.2)]',
+    outline: 'bg-transparent border border-white/20 text-[#F5F5F5] hover:border-[#FFB800] hover:text-[#FFB800]',
   };
 
   const sizes = {
     sm: 'px-4 py-2 text-xs',
-    md: 'px-6 py-3 text-sm',
-    lg: 'px-8 py-4 text-base',
+    md: 'px-6 py-2.5 text-sm',
+    lg: 'px-8 py-3.5 text-sm',
   };
 
   return (
-    <button
-      ref={(el) => {
-        (buttonRef as React.MutableRefObject<HTMLButtonElement | null>).current = el;
-        (elementRef as React.MutableRefObject<HTMLElement | null>).current = el;
-      }}
-      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
-      onMouseEnter={startJitter}
-      onMouseLeave={stopJitter}
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ duration: 0.15 }}
+      className={`font-mono font-bold uppercase tracking-wider rounded-md transition-all duration-200 ${variants[variant]} ${sizes[size]} ${className}`}
       {...props}
     >
       {children}
-    </button>
+    </motion.button>
   );
 };
 
