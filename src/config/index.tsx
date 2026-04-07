@@ -23,7 +23,7 @@ export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [solana, solanaTest
 // Set up Solana Adapter
 export const solanaWeb3JsAdapter = new SolanaAdapter()
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
+export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 export const getAuthToken = () => {
   const token = localStorage.getItem('access_token')

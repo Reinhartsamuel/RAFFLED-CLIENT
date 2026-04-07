@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { formatUnits } from 'viem'
 import { motion } from 'framer-motion'
-import { API_BASE_URL, getAuthToken } from '../config/index'
+import { BACKEND_URL, getAuthToken } from '../config/index'
 import { Layout } from '../components/evm/Layout'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { useConfig } from 'wagmi'
@@ -53,7 +53,7 @@ export function RaffleDetail() {
         setError(null)
 
         const authToken = getAuthToken()
-        const res = await fetch(`${API_BASE_URL}/raffles/${id as string}`, {
+        const res = await fetch(`${BACKEND_URL}/raffles/${id as string}`, {
           method: 'GET',
           headers: {
             ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),

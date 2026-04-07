@@ -5,7 +5,7 @@ import { parseUnits, type Address } from 'viem'
 import { useCreateRaffleERC20, useCreateRaffleERC721 } from '../../hooks/useRaffleContract'
 import { useTokenApproval, useTokenDecimals, useTokenBalance, useNFTApproval } from '../../hooks/useTokenApproval'
 import { getRaffleManagerAddress, getMockUSDCAddress } from '../../config/evm.config'
-import { API_BASE_URL, getAuthToken } from '../../config/index'
+import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { TransactionReceipt } from './TransactionReceipt'
 import { PrizeType } from '../../types/evm.types'
 import './CreateRaffleModal.css'
@@ -135,7 +135,7 @@ export function CreateRaffleModal({ onClose }: CreateRaffleModalProps) {
       }
 
       const token = getAuthToken()
-      const res = await fetch(`${API_BASE_URL}/raffles`, {
+      const res = await fetch(`${BACKEND_URL}/raffles`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
