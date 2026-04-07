@@ -88,12 +88,6 @@ export function Navbar() {
     <>
       {/* Header */}
       <header className="bg-[#050505]/90 backdrop-blur-xl border-b border-[#1f1f1f] sticky top-0 z-50">
-       <button
-                className="font-mono font-semibold text-xs uppercase tracking-wider px-4 py-2 rounded-md bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => console.log(BACKEND_URL)}
-              >
-                test
-              </button>
         <div className="px-6 py-3.5 flex items-center justify-between gap-4">
           {/* Logo */}
           <div

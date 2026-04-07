@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '../../utils/animations';
-import { ShaderGradientCanvas, ShaderGradient } from '@shadergradient/react';
 import { Button } from './Button';
 
 interface HeroSectionProps {
@@ -9,45 +7,8 @@ interface HeroSectionProps {
 }
 
 export const HeroSection = ({ onEnterApp }: HeroSectionProps) => {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
-      {/* ShaderGradient background */}
-      {mounted && <ShaderGradientCanvas lazyLoad={false} style={{ position: 'absolute', inset: 0, zIndex: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-        <ShaderGradient
-          animate="on"
-          brightness={1.1}
-          cAzimuthAngle={180}
-          cDistance={3.6}
-          cPolarAngle={90}
-          cameraZoom={1}
-          color1="#002900"
-          color2="#2b0000"
-          color3="#000015"
-          envPreset="city"
-          lightType="3d"
-          positionX={-1.4}
-          positionY={0}
-          positionZ={0}
-          reflection={0.1}
-          rotationX={0}
-          rotationY={10}
-          rotationZ={50}
-          type="plane"
-          uAmplitude={1}
-          uDensity={1.3}
-          uFrequency={5.5}
-          uSpeed={0.1}
-          uStrength={4}
-          uTime={0}
-          wireframe={false}
-        />
-      </ShaderGradientCanvas>}
 
       {/* Radial vignette overlay */}
       <div className="absolute inset-0 bg-radial-gradient pointer-events-none" style={{
