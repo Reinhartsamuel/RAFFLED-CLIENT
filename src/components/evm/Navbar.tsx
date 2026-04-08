@@ -110,15 +110,22 @@ export function Navbar() {
         <div className="px-6 py-3.5 flex items-center justify-between gap-4">
           {/* Logo */}
           <div
-            className="flex flex-col cursor-pointer select-none"
+            className="flex items-center gap-3 cursor-pointer select-none"
             onClick={() => navigate('/app')}
           >
-            <h1 className="font-sans font-bold text-xl tracking-tight text-[#F5F5F5] leading-none">
-              RAFFLED<span className="text-[#FFB800]">.</span>
-            </h1>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5">
-              On-chain · Chainlink VRF
-            </p>
+            <img
+              src="/useRaffled.webp"
+              alt="Raffled"
+              className="w-9 h-9 rounded-md object-cover"
+            />
+            <div className="flex flex-col">
+              <h1 className="font-sans font-bold text-xl tracking-tight text-[#F5F5F5] leading-none">
+                RAFFLED<span className="text-[#FFB800]">.</span>
+              </h1>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5">
+                On-chain · Chainlink VRF
+              </p>
+            </div>
           </div>
 
           {/* Controls */}

@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { staggerContainer, staggerItem } from '../../utils/animations';
 import { Button } from './Button';
+import { FloatingCoins } from './FloatingCoins';
 
 interface HeroSectionProps {
   onEnterApp: () => void;
@@ -10,9 +11,12 @@ export const HeroSection = ({ onEnterApp }: HeroSectionProps) => {
   return (
     <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden">
 
-      {/* Radial vignette overlay */}
-      <div className="absolute inset-0 bg-radial-gradient pointer-events-none" style={{
-        background: 'radial-gradient(ellipse 80% 60% at 50% 50%, transparent 0%, #050505 100%)'
+      {/* Floating coins — layered 3D depth, scroll-reactive */}
+      <FloatingCoins />
+
+      {/* Centered text-halo — darkens ONLY behind the headline so coins stay prominent at edges */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse 45% 35% at 50% 50%, rgba(5,5,5,0.75) 0%, rgba(5,5,5,0.4) 50%, transparent 85%)'
       }} />
 
       {/* Content */}

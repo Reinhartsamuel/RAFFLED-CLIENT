@@ -113,15 +113,12 @@ export const FeatureSection = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
-          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#333333]">
+          <span className="font-mono text-[20px] uppercase tracking-[0.2em] text-[#666666]">
             Powered by
           </span>
           <div className="flex items-center gap-3">
             <div className="px-5 py-3 rounded-lg border border-[#1f1f1f] bg-[#0a0a0a] hover:border-[#2a2a2a] transition-colors">
-              <img src={baseLogo} alt="Base" className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity" />
-            </div>
-            <div className="px-5 py-3 rounded-lg border border-[#1f1f1f] bg-[#0a0a0a] hover:border-[#2a2a2a] transition-colors">
-              <img src={solanaLogo} alt="Solana" className="h-6 w-auto opacity-70 hover:opacity-100 transition-opacity" />
+              <img src={baseLogo} alt="Base" className="h-30 w-auto opacity-80 hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </motion.div>

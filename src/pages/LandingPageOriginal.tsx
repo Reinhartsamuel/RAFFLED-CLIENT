@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { HeroSection } from '../components/landing/HeroSection';
 import { FeatureSection } from '../components/landing/FeatureSection';
+import { RaffleShowcase } from '../components/landing/RaffleShowcase';
 import { Footer } from '../components/landing/Footer';
 import { Button } from '../components/landing/Button';
 import useLenis from '../hooks/useLenis';
@@ -29,6 +30,9 @@ export const LandingPageOriginal = () => {
             <a href="#features" className="font-mono text-xs uppercase tracking-wider text-[#555555] hover:text-[#FFB800] transition-colors hidden md:block">
               Features
             </a>
+            <a href="#live-raffles" className="font-mono text-xs uppercase tracking-wider text-[#555555] hover:text-[#FFB800] transition-colors hidden md:block">
+              Live Raffles
+            </a>
             <a href="#how-it-works" className="font-mono text-xs uppercase tracking-wider text-[#555555] hover:text-[#FFB800] transition-colors hidden md:block">
               How It Works
             </a>
@@ -48,6 +52,9 @@ export const LandingPageOriginal = () => {
         <div id="features">
           <FeatureSection />
         </div>
+
+        {/* Live Raffles showcase — pulls from backend, routes to /app/raffle/:id on click */}
+        <RaffleShowcase />
 
         {/* How It Works */}
         <section id="how-it-works" className="py-24 md:py-32 bg-[#050505] relative">

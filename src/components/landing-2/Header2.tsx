@@ -4,8 +4,15 @@ const Header2 = () => {
     return (
         <header className="fixed top-0 left-0 w-full z-50">
             <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between">
-                <a href="/" className="font-syne font-extrabold text-xl text-white">
-                    RAFFLED
+                <a href="/" className="flex items-center gap-3">
+                    <img
+                        src="/useRaffled.webp"
+                        alt="Raffled"
+                        className="w-9 h-9 rounded-md object-cover"
+                    />
+                    <span className="font-syne font-extrabold text-xl text-white">
+                        RAFFLED<span className="text-[#FFB800]">.</span>
+                    </span>
                 </a>
                 <div className="flex items-center gap-6">
                     <a
