@@ -3,12 +3,18 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { formatUnits } from 'viem'
 import { motion } from 'framer-motion'
-import { BACKEND_URL, getAuthToken } from '../config/index'
+import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { Layout } from '../components/evm/Layout'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, staggerItem, fadeInUp } from '../utils/animations'
+
+interface LeaderboardEntry {
+  rank: number
+  address: string
+  tickets_count: number
+}
 
 interface RaffleDetailData {
   id: number
@@ -45,6 +51,8 @@ export function RaffleDetail() {
   const [error, setError] = useState<string | null>(null)
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [balanceData, setBalanceData] = useState<bigint | null>(null)
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
 
   useEffect(() => {
     const fetchRaffleDetail = async () => {
@@ -53,7 +61,7 @@ export function RaffleDetail() {
         setError(null)
 
         const authToken = getAuthToken()
-        const res = await fetch(`${BACKEND_URL}/raffles/${id as string}`, {
+        const res = await apiFetch(`${BACKEND_URL}/raffles/${id as string}`, {
           method: 'GET',
           headers: {
             ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -66,11 +74,39 @@ export function RaffleDetail() {
 
         const data = await res.json()
         console.log('Fetched raffle detail:', data)
-        setRaffle(data.raffle || null)
+        const raw = data.raffle
+        if (raw) {
+          const normalized: RaffleDetailData = {
+            id: raw.id,
+            title: raw.title,
+            description: raw.description,
+            prize_type: raw.type === 'nft' ? 'erc721' : 'erc20',
+            prize_amount: raw.prize_amount_or_token_id ?? raw.prize_amount ?? '0',
+            prize_asset_symbol: raw.prize_asset_symbol ?? '',
+            prize_asset_decimals: Number(raw.prize_asset_decimals ?? 6),
+            ticket_price_usd: raw.ticket_price_usd ?? '0',
+            ticket_price_amount: raw.ticket_price_amount ?? '0',
+            max_tickets: Number(raw.max_tickets ?? 0),
+            tickets_sold: Number(raw.sold_tickets ?? raw.tickets_sold ?? 0),
+            ends_at: raw.expire_at ?? raw.ends_at ?? '',
+            status: raw.status ?? '',
+            image_url: raw.image_url,
+            prize_tx_hash: raw.raffle_tx_hash ?? raw.prize_tx_hash,
+            contract_address: raw.contract_address,
+            creator_address: raw.owner_address ?? raw.creator_address,
+            created_at: raw.created_at,
+            payment_asset: raw.prize_asset ?? raw.payment_asset ?? '',
+            payment_asset_symbol: raw.prize_asset_symbol ?? raw.payment_asset_symbol ?? 'USDC',
+            payment_asset_decimals: Number(raw.prize_asset_decimals ?? raw.payment_asset_decimals ?? 6),
+          }
+          setRaffle(normalized)
+        } else {
+          setRaffle(null)
+        }
 
-        if (address && data.raffle?.payment_asset && config) {
+        if (address && (raw?.prize_asset || raw?.payment_asset) && config) {
           try {
-            const paymentAssetAddr = data.raffle.payment_asset as `0x${string}`
+            const paymentAssetAddr = (raw.prize_asset ?? raw.payment_asset) as `0x${string}`
             const balance = await readContract(config, {
               address: paymentAssetAddr,
               abi: [
@@ -100,6 +136,32 @@ export function RaffleDetail() {
 
     if (id) fetchRaffleDetail()
   }, [id, address, config])
+
+  useEffect(() => {
+    if (!id) return
+    const fetchLeaderboard = async () => {
+      setLeaderboardLoading(true)
+      try {
+        const res = await apiFetch(`${BACKEND_URL}/raffles/${id}/leaderboard?per_page=10`, {
+          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        })
+        if (!res.ok) return
+        const data = await res.json()
+        console.log('Leaderboard raw:', data)
+        const entries: LeaderboardEntry[] = (data.data || []).map((item: Record<string, unknown>, index: number) => ({
+          rank: (item.rank as number) ?? index + 1,
+          address: (item.address ?? item.wallet_address ?? item.buyer_address ?? item.user_address ?? '') as string,
+          tickets_count: (item.tickets_count ?? item.ticket_count ?? item.tickets ?? item.count ?? 0) as number,
+        }))
+        setLeaderboard(entries)
+      } catch (err) {
+        console.error('Error fetching leaderboard:', err)
+      } finally {
+        setLeaderboardLoading(false)
+      }
+    }
+    fetchLeaderboard()
+  }, [id])
 
   if (loading) {
     return (
@@ -351,6 +413,45 @@ export function RaffleDetail() {
                 </div>
               </motion.div>
             )}
+
+            {/* Leaderboard */}
+            <motion.div variants={staggerItem} className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-4">Top Ticket Holders</p>
+              {leaderboardLoading ? (
+                <p className="font-mono text-xs text-[#333333] animate-pulse">Loading...</p>
+              ) : leaderboard.length === 0 ? (
+                <p className="font-mono text-xs text-[#333333]">No tickets purchased yet.</p>
+              ) : (
+                <div className="space-y-2">
+                  {leaderboard.map((entry) => (
+                    <div
+                      key={entry.address}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1f1f1f]"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className={`font-mono text-xs font-bold w-5 text-center ${
+                          entry.rank === 1 ? 'text-[#FFB800]' :
+                          entry.rank === 2 ? 'text-[#aaaaaa]' :
+                          entry.rank === 3 ? 'text-[#cd7f32]' :
+                          'text-[#333333]'
+                        }`}>
+                          {entry.rank === 1 ? '1st' : entry.rank === 2 ? '2nd' : entry.rank === 3 ? '3rd' : `${entry.rank}`}
+                        </span>
+                        <span className="font-mono text-xs text-[#555555]">
+                          {entry.address ? `${entry.address.slice(0, 6)}…${entry.address.slice(-4)}` : '—'}
+                        </span>
+                        {address && entry.address && entry.address.toLowerCase() === address.toLowerCase() && (
+                          <span className="font-mono text-[9px] uppercase tracking-wider text-[#FFB800] border border-[#FFB800]/30 rounded px-1">You</span>
+                        )}
+                      </div>
+                      <span className="font-mono text-xs font-semibold text-[#F5F5F5]">
+                        {entry.tickets_count} {entry.tickets_count === 1 ? 'ticket' : 'tickets'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
           </motion.div>
         </div>
       </div>

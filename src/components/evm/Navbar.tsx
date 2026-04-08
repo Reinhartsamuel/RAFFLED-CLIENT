@@ -17,6 +17,12 @@ export function Navbar() {
   const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [autoAuthRan, setAutoAuthRan] = useState(false)
 
+  useEffect(() => {
+    if (!authMessage) return
+    const timer = setTimeout(() => setAuthMessage(null), 10000)
+    return () => clearTimeout(timer)
+  }, [authMessage])
+
   const handleSignIn = async (auto = false) => {
     if (!isConnected || !address) {
       if (!auto) open()
@@ -62,6 +68,19 @@ export function Navbar() {
       }
     }
   }
+
+  // Disconnect + clear state when any API call returns 401
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      localStorage.removeItem('access_token')
+      setAutoAuthRan(false)
+      setAuthStatus('idle')
+      setAuthMessage(null)
+      try { disconnect() } catch { /* ignore */ }
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [disconnect])
 
   // Auto sign-in when wallet connects
   useEffect(() => {

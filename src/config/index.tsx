@@ -33,3 +33,21 @@ export const getAuthToken = () => {
   }
   return token
 }
+
+export const clearAuthToken = () => {
+  localStorage.removeItem('access_token')
+}
+
+/**
+ * Drop-in replacement for fetch that automatically handles 401 responses.
+ * On 401 it clears the stored auth token and fires an 'auth:unauthorized'
+ * DOM event so the Navbar can disconnect the wallet.
+ */
+export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const response = await fetch(input, init)
+  if (response.status === 401) {
+    clearAuthToken()
+    window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+  }
+  return response
+}

@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "59c5aa92-3c11-4ab5-a6fb-2fe2e9cbc103",
+        "_postman_id": "3c4e00b0-adf8-431f-8a63-4f98db1e1456",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -254,6 +254,12 @@
                             "path": "api\/raffles",
                             "query": [
                                 {
+                                    "key": "owner_address",
+                                    "value": "0x280ed",
+                                    "description": "Filter by creator.",
+                                    "disabled": false
+                                },
+                                {
                                     "key": "type",
                                     "value": "nft",
                                     "description": "Filter by type (nft, crypto).",
@@ -274,7 +280,7 @@
                                 {
                                     "key": "sort_by",
                                     "value": "consequatur",
-                                    "description": "Sort column (contract_raffle_id, created_at, expire_at, sold_tickets, max_tickets, prize_amount). Default: contract_raffle_id",
+                                    "description": "Sort column (contract_raffle_id, created_at, expire_at, sold_tickets, max_tickets, prize_amount_or_token_id). Default: contract_raffle_id",
                                     "disabled": false
                                 },
                                 {
@@ -284,7 +290,7 @@
                                     "disabled": false
                                 }
                             ],
-                            "raw": "{{baseUrl}}\/api\/raffles?type=nft&status=consequatur&search=giveaway&sort_by=consequatur&sort_dir=consequatur"
+                            "raw": "{{baseUrl}}\/api\/raffles?owner_address=0x280ed&type=nft&status=consequatur&search=giveaway&sort_by=consequatur&sort_dir=consequatur"
                         },
                         "method": "GET",
                         "header": [
@@ -471,6 +477,156 @@
                             "header": [],
                             "code": 200,
                             "body": "{\"raffle\":{}}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "description": "",
+            "item": [
+                {
+                    "name": "List users.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/users",
+                            "query": [
+                                {
+                                    "key": "address",
+                                    "value": "0x123abc...",
+                                    "description": "Filter by wallet address.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "consequatur",
+                                    "description": "Sort column (created_at). Default: created_at.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_dir",
+                                    "value": "consequatur",
+                                    "description": "Sort direction (asc, desc). Default: desc.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/users?address=0x123abc...&sort_by=consequatur&sort_dir=consequatur"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Show user details.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/users\/:user_address",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/users\/:user_address",
+                            "variable": [
+                                {
+                                    "id": "user_address",
+                                    "key": "user_address",
+                                    "value": "0x280ed4fbbbe9ccb25b9de910638efd7920023998",
+                                    "description": ""
+                                },
+                                {
+                                    "id": "user",
+                                    "key": "user",
+                                    "value": "0x...",
+                                    "description": "User address."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update current user's profile.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/user",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/user"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "profile_picture",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"data\":{}}",
                             "name": ""
                         }
                     ]

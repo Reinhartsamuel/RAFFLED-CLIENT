@@ -5,7 +5,7 @@ import { WagmiProvider } from 'wagmi'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { wagmiConfig, queryClient, networks } from './config/evm.config'
-import { BACKEND_URL, getAuthToken } from './config/index'
+import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
 import { WalletConnect } from './components/evm/WalletConnect'
 import { CreateRaffleModal } from './components/evm/CreateRaffleModal'
 import { useRaffleCount } from './hooks/useRaffleContract'
@@ -41,7 +41,7 @@ export function HomePage() {
       const token = getAuthToken()
       const url = new URL(`${BACKEND_URL}/raffles`)
 
-      const res = await fetch(url.toString(), {
+      const res = await apiFetch(url.toString(), {
         method: 'GET',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -94,7 +94,9 @@ export function HomePage() {
             <p className="font-mono text-xs text-[#333333] mb-8">
               {networks.map((n) => n.name).join(' · ')}
             </p>
-            <WalletConnect />
+            <div className='flex w-full justify-center'>
+              <WalletConnect />
+            </div>
           </motion.div>
         </div>
       ) : (
