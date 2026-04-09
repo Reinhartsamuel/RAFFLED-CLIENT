@@ -97,6 +97,125 @@
   border-radius: 0 0 16px 16px;
 }
 
+/* ── Prize type picker ── */
+
+.type-picker {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.type-picker-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.1rem 0.75rem 0.9rem;
+  background: #111111;
+  border: 1.5px solid #1f1f1f;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #555555;
+}
+
+.type-picker-card:hover:not(:disabled) {
+  border-color: #444;
+  color: #aaa;
+  background: #161616;
+}
+
+.type-picker-card.active {
+  border-color: #FFB800;
+  background: rgba(255, 184, 0, 0.06);
+  color: #FFB800;
+  box-shadow: 0 0 0 1px #FFB800, 0 0 12px rgba(255, 184, 0, 0.12);
+}
+
+.type-picker-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.type-picker-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+}
+
+.type-picker-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.type-picker-sub {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+/* ── Coin picker ── */
+
+.coin-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.coin-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.5rem;
+  min-width: 62px;
+  flex: 1 1 62px;
+  max-width: 80px;
+  background: #111111;
+  border: 1.5px solid #1f1f1f;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  color: #666;
+}
+
+.coin-card:hover:not(:disabled) {
+  border-color: #444;
+  color: #bbb;
+  background: #161616;
+}
+
+.coin-card.active {
+  border-color: #FFB800;
+  background: rgba(255, 184, 0, 0.06);
+  color: #FFB800;
+  box-shadow: 0 0 0 1px #FFB800, 0 0 10px rgba(255, 184, 0, 0.1);
+}
+
+.coin-card:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.coin-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: contain;
+}
+
+.coin-symbol {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
 /* Form */
 
 .raffle-form {

@@ -219,7 +219,7 @@ export function BuyTicketsModal({
               <div className="py-2.5 px-4 rounded-lg bg-[#FFB800]/08 border border-[#FFB800]/25 flex items-center gap-2">
                 <span className="text-[#FFB800] text-sm">🎪</span>
                 <span className="font-mono text-xs text-[#FFB800]">
-                  You created this raffle — switch wallets to enter.
+                  You created this raffle — Raffle host cannot enter their own raffle.
                 </span>
               </div>
             )}
