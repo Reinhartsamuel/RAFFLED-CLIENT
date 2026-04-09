@@ -69,8 +69,8 @@ export function RaffleCard({
     
     const decimals = raffle.prize_asset_decimals || 6
     const symbol = raffle.prize_asset_symbol || 'USDC'
-    const soldTickets = raffle.sold_tickets || 0
-    const maxTickets = raffle.max_tickets || 0
+    const soldTickets = Number(raffle.sold_tickets ?? 0)
+    const maxTickets = Number(raffle.max_tickets ?? 0)
     const remainingTickets = maxTickets - soldTickets
     const isSoldOut = soldTickets >= maxTickets
     const ticketPriceBig = BigInt(raffle.ticket_price_amount ?? '0')
@@ -123,6 +123,7 @@ export function RaffleCard({
                 y: -8,
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 184, 0, 0.15)',
             }}
+            onMouseOver={() => console.log()}
         >
             {/* Mouse tracking spotlight effect */}
             {isHovered && (
