@@ -1,6 +1,6 @@
 import { motion, useInView, type Variants } from 'framer-motion';
 import { useRef } from 'react';
-import solanaLogo from '../../assets/solanaLogoMark.png';
+// import solanaLogo from '../../assets/solanaLogoMark.png';
 import baseLogo from '../../assets/base-logo.webp';
 
 const features = [
