@@ -1,10 +1,21 @@
 import { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, usePublicClient, useAccount } from 'wagmi'
-import { formatUnits } from 'viem'
+import { usePublicClient, useAccount, useChainId } from 'wagmi'
+import { useWaitForTransactionReceipt } from 'wagmi'
+import { formatUnits, ContractFunctionRevertedError } from 'viem'
 import { motion, AnimatePresence } from 'framer-motion'
-import { RAFFLE_MANAGER_ADDRESS } from '../../config/contracts'
-import RaffleManagerABI from '../../abis/RaffleManager.json'
 import { overlayVariants, modalVariants } from '../../utils/animations'
+import { getRaffleManagerAddress } from '../../config/evm.config'
+import { useTokenApproval } from '../../hooks/useTokenApproval'
+import { useEnterRaffle } from '../../hooks/useRaffleContract'
+
+const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
+  HostCannotEnter: "You're the raffle host — you can't enter your own raffle.",
+  MaxCapReached: 'This raffle is sold out.',
+  RaffleNotOpen: 'This raffle is no longer open.',
+  InvalidParams: 'Invalid parameters sent to the contract.',
+  ReentrancyGuardReentrantCall: 'Reentrant call detected — please try again.',
+  SafeERC20FailedOperation: 'Token transfer failed. Check your USDC balance and approval.',
+}
 
 interface BuyTicketsModalProps {
   raffleId: number
@@ -17,6 +28,7 @@ interface BuyTicketsModalProps {
   maxTickets: number
   ticketsSold: number
   userBalanceData: bigint | null
+  creatorAddress?: string
   onClose: () => void
   onSuccess?: () => void
 }
@@ -32,110 +44,100 @@ export function BuyTicketsModal({
   maxTickets,
   ticketsSold,
   userBalanceData,
+  creatorAddress,
   onClose,
   onSuccess,
 }: BuyTicketsModalProps) {
   const { address } = useAccount()
   const publicClient = usePublicClient()
+  const chainId = useChainId()
+  const raffleManagerAddress = getRaffleManagerAddress(chainId)
+
   const [ticketCount, setTicketCount] = useState(1)
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [currentStep, setCurrentStep] = useState<'idle' | 'approving' | 'purchasing'>('idle')
+  const [error, setError] = useState<string | null>(null)
+  const [isRaffleCreator, setIsRaffleCreator] = useState(false)
+  const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
 
-  const { writeContract, data: hash, error: writeError, isPending } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({ hash })
-
-  // ticketPrice is already in smallest unit (e.g. 1000000 for 1 USDC with 6 decimals)
   const ticketPriceBigInt = BigInt(ticketPrice)
   const totalPrice = ticketPriceBigInt * BigInt(ticketCount)
   const totalPriceFormatted = formatUnits(totalPrice, paymentAssetDecimals)
 
-  // Calculate win chance
   const remainingTickets = maxTickets - ticketsSold
-  const winChance = remainingTickets > 0
-    ? ((ticketCount / (ticketsSold + ticketCount)) * 100).toFixed(2)
-    : '0.00'
+  const winChance =
+    remainingTickets > 0
+      ? ((ticketCount / (ticketsSold + ticketCount)) * 100).toFixed(2)
+      : '0.00'
 
-  // Check if user has enough balance
   const hasEnoughBalance = userBalanceData ? userBalanceData >= totalPrice : false
 
+  const { approve, hasAllowance, isPending: isApprovePending } = useTokenApproval(
+    paymentAsset as `0x${string}`,
+    raffleManagerAddress
+  )
+  const { enterRaffle, isPending: isEnterPending } = useEnterRaffle()
+  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+    hash: enterRaffleHash,
+  })
+
+  // Detect if connected wallet is the raffle creator
   useEffect(() => {
-    if (isSuccess && hash) {
-      console.log('✅ Transaction successful!')
-      console.log('Transaction hash:', hash)
+    if (address && creatorAddress) {
+      setIsRaffleCreator(address.toLowerCase() === creatorAddress.toLowerCase())
+    } else {
+      setIsRaffleCreator(false)
+    }
+  }, [address, creatorAddress])
+
+  useEffect(() => {
+    if (isSuccess && enterRaffleHash) {
       setIsPurchasing(false)
       setCurrentStep('idle')
+      onSuccess?.()
     }
-  }, [isSuccess, hash, onSuccess, onClose])
-
-  useEffect(() => {
-    if (writeError) {
-      console.error('❌ Transaction error:', writeError)
-      setIsPurchasing(false)
-    }
-  }, [writeError])
+  }, [isSuccess, enterRaffleHash, onSuccess])
 
   const handlePurchase = async () => {
-    if (!address || !publicClient) {
-      console.error('No wallet connected or public client not available')
+    if (!address || !publicClient) return
+
+    if (isRaffleCreator) {
+      setError("You're the host — hosts can't enter their own raffle.")
       return
     }
 
     if (!hasEnoughBalance) {
-      console.error('Insufficient balance')
+      setError(`Insufficient ${paymentAssetSymbol} balance.`)
       return
     }
 
+    setError(null)
+
     try {
       setIsPurchasing(true)
-      console.log('🎫 Purchasing tickets...')
-      console.log('Raffle ID:', raffleId)
-      console.log('Ticket count:', ticketCount)
-      console.log('Total price:', totalPriceFormatted, paymentAssetSymbol)
-      console.log('Total price (raw):', totalPrice.toString())
 
-      // Step 1: Approve USDC spend
-      setCurrentStep('approving')
-      console.log('📝 Step 1/2: Approving USDC spend...')
-      console.log('Token address:', paymentAsset)
-      console.log('Spender (RaffleManager):', RAFFLE_MANAGER_ADDRESS)
-      console.log('Amount to approve:', totalPrice.toString())
-
-      writeContract({
-        address: paymentAsset as `0x${string}`,
-        abi: [
-          {
-            name: 'approve',
-            type: 'function',
-            stateMutability: 'nonpayable',
-            inputs: [
-              { name: 'spender', type: 'address' },
-              { name: 'amount', type: 'uint256' },
-            ],
-            outputs: [{ name: '', type: 'bool' }],
-          },
-        ],
-        functionName: 'approve',
-        args: [RAFFLE_MANAGER_ADDRESS, totalPrice],
-      })
-
-      console.log('⏳ Waiting for approval confirmation...')
+      // Step 1: Approve payment token (skip if allowance already sufficient)
+      if (!hasAllowance(totalPrice)) {
+        setCurrentStep('approving')
+        const approveTxHash = await approve(totalPriceFormatted, paymentAssetDecimals)
+        await publicClient.waitForTransactionReceipt({ hash: approveTxHash as `0x${string}` })
+      }
 
       // Step 2: Enter raffle
-      const estimatedGas = BigInt(100000 + 50000 * ticketCount)
-
       setCurrentStep('purchasing')
-      console.log('🎫 Step 2/2: Entering raffle...')
-      writeContract({
-        address: RAFFLE_MANAGER_ADDRESS,
-        abi: RaffleManagerABI,
-        functionName: 'enterRaffle',
-        args: [BigInt(raffleId), BigInt(ticketCount)],
-        gas: estimatedGas,
-      })
-
-      console.log('✅ Enter raffle submitted')
-    } catch (error) {
-      console.error('❌ Error purchasing tickets:', error)
+      const hash = await enterRaffle({ raffleId, ticketCount })
+      setEnterRaffleHash(hash as `0x${string}`)
+    } catch (err) {
+      console.error('Purchase failed:', err)
+      let msg = 'Transaction failed.'
+      if (err instanceof ContractFunctionRevertedError) {
+        const errorName = err.data?.errorName
+        msg = CONTRACT_ERROR_MESSAGES[errorName ?? ''] ?? `Contract error: ${errorName ?? 'unknown'}`
+      } else if (err instanceof Error) {
+        const viem = err as Error & { shortMessage?: string }
+        msg = viem.shortMessage ?? err.message
+      }
+      setError(msg)
       setIsPurchasing(false)
       setCurrentStep('idle')
     }
@@ -150,12 +152,16 @@ export function BuyTicketsModal({
   }
 
   const getButtonLabel = () => {
-    if (currentStep === 'approving') return 'Approving...'
-    if (currentStep === 'purchasing') return 'Purchasing...'
-    if (isPending || isConfirming) return 'Processing...'
+    if (isRaffleCreator) return 'Your Raffle'
+    if (currentStep === 'approving' || isApprovePending) return 'Approving...'
+    if (currentStep === 'purchasing' || isEnterPending) return 'Purchasing...'
+    if (isConfirming) return 'Confirming...'
     if (isSuccess) return 'Success!'
     return 'Buy Tickets'
   }
+
+  const isBusy = isPurchasing || isApprovePending || isEnterPending || isConfirming
+  const isDisabled = isBusy || !hasEnoughBalance || isSuccess || isRaffleCreator
 
   return (
     <AnimatePresence>
@@ -203,15 +209,27 @@ export function BuyTicketsModal({
             {/* Prize Title */}
             <div className="text-center">
               <h3 className="font-sans font-semibold text-base text-[#F5F5F5]">{prizeTitle}</h3>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#333333] mt-0.5">Raffle Prize</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#333333] mt-0.5">
+                Raffle Prize
+              </p>
             </div>
+
+            {/* Creator notice banner */}
+            {isRaffleCreator && (
+              <div className="py-2.5 px-4 rounded-lg bg-[#FFB800]/08 border border-[#FFB800]/25 flex items-center gap-2">
+                <span className="text-[#FFB800] text-sm">🎪</span>
+                <span className="font-mono text-xs text-[#FFB800]">
+                  You created this raffle — switch wallets to enter.
+                </span>
+              </div>
+            )}
 
             {/* Ticket Counter */}
             <div className="flex items-center justify-center gap-4 py-2">
               <button
                 className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 onClick={decrement}
-                disabled={ticketCount <= 1}
+                disabled={ticketCount <= 1 || isRaffleCreator}
               >
                 −
               </button>
@@ -223,7 +241,7 @@ export function BuyTicketsModal({
               <button
                 className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                 onClick={increment}
-                disabled={ticketCount >= remainingTickets}
+                disabled={ticketCount >= remainingTickets || isRaffleCreator}
               >
                 +
               </button>
@@ -238,7 +256,9 @@ export function BuyTicketsModal({
 
             {/* Balance */}
             <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-[#111111] border border-[#1f1f1f]">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#555555]">Balance</span>
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#555555]">
+                Balance
+              </span>
               <span className="font-mono text-sm font-semibold text-[#F5F5F5]">
                 {userBalanceData ? formatUnits(userBalanceData, paymentAssetDecimals) : '0'}{' '}
                 <span className="text-[#555555]">{paymentAssetSymbol}</span>
@@ -248,24 +268,30 @@ export function BuyTicketsModal({
             {/* Purchase Button */}
             <button
               className={`w-full flex items-center justify-between px-5 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${
-                isPurchasing || isPending || isConfirming || !hasEnoughBalance
-                  ? 'bg-[#111111] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
-                  : isSuccess
+                isSuccess
                   ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 cursor-not-allowed'
+                  : isDisabled
+                  ? 'bg-[#111111] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
                   : 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)]'
               }`}
               onClick={handlePurchase}
-              disabled={isPurchasing || isPending || isConfirming || !hasEnoughBalance}
+              disabled={isDisabled}
             >
               <span>{getButtonLabel()}</span>
-              <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
-                <img src="/USDC.svg" alt={paymentAssetSymbol} className="w-4 h-4" />
-                <span className="text-xs font-bold">{totalPriceFormatted}</span>
-              </div>
+              {isRaffleCreator ? (
+                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
+                  <span className="text-xs font-bold">Change Wallet</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
+                  <img src="/USDC.svg" alt={paymentAssetSymbol} className="w-4 h-4" />
+                  <span className="text-xs font-bold">{totalPriceFormatted}</span>
+                </div>
+              )}
             </button>
 
-            {/* Error */}
-            {!hasEnoughBalance && (
+            {/* Insufficient balance */}
+            {!hasEnoughBalance && !isRaffleCreator && (
               <div className="py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center">
                 <span className="font-mono text-xs text-[#EF4444]">
                   Insufficient {paymentAssetSymbol} balance
@@ -273,8 +299,15 @@ export function BuyTicketsModal({
               </div>
             )}
 
+            {/* Error */}
+            {error && (
+              <div className="py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center">
+                <span className="font-mono text-xs text-[#EF4444]">{error}</span>
+              </div>
+            )}
+
             {/* Success */}
-            {isSuccess && hash && (
+            {isSuccess && enterRaffleHash && (
               <div className="py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center">
                 <span className="font-mono text-xs text-[#22C55E]">
                   ✓ Tickets purchased successfully!

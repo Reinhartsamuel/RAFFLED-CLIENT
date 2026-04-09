@@ -95,9 +95,9 @@ export function RaffleDetail() {
             contract_address: raw.contract_address,
             creator_address: raw.owner_address ?? raw.creator_address,
             created_at: raw.created_at,
-            payment_asset: raw.prize_asset ?? raw.payment_asset ?? '',
-            payment_asset_symbol: raw.prize_asset_symbol ?? raw.payment_asset_symbol ?? 'USDC',
-            payment_asset_decimals: Number(raw.prize_asset_decimals ?? raw.payment_asset_decimals ?? 6),
+            payment_asset: raw.payment_asset ?? raw.prize_asset ?? '',
+            payment_asset_symbol: raw.payment_asset_symbol ?? raw.prize_asset_symbol ?? 'USDC',
+            payment_asset_decimals: Number(raw.payment_asset_decimals ?? raw.prize_asset_decimals ?? 6),
           }
           setRaffle(normalized)
         } else {
@@ -106,7 +106,7 @@ export function RaffleDetail() {
 
         if (address && (raw?.prize_asset || raw?.payment_asset) && config) {
           try {
-            const paymentAssetAddr = (raw.prize_asset ?? raw.payment_asset) as `0x${string}`
+            const paymentAssetAddr = (raw.payment_asset ?? raw.prize_asset) as `0x${string}`
             const balance = await readContract(config, {
               address: paymentAssetAddr,
               abi: [
@@ -464,6 +464,7 @@ export function RaffleDetail() {
           paymentAsset={raffle.payment_asset}
           paymentAssetSymbol={raffle.payment_asset_symbol || 'USDC'}
           paymentAssetDecimals={raffle.payment_asset_decimals || 6}
+          creatorAddress={raffle.creator_address}
           userBalanceData={balanceData}
           prizeImage={raffle.image_url}
           prizeTitle={raffle.title}
