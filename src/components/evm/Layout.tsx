@@ -1,4 +1,5 @@
 import { ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { pageVariants } from '../../utils/animations'
@@ -58,6 +59,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
   activeFilter: string
   onFilterChange: (filter: string) => void
 }) {
+  const navigate = useNavigate()
   const filters = [
     { id: 'home', label: 'Home', icon: '⌂' },
     { id: 'official', label: 'Official', icon: '★' },
@@ -94,7 +96,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
-          onClick={() => onFilterChange('discover')}
+          onClick={() => navigate('/app')}
         >
           <span className="w-4 text-center">◎</span>
           <span>Discover</span>
@@ -105,7 +107,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
-          onClick={() => onFilterChange('faucet')}
+          onClick={() => navigate('/app/faucet')}
         >
           <span className="w-4 text-center">⬡</span>
           <span>Faucet</span>
@@ -116,7 +118,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
-          onClick={() => onFilterChange('mytickets')}
+          onClick={() => {}}
         >
           <span className="w-4 text-center">☰</span>
           <span>My Tickets</span>

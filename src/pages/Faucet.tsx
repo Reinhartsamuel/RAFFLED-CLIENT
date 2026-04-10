@@ -2,8 +2,8 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useWriteContract, useReadContract, useAccount } from 'wagmi'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
-import { Navigate } from 'react-router-dom'
 import { Layout, DashboardSidebar } from '../components/evm/Layout'
+import { WalletConnect } from '../components/evm/WalletConnect'
 import mockUsdcAbi from '../abis/MockUSDC.json'
 
 const MOCK_USDC_ADDRESS = '0x49f49cfe89050a8f8e48d3a31e33a8e26bc80d1d'
@@ -14,8 +14,6 @@ export function FaucetPage() {
   const { address } = useAccount()
   const { open } = useAppKit()
   const [message, setMessage] = useState<{ type: 'success' | 'error' | null; text: string }>({ type: null, text: '' })
-
-  const sidebar = <DashboardSidebar activeFilter="faucet" onFilterChange={() => {}} />
 
   const { writeContractAsync } = useWriteContract()
 
@@ -29,14 +27,43 @@ export function FaucetPage() {
     },
   })
 
-  // Redirect to connect wallet first if not connected
+  const sidebar = <DashboardSidebar activeFilter="faucet" onFilterChange={() => {}} />
+
+  // If not connected, show connect wallet prompt instead of redirecting
   if (!isConnected) {
-    return <Navigate to="/app" replace />
+    return (
+      <Layout sidebar={sidebar}>
+        <div className="min-h-[60vh] flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-md w-full text-center border border-[#1f1f1f] bg-[#0a0a0a] rounded-2xl p-10"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-[#FFB800]/10 border border-[#FFB800]/20 flex items-center justify-center text-2xl mx-auto mb-6">
+              ⬡
+            </div>
+            <h2 className="font-sans font-bold text-2xl text-[#F5F5F5] mb-3">Connect Your Wallet</h2>
+            <p className="font-mono text-sm text-[#555555] mb-8">
+              Connect your wallet to access the MockUSDC faucet
+            </p>
+            <WalletConnect />
+          </motion.div>
+        </div>
+      </Layout>
+    )
   }
 
   const handleMint = async () => {
     if (!address) {
       open()
+      return
+    }
+
+    // Check balance before minting
+    const currentBalance = balance ? Number(balance as bigint) : 0
+    if (currentBalance >= 10000000000) {
+      setMessage({ type: 'error', text: 'You already have enough test tokens!' })
       return
     }
 
