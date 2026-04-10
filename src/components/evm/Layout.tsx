@@ -1,8 +1,8 @@
 import { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { pageVariants } from '../../utils/animations'
+
 
 interface LayoutProps {
   children: ReactNode
@@ -58,7 +58,6 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
   activeFilter: string
   onFilterChange: (filter: string) => void
 }) {
-  const navigate = useNavigate()
   const filters = [
     { id: 'home', label: 'Home', icon: '⌂' },
     { id: 'official', label: 'Official', icon: '★' },
@@ -90,13 +89,35 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
 
       <div className="flex flex-col gap-0.5 px-2">
         <button
-          className="flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]"
-          onClick={() => navigate('/app')}
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
+            activeFilter === 'discover'
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
+              : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
+          }`}
+          onClick={() => onFilterChange('discover')}
         >
           <span className="w-4 text-center">◎</span>
           <span>Discover</span>
         </button>
-        <button className="flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]">
+        <button
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
+            activeFilter === 'faucet'
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
+              : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
+          }`}
+          onClick={() => onFilterChange('faucet')}
+        >
+          <span className="w-4 text-center">⬡</span>
+          <span>Faucet</span>
+        </button>
+        <button
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
+            activeFilter === 'mytickets'
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
+              : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
+          }`}
+          onClick={() => onFilterChange('mytickets')}
+        >
           <span className="w-4 text-center">☰</span>
           <span>My Tickets</span>
         </button>

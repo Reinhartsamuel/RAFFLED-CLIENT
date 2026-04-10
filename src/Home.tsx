@@ -16,6 +16,7 @@ import { BackendRaffle } from './interfaces/BackendRaffle'
 import { RaffleCard } from './components/evm/RaffleCard'
 import posterImg from './assets/poster.webp'
 import { staggerContainer, staggerItem, scaleIn, fadeInUp } from './utils/animations'
+import Faucet from './pages/Faucet'
 
 const onboardingSteps = [
   { icon: '✌', title: 'Welcome aboard', desc: 'Connect your wallet.', done: true },
@@ -261,6 +262,7 @@ export default function Home() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/raffle/:id" element={<RaffleDetail />} />
+          <Route path="/faucet" element={<Faucet />} />
         </Routes>
       </QueryClientProvider>
     </WagmiProvider>
