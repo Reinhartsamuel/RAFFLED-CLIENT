@@ -225,21 +225,35 @@ export function BuyTicketsModal({
             )}
 
             {/* Ticket Counter */}
-            <div className="flex items-center justify-center gap-4 py-2">
+            <div className="flex items-center justify-center gap-3 py-2">
               <button
-                className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
                 onClick={decrement}
                 disabled={ticketCount <= 1 || isRaffleCreator}
               >
                 −
               </button>
-              <div className="flex items-center gap-2 px-6 py-2.5 border border-[#2a2a2a] bg-[#111111] rounded-lg min-w-[140px] justify-center">
-                <span className="font-mono font-bold text-[#F5F5F5] text-sm">
-                  {ticketCount} TICKET{ticketCount !== 1 ? 'S' : ''}
+              <div className="flex flex-col items-center gap-1 flex-1">
+                <input
+                  type="number"
+                  min={1}
+                  max={remainingTickets}
+                  value={ticketCount}
+                  disabled={isRaffleCreator}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value, 10)
+                    if (isNaN(val) || val < 1) setTicketCount(1)
+                    else if (val > remainingTickets) setTicketCount(remainingTickets)
+                    else setTicketCount(val)
+                  }}
+                  className="w-full text-center font-mono font-bold text-[#F5F5F5] text-lg bg-[#111111] border border-[#2a2a2a] rounded-lg py-2.5 focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                />
+                <span className="font-mono text-[9px] uppercase tracking-widest text-[#555555]">
+                  TICKET{ticketCount !== 1 ? 'S' : ''} · max {remainingTickets}
                 </span>
               </div>
               <button
-                className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                className="w-11 h-11 rounded-lg border border-[#2a2a2a] bg-[#111111] text-[#F5F5F5] text-xl font-bold flex items-center justify-center hover:bg-[#FFB800] hover:text-[#050505] hover:border-[#FFB800] transition-all disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
                 onClick={increment}
                 disabled={ticketCount >= remainingTickets || isRaffleCreator}
               >

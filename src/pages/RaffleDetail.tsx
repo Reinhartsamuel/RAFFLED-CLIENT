@@ -9,6 +9,7 @@ import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, staggerItem, fadeInUp } from '../utils/animations'
+import { safeBigInt } from '../utils/safeBigInt'
 
 interface LeaderboardEntry {
   rank: number
@@ -166,9 +167,75 @@ export function RaffleDetail() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
-            Loading raffle...
+        <div className="p-6 lg:p-8 max-w-5xl mx-auto">
+          {/* Header bar */}
+          <div className="flex items-center justify-between mb-8 pb-5 border-b border-[#1f1f1f]">
+            <div className="h-8 w-20 bg-[#1a1a1a] rounded-lg animate-pulse" />
+            <div className="h-6 w-16 bg-[#1a1a1a] rounded-full animate-pulse" />
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left — image */}
+            <div className="aspect-square w-full bg-[#111111] rounded-xl border border-[#1f1f1f] animate-pulse" />
+
+            {/* Right — detail blocks */}
+            <div className="space-y-4">
+              {/* Title + description */}
+              <div className="space-y-2">
+                <div className="h-8 w-3/4 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-3 w-full bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-3 w-2/3 bg-[#1a1a1a] rounded animate-pulse" />
+              </div>
+
+              {/* Prize box */}
+              <div className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5 space-y-3">
+                <div className="h-2 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-10 w-40 bg-[#1a1a1a] rounded animate-pulse" />
+              </div>
+
+              {/* Ticket info box */}
+              <div className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5 space-y-4">
+                <div className="h-2 w-28 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="h-2 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                    <div className="h-5 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                    <div className="h-5 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="h-2 w-full bg-[#1a1a1a] rounded-full animate-pulse" />
+                  <div className="h-2 w-12 bg-[#1a1a1a] rounded animate-pulse" />
+                </div>
+              </div>
+
+              {/* Timeline box */}
+              <div className="rounded-xl border border-[#1f1f1f] bg-[#0a0a0a] p-5 space-y-4">
+                <div className="h-2 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <div className="h-2 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                  </div>
+                  <div className="space-y-2">
+                    <div className="h-2 w-10 bg-[#1a1a1a] rounded animate-pulse" />
+                    <div className="h-4 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Balance row */}
+              <div className="flex items-center justify-between px-4 py-3 rounded-lg border border-[#1f1f1f] bg-[#111111]">
+                <div className="h-2 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                <div className="h-4 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+              </div>
+
+              {/* Button */}
+              <div className="h-12 w-full bg-[#1a1a1a] rounded-lg animate-pulse" />
+            </div>
           </div>
         </div>
       </Layout>
@@ -200,6 +267,9 @@ export function RaffleDetail() {
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
+  const ticketPrice = raffle.ticket_price_usd && Number(raffle.ticket_price_usd) > 0
+    ? Number(raffle.ticket_price_usd).toFixed(2)
+    : formatUnits(safeBigInt(raffle.ticket_price_amount), raffle.payment_asset_decimals || 6)
 
   const getRaffleStatusText = () => {
     if (isSoldOut) return 'Sold Out'
@@ -230,11 +300,10 @@ export function RaffleDetail() {
           >
             ← Back
           </button>
-          <span className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full ${
-            isActive
+          <span className={`font-mono text-[10px] uppercase tracking-widest px-3 py-1.5 rounded-full ${isActive
               ? 'bg-[#FFB800]/10 text-[#FFB800] border border-[#FFB800]/30'
               : 'bg-[#1f1f1f] text-[#555555] border border-[#1f1f1f]'
-          }`}>
+            }`}>
             {isActive && <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#22C55E] mr-1.5 align-middle animate-pulse" />}
             {getRaffleStatusText()}
           </span>
@@ -315,8 +384,8 @@ export function RaffleDetail() {
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mb-4">Ticket Information</p>
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Price per Ticket</p>
-                  <p className="font-mono text-base font-semibold text-[#F5F5F5]">${raffle.ticket_price_usd}</p>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1" onClick={() => console.log(raffle)}>Price per Ticket</p>
+                  <p className="font-mono text-base font-semibold text-[#F5F5F5]">${ticketPrice}</p>
                 </div>
                 <div>
                   <p className="font-mono text-[10px] uppercase tracking-wider text-[#333333] mb-1">Tickets Sold</p>
@@ -370,11 +439,10 @@ export function RaffleDetail() {
             <motion.div variants={staggerItem}>
               {isConnected ? (
                 <button
-                  className={`w-full flex items-center justify-between px-6 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${
-                    isActive
+                  className={`w-full flex items-center justify-between px-6 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${isActive
                       ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.35)]'
                       : 'bg-[#111111] text-[#555555] cursor-not-allowed border border-[#1f1f1f]'
-                  }`}
+                    }`}
                   disabled={!isActive}
                   onClick={() => setShowBuyModal(true)}
                 >
@@ -429,12 +497,11 @@ export function RaffleDetail() {
                       className="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[#111111] border border-[#1f1f1f]"
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`font-mono text-xs font-bold w-5 text-center ${
-                          entry.rank === 1 ? 'text-[#FFB800]' :
-                          entry.rank === 2 ? 'text-[#aaaaaa]' :
-                          entry.rank === 3 ? 'text-[#cd7f32]' :
-                          'text-[#333333]'
-                        }`}>
+                        <span className={`font-mono text-xs font-bold w-5 text-center ${entry.rank === 1 ? 'text-[#FFB800]' :
+                            entry.rank === 2 ? 'text-[#aaaaaa]' :
+                              entry.rank === 3 ? 'text-[#cd7f32]' :
+                                'text-[#333333]'
+                          }`}>
                           {entry.rank === 1 ? '1st' : entry.rank === 2 ? '2nd' : entry.rank === 3 ? '3rd' : `${entry.rank}`}
                         </span>
                         <span className="font-mono text-xs text-[#555555]">

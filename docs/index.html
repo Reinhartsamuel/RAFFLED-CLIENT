@@ -66,16 +66,39 @@
                     <a href="#authenticating-requests">Authenticating requests</a>
                 </li>
                             </ul>
+                    <ul id="tocify-header-endpoints" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="endpoints">
+                    <a href="#endpoints">Endpoints</a>
+                </li>
+                                    <ul id="tocify-subheader-endpoints" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="endpoints-POSTapi-webhooks-alchemy">
+                                <a href="#endpoints-POSTapi-webhooks-alchemy">Handle incoming Alchemy webhook.</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
+                    <ul id="tocify-header-events" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="events">
+                    <a href="#events">Events</a>
+                </li>
+                                    <ul id="tocify-subheader-events" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="events-GETapi-events">
+                                <a href="#events-GETapi-events">List on-chain events.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="events-GETapi-events-stream">
+                                <a href="#events-GETapi-events-stream">Stream on-chain events (SSE).</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-fee-change-events" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="fee-change-events">
                     <a href="#fee-change-events">Fee Change Events</a>
                 </li>
                                     <ul id="tocify-subheader-fee-change-events" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="fee-change-events-GETapi-fee-change-events">
-                                <a href="#fee-change-events-GETapi-fee-change-events">List on-chain fee change events.</a>
+                                <a href="#fee-change-events-GETapi-fee-change-events">List fee change events.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="fee-change-events-GETapi-fee-change-events--feeChangeEvent_id-">
-                                <a href="#fee-change-events-GETapi-fee-change-events--feeChangeEvent_id-">Show one on-chain fee change event.</a>
+                                <a href="#fee-change-events-GETapi-fee-change-events--feeChangeEvent_id-">Show a fee change event.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -85,7 +108,7 @@
                 </li>
                                     <ul id="tocify-subheader-raffle-stats" class="tocify-subheader">
                                                     <li class="tocify-item level-2" data-unique="raffle-stats-GETapi-raffles--raffle_id--leaderboard">
-                                <a href="#raffle-stats-GETapi-raffles--raffle_id--leaderboard">Leaderboard for a raffle.</a>
+                                <a href="#raffle-stats-GETapi-raffles--raffle_id--leaderboard">Raffle leaderboard.</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="raffle-stats-GETapi-raffles--raffle_id--transactions">
                                 <a href="#raffle-stats-GETapi-raffles--raffle_id--transactions">Recent ticket transactions.</a>
@@ -136,7 +159,7 @@
                                 <a href="#wallet-auth-GETapi-auth-nonce">Generate nonce (valid 5 minutes)</a>
                             </li>
                                                                                 <li class="tocify-item level-2" data-unique="wallet-auth-POSTapi-auth-verify">
-                                <a href="#wallet-auth-POSTapi-auth-verify">Verify signed message (Solana/Base)</a>
+                                <a href="#wallet-auth-POSTapi-auth-verify">Verify wallet signature and issue token.</a>
                             </li>
                                                                         </ul>
                             </ul>
@@ -148,7 +171,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: March 26, 2026</li>
+        <li>Last updated: April 11, 2026</li>
     </ul>
 </div>
 
@@ -169,16 +192,542 @@ You can switch the language used with the tabs at the top right (or from the nav
 <p>All authenticated endpoints are marked with a <code>requires authentication</code> badge in the documentation below.</p>
 <p>You can obtain your token by completing the SIWE process using the /siwe/nonce and /siwe/verify endpoints.</p>
 
-        <h1 id="fee-change-events">Fee Change Events</h1>
+        <h1 id="endpoints">Endpoints</h1>
 
     
 
-                                <h2 id="fee-change-events-GETapi-fee-change-events">List on-chain fee change events.</h2>
+                                <h2 id="endpoints-POSTapi-webhooks-alchemy">Handle incoming Alchemy webhook.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+
+
+<span id="example-requests-POSTapi-webhooks-alchemy">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://api.raffled.live/api/webhooks/alchemy" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/webhooks/alchemy"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-webhooks-alchemy">
+</span>
+<span id="execution-results-POSTapi-webhooks-alchemy" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-webhooks-alchemy"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-webhooks-alchemy"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-webhooks-alchemy" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-webhooks-alchemy">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-webhooks-alchemy" data-method="POST"
+      data-path="api/webhooks/alchemy"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-webhooks-alchemy', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-webhooks-alchemy"
+                    onclick="tryItOut('POSTapi-webhooks-alchemy');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-webhooks-alchemy"
+                    onclick="cancelTryOut('POSTapi-webhooks-alchemy');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-webhooks-alchemy"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/webhooks/alchemy</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-webhooks-alchemy"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-webhooks-alchemy"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-webhooks-alchemy"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
+                <h1 id="events">Events</h1>
+
+    
+
+                                <h2 id="events-GETapi-events">List on-chain events.</h2>
 
 <p>
 </p>
 
+<p>Returns a paginated list of all successfully processed on-chain events,
+ordered by blockchain ordering (<code>block_number</code> DESC, <code>log_index</code> DESC).</p>
 
+<span id="example-requests-GETapi-events">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://api.raffled.live/api/events?since_block=39000000&amp;tx_hash=0xabc123&amp;per_page=20" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/events"
+);
+
+const params = {
+    "since_block": "39000000",
+    "tx_hash": "0xabc123",
+    "per_page": "20",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-events">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 42,
+            &quot;event_type&quot;: &quot;TicketPurchased&quot;,
+            &quot;source&quot;: &quot;webhook&quot;,
+            &quot;block_number&quot;: 39000100,
+            &quot;log_index&quot;: 3,
+            &quot;tx_hash&quot;: &quot;0xabc123&quot;,
+            &quot;event_data&quot;: {
+                &quot;raffle_id&quot;: 7,
+                &quot;buyer&quot;: &quot;0xdef456&quot;,
+                &quot;ticket_count&quot;: 2
+            },
+            &quot;created_at&quot;: &quot;2026-04-11 09:00:00&quot;
+        }
+    ],
+    &quot;first_page_url&quot;: &quot;http://localhost/api/events?page=1&quot;,
+    &quot;from&quot;: 1,
+    &quot;last_page&quot;: 5,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/events?page=5&quot;,
+    &quot;next_page_url&quot;: &quot;http://localhost/api/events?page=2&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/events&quot;,
+    &quot;per_page&quot;: 20,
+    &quot;prev_page_url&quot;: null,
+    &quot;to&quot;: 20,
+    &quot;total&quot;: 97
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-events" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-events"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-events"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-events" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-events">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-events" data-method="GET"
+      data-path="api/events"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-events', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-events"
+                    onclick="tryItOut('GETapi-events');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-events"
+                    onclick="cancelTryOut('GETapi-events');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-events"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/events</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-events"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-events"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="event_type"                data-endpoint="GETapi-events"
+               value=""
+               data-component="query">
+    <br>
+<p>Filter by event type. One of: <code>RaffleCreated</code>, <code>TicketPurchased</code>, <code>WinnerPicked</code>, <code>RaffleExpired</code>, <code>UnderfilledPrizeReturned</code>, <code>PlatformFeeCollected</code>, <code>FeeChangeProposed</code>.</p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>since_block</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="since_block"                data-endpoint="GETapi-events"
+               value="39000000"
+               data-component="query">
+    <br>
+<p>Only return events at or after this block number. Example: <code>39000000</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>tx_hash</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="tx_hash"                data-endpoint="GETapi-events"
+               value="0xabc123"
+               data-component="query">
+    <br>
+<p>Filter by transaction hash. Example: <code>0xabc123</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-events"
+               value="20"
+               data-component="query">
+    <br>
+<p>Number of results per page (default: 20, max: 100). Example: <code>20</code></p>
+            </div>
+                </form>
+
+                    <h2 id="events-GETapi-events-stream">Stream on-chain events (SSE).</h2>
+
+<p>
+</p>
+
+<p>Opens a persistent <strong>Server-Sent Events</strong> connection that pushes every
+raffle event in blockchain order (<code>block_number</code> ASC → <code>log_index</code> ASC).</p>
+<p>On first connection (no cursor) the server replays the latest 50 events
+and then polls every 3 seconds for new ones.
+Use the <code>Last-Event-ID</code> header (format: <code>{block_number}:{log_index}</code>) or
+the <code>last_block</code> / <code>last_log_index</code> query params to resume from a cursor.</p>
+<p>Each pushed message has the SSE event name <strong><code>event_log</code></strong>:</p>
+<pre><code>id: 39000100:3
+event: event_log
+data: {"id":42,"event_type":"TicketPurchased","source":"webhook", ...}</code></pre>
+<p>A <code>": heartbeat"</code> comment is sent when there are no new events to keep
+the connection alive.</p>
+
+<span id="example-requests-GETapi-events-stream">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://api.raffled.live/api/events/stream?last_block=39000100&amp;last_log_index=3&amp;event_type=TicketPurchased" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/events/stream"
+);
+
+const params = {
+    "last_block": "39000100",
+    "last_log_index": "3",
+    "event_type": "TicketPurchased",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-events-stream">
+            <blockquote>
+            <p>Example response (200, SSE stream (text/event-stream)):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;id&quot;: &quot;39000100:3&quot;,
+    &quot;event&quot;: &quot;event_log&quot;,
+    &quot;data&quot;: {
+        &quot;id&quot;: 42,
+        &quot;event_type&quot;: &quot;TicketPurchased&quot;,
+        &quot;source&quot;: &quot;webhook&quot;,
+        &quot;block_number&quot;: 39000100,
+        &quot;log_index&quot;: 3,
+        &quot;tx_hash&quot;: &quot;0xabc123&quot;,
+        &quot;event_data&quot;: {
+            &quot;raffle_id&quot;: 7,
+            &quot;buyer&quot;: &quot;0xdef456&quot;,
+            &quot;ticket_count&quot;: 2
+        },
+        &quot;created_at&quot;: &quot;2026-04-11 09:00:00&quot;
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-events-stream" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-events-stream"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-events-stream"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-events-stream" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-events-stream">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-events-stream" data-method="GET"
+      data-path="api/events/stream"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-events-stream', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-events-stream"
+                    onclick="tryItOut('GETapi-events-stream');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-events-stream"
+                    onclick="cancelTryOut('GETapi-events-stream');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-events-stream"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/events/stream</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-events-stream"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-events-stream"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>last_block</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="last_block"                data-endpoint="GETapi-events-stream"
+               value="39000100"
+               data-component="query">
+    <br>
+<p>Resume cursor — block number of the last received event. Example: <code>39000100</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>last_log_index</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="last_log_index"                data-endpoint="GETapi-events-stream"
+               value="3"
+               data-component="query">
+    <br>
+<p>Resume cursor — log index of the last received event. Example: <code>3</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>event_type</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="event_type"                data-endpoint="GETapi-events-stream"
+               value="TicketPurchased"
+               data-component="query">
+    <br>
+<p>Filter by event type. One of: <code>RaffleCreated</code>, <code>TicketPurchased</code>, <code>WinnerPicked</code>, <code>RaffleExpired</code>, <code>UnderfilledPrizeReturned</code>, <code>PlatformFeeCollected</code>, <code>FeeChangeProposed</code>. Example: <code>TicketPurchased</code></p>
+            </div>
+                </form>
+
+                <h1 id="fee-change-events">Fee Change Events</h1>
+
+    
+
+                                <h2 id="fee-change-events-GETapi-fee-change-events">List fee change events.</h2>
+
+<p>
+</p>
+
+<p>Returns paginated on-chain fee change events, ordered by <code>effective_at</code>.</p>
 
 <span id="example-requests-GETapi-fee-change-events">
 <blockquote>Example request:</blockquote>
@@ -186,7 +735,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://api.raffled.live/api/fee-change-events?tx_hash=consequatur&amp;per_page=20&amp;sort_dir=consequatur" \
+    --get "https://api.raffled.live/api/fee-change-events?per_page=20" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -197,9 +746,7 @@ You can switch the language used with the tabs at the top right (or from the nav
 );
 
 const params = {
-    "tx_hash": "consequatur",
     "per_page": "20",
-    "sort_dir": "consequatur",
 };
 Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
@@ -223,9 +770,27 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: [],
-    &quot;meta&quot;: {},
-    &quot;links&quot;: {}
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;new_fee_bps&quot;: 250,
+            &quot;effective_at&quot;: &quot;2026-05-01 00:00:00&quot;,
+            &quot;tx_hash&quot;: &quot;0xabc123&quot;,
+            &quot;created_at&quot;: &quot;2026-04-10 00:00:00&quot;,
+            &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+        }
+    ],
+    &quot;from&quot;: 1,
+    &quot;to&quot;: 20,
+    &quot;total&quot;: 3,
+    &quot;per_page&quot;: 20,
+    &quot;last_page&quot;: 1,
+    &quot;first_page_url&quot;: &quot;http://localhost/api/fee-change-events?page=1&quot;,
+    &quot;next_page_url&quot;: null,
+    &quot;prev_page_url&quot;: null,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/fee-change-events?page=1&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/fee-change-events&quot;
 }</code>
  </pre>
     </span>
@@ -308,10 +873,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="tx_hash"                data-endpoint="GETapi-fee-change-events"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Filter by transaction hash. Example: <code>consequatur</code></p>
+<p>Filter by transaction hash.</p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
@@ -323,7 +888,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="20"
                data-component="query">
     <br>
-<p>Number of records per page (1-50). Example: <code>20</code></p>
+<p>Records per page (1–50). Default: 20. Example: <code>20</code></p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>sort_dir</code></b>&nbsp;&nbsp;
@@ -332,14 +897,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort_dir"                data-endpoint="GETapi-fee-change-events"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Sort direction (asc, desc). Default: desc Example: <code>consequatur</code></p>
+<p>Sort direction (<code>asc</code>, <code>desc</code>). Default: <code>desc</code>.</p>
             </div>
                 </form>
 
-                    <h2 id="fee-change-events-GETapi-fee-change-events--feeChangeEvent_id-">Show one on-chain fee change event.</h2>
+                    <h2 id="fee-change-events-GETapi-fee-change-events--feeChangeEvent_id-">Show a fee change event.</h2>
 
 <p>
 </p>
@@ -381,7 +946,21 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;id&quot;: 1
+    &quot;id&quot;: 1,
+    &quot;new_fee_bps&quot;: 250,
+    &quot;effective_at&quot;: &quot;2026-05-01 00:00:00&quot;,
+    &quot;tx_hash&quot;: &quot;0xabc123&quot;,
+    &quot;created_at&quot;: &quot;2026-04-10 00:00:00&quot;,
+    &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Not Found&quot;
 }</code>
  </pre>
     </span>
@@ -479,7 +1058,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="1"
                data-component="url">
     <br>
-<p>Event id. Example: <code>1</code></p>
+<p>Fee change event ID. Example: <code>1</code></p>
             </div>
                     </form>
 
@@ -487,12 +1066,13 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
     
 
-                                <h2 id="raffle-stats-GETapi-raffles--raffle_id--leaderboard">Leaderboard for a raffle.</h2>
+                                <h2 id="raffle-stats-GETapi-raffles--raffle_id--leaderboard">Raffle leaderboard.</h2>
 
 <p>
 </p>
 
-
+<p>Returns top ticket buyers for a raffle, grouped by wallet address and
+sorted by total tickets purchased (desc).</p>
 
 <span id="example-requests-GETapi-raffles--raffle_id--leaderboard">
 <blockquote>Example request:</blockquote>
@@ -535,9 +1115,24 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: [],
-    &quot;meta&quot;: {},
-    &quot;links&quot;: {}
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;user_address&quot;: &quot;0xabc123&quot;,
+            &quot;tickets&quot;: 15,
+            &quot;total_spent_raw&quot;: &quot;15000000&quot;
+        }
+    ],
+    &quot;from&quot;: 1,
+    &quot;to&quot;: 10,
+    &quot;total&quot;: 42,
+    &quot;per_page&quot;: 10,
+    &quot;last_page&quot;: 5,
+    &quot;first_page_url&quot;: &quot;http://localhost/api/raffles/1/leaderboard?page=1&quot;,
+    &quot;next_page_url&quot;: &quot;http://localhost/api/raffles/1/leaderboard?page=2&quot;,
+    &quot;prev_page_url&quot;: null,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/raffles/1/leaderboard?page=5&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/raffles/1/leaderboard&quot;
 }</code>
  </pre>
     </span>
@@ -635,7 +1230,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="1"
                data-component="url">
     <br>
-<p>Raffle id. Example: <code>1</code></p>
+<p>Raffle ID. Example: <code>1</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">
@@ -648,7 +1243,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="10"
                data-component="query">
     <br>
-<p>Number of records per page (1-20). Example: <code>10</code></p>
+<p>Records per page (1–20). Default: 10. Example: <code>10</code></p>
             </div>
                 </form>
 
@@ -657,7 +1252,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>
 </p>
 
-
+<p>Returns the most recent ticket purchase records for a raffle,
+ordered by newest first.</p>
 
 <span id="example-requests-GETapi-raffles--raffle_id--transactions">
 <blockquote>Example request:</blockquote>
@@ -700,9 +1296,29 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: [],
-    &quot;meta&quot;: {},
-    &quot;links&quot;: {}
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 99,
+            &quot;raffle_id&quot;: 1,
+            &quot;contract_raffle_id&quot;: 7,
+            &quot;user_address&quot;: &quot;0xdef456&quot;,
+            &quot;quantity&quot;: 2,
+            &quot;ticket_tx_hash&quot;: &quot;0xabc789&quot;,
+            &quot;created_at&quot;: &quot;2026-04-10 10:00:00&quot;,
+            &quot;updated_at&quot;: &quot;2026-04-10 10:00:00&quot;
+        }
+    ],
+    &quot;from&quot;: 1,
+    &quot;to&quot;: 10,
+    &quot;total&quot;: 55,
+    &quot;per_page&quot;: 10,
+    &quot;last_page&quot;: 6,
+    &quot;first_page_url&quot;: &quot;http://localhost/api/raffles/1/transactions?page=1&quot;,
+    &quot;next_page_url&quot;: &quot;http://localhost/api/raffles/1/transactions?page=2&quot;,
+    &quot;prev_page_url&quot;: null,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/raffles/1/transactions?page=6&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/raffles/1/transactions&quot;
 }</code>
  </pre>
     </span>
@@ -800,7 +1416,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="1"
                data-component="url">
     <br>
-<p>Raffle id. Example: <code>1</code></p>
+<p>Raffle ID. Example: <code>1</code></p>
             </div>
                         <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
                                     <div style="padding-left: 28px; clear: unset;">
@@ -813,7 +1429,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="10"
                data-component="query">
     <br>
-<p>Number of records per page (1-20). Example: <code>10</code></p>
+<p>Records per page (1–20). Default: 10. Example: <code>10</code></p>
             </div>
                 </form>
 
@@ -826,7 +1442,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>
 </p>
 
-
+<p>Returns a paginated list of all on-chain-registered raffles.
+Ordered by <code>contract_raffle_id</code> desc by default.</p>
 
 <span id="example-requests-GETapi-raffles">
 <blockquote>Example request:</blockquote>
@@ -834,7 +1451,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://api.raffled.live/api/raffles?owner_address=0x280ed&amp;type=nft&amp;status=consequatur&amp;search=giveaway&amp;sort_by=consequatur&amp;sort_dir=consequatur" \
+    --get "https://api.raffled.live/api/raffles?owner_address=0x280ed&amp;type=crypto&amp;search=giveaway" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -846,11 +1463,8 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 const params = {
     "owner_address": "0x280ed",
-    "type": "nft",
-    "status": "consequatur",
+    "type": "crypto",
     "search": "giveaway",
-    "sort_by": "consequatur",
-    "sort_dir": "consequatur",
 };
 Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
@@ -874,9 +1488,46 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: [],
-    &quot;meta&quot;: {},
-    &quot;links&quot;: {}
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;id&quot;: 1,
+            &quot;contract_raffle_id&quot;: 7,
+            &quot;owner_address&quot;: &quot;0xabc123&quot;,
+            &quot;type&quot;: &quot;crypto&quot;,
+            &quot;status&quot;: &quot;open&quot;,
+            &quot;underfilled&quot;: false,
+            &quot;registered_on_chain&quot;: true,
+            &quot;title&quot;: &quot;Raffle #7&quot;,
+            &quot;description&quot;: &quot;Win USDC!&quot;,
+            &quot;prize_asset&quot;: &quot;0xtoken&quot;,
+            &quot;prize_asset_symbol&quot;: &quot;USDC&quot;,
+            &quot;prize_asset_name&quot;: &quot;USD Coin&quot;,
+            &quot;prize_asset_decimals&quot;: 6,
+            &quot;prize_amount_or_token_id&quot;: &quot;100000000&quot;,
+            &quot;ticket_price_amount&quot;: &quot;1000000&quot;,
+            &quot;max_tickets&quot;: 100,
+            &quot;sold_tickets&quot;: 42,
+            &quot;expire_at&quot;: &quot;2026-05-01 00:00:00&quot;,
+            &quot;raffle_tx_hash&quot;: &quot;0xdef456&quot;,
+            &quot;winner_address&quot;: null,
+            &quot;winner_picked_tx_hash&quot;: null,
+            &quot;image_url&quot;: &quot;http://localhost/assets/usdc.png&quot;,
+            &quot;official_raffle&quot;: false,
+            &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+            &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+        }
+    ],
+    &quot;first_page_url&quot;: &quot;http://localhost/api/raffles?page=1&quot;,
+    &quot;from&quot;: 1,
+    &quot;last_page&quot;: 3,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/raffles?page=3&quot;,
+    &quot;next_page_url&quot;: &quot;http://localhost/api/raffles?page=2&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/raffles&quot;,
+    &quot;per_page&quot;: 20,
+    &quot;prev_page_url&quot;: null,
+    &quot;to&quot;: 20,
+    &quot;total&quot;: 42
 }</code>
  </pre>
     </span>
@@ -962,7 +1613,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="0x280ed"
                data-component="query">
     <br>
-<p>Filter by creator. Example: <code>0x280ed</code></p>
+<p>Filter by creator wallet address. Example: <code>0x280ed</code></p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>type</code></b>&nbsp;&nbsp;
@@ -971,10 +1622,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="type"                data-endpoint="GETapi-raffles"
-               value="nft"
+               value="crypto"
                data-component="query">
     <br>
-<p>Filter by type (nft, crypto). Example: <code>nft</code></p>
+<p>Filter by prize type (<code>nft</code>, <code>crypto</code>). Example: <code>crypto</code></p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>status</code></b>&nbsp;&nbsp;
@@ -983,10 +1634,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="status"                data-endpoint="GETapi-raffles"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Filter by status (open, completed) Example: <code>consequatur</code></p>
+<p>Filter by status (<code>open</code>, <code>completed</code>).</p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
@@ -1007,10 +1658,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort_by"                data-endpoint="GETapi-raffles"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Sort column (contract_raffle_id, created_at, expire_at, sold_tickets, max_tickets, prize_amount_or_token_id). Default: contract_raffle_id Example: <code>consequatur</code></p>
+<p>Sort column. One of: <code>contract_raffle_id</code>, <code>created_at</code>, <code>expire_at</code>, <code>sold_tickets</code>, <code>max_tickets</code>, <code>prize_amount_or_token_id</code>. Default: <code>contract_raffle_id</code>.</p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>sort_dir</code></b>&nbsp;&nbsp;
@@ -1019,10 +1670,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort_dir"                data-endpoint="GETapi-raffles"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Sort direction (asc, desc). Default: desc Example: <code>consequatur</code></p>
+<p>Sort direction (<code>asc</code>, <code>desc</code>). Default: <code>desc</code>.</p>
             </div>
                 </form>
 
@@ -1068,8 +1719,48 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;raffle&quot;: {},
-    &quot;your_tickets&quot;: 0
+    &quot;raffle&quot;: {
+        &quot;id&quot;: 1,
+        &quot;contract_raffle_id&quot;: 7,
+        &quot;owner_address&quot;: &quot;0xabc123&quot;,
+        &quot;type&quot;: &quot;crypto&quot;,
+        &quot;status&quot;: &quot;open&quot;,
+        &quot;underfilled&quot;: false,
+        &quot;registered_on_chain&quot;: true,
+        &quot;title&quot;: &quot;Raffle #7&quot;,
+        &quot;description&quot;: &quot;Win USDC!&quot;,
+        &quot;prize_asset&quot;: &quot;0xtoken&quot;,
+        &quot;prize_asset_symbol&quot;: &quot;USDC&quot;,
+        &quot;prize_asset_name&quot;: &quot;USD Coin&quot;,
+        &quot;prize_asset_decimals&quot;: 6,
+        &quot;prize_amount_or_token_id&quot;: &quot;100000000&quot;,
+        &quot;ticket_price_amount&quot;: &quot;1000000&quot;,
+        &quot;max_tickets&quot;: 100,
+        &quot;sold_tickets&quot;: 42,
+        &quot;expire_at&quot;: &quot;2026-05-01 00:00:00&quot;,
+        &quot;raffle_tx_hash&quot;: &quot;0xdef456&quot;,
+        &quot;winner_address&quot;: null,
+        &quot;winner_picked_tx_hash&quot;: null,
+        &quot;image_url&quot;: &quot;http://localhost/assets/usdc.png&quot;,
+        &quot;official_raffle&quot;: false,
+        &quot;owner&quot;: {
+            &quot;address&quot;: &quot;0xabc123&quot;,
+            &quot;profile_picture&quot;: null
+        },
+        &quot;winner&quot;: null,
+        &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+        &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+    },
+    &quot;your_tickets&quot;: 3
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Not Found&quot;
 }</code>
  </pre>
     </span>
@@ -1167,7 +1858,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value="1"
                data-component="url">
     <br>
-<p>Raffle id. Example: <code>1</code></p>
+<p>Raffle ID. Example: <code>1</code></p>
             </div>
                     </form>
 
@@ -1191,7 +1882,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --form "raffle_tx_hash=0xabc123"\
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\phpB9CE.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php3019.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -1347,7 +2038,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\phpB9CE.tmp</code></p>
+<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php3019.tmp</code></p>
         </div>
         </form>
 
@@ -1370,7 +2061,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\phpB9D0.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php301B.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -1538,7 +2229,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\phpB9D0.tmp</code></p>
+<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php301B.tmp</code></p>
         </div>
         </form>
 
@@ -1559,7 +2250,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://api.raffled.live/api/users?address=0x123abc...&amp;sort_by=consequatur&amp;sort_dir=consequatur" \
+    --get "https://api.raffled.live/api/users?address=0x123" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
@@ -1570,9 +2261,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
 );
 
 const params = {
-    "address": "0x123abc...",
-    "sort_by": "consequatur",
-    "sort_dir": "consequatur",
+    "address": "0x123",
 };
 Object.keys(params)
     .forEach(key =&gt; url.searchParams.append(key, params[key]));
@@ -1596,9 +2285,25 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: [],
-    &quot;meta&quot;: {},
-    &quot;links&quot;: {}
+    &quot;current_page&quot;: 1,
+    &quot;data&quot;: [
+        {
+            &quot;address&quot;: &quot;0xabc123&quot;,
+            &quot;profile_picture&quot;: &quot;http://localhost/storage/users/0xabc123/avatar.jpg&quot;,
+            &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+            &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+        }
+    ],
+    &quot;from&quot;: 1,
+    &quot;to&quot;: 20,
+    &quot;total&quot;: 120,
+    &quot;per_page&quot;: 20,
+    &quot;last_page&quot;: 6,
+    &quot;first_page_url&quot;: &quot;http://localhost/api/users?page=1&quot;,
+    &quot;next_page_url&quot;: &quot;http://localhost/api/users?page=2&quot;,
+    &quot;prev_page_url&quot;: null,
+    &quot;last_page_url&quot;: &quot;http://localhost/api/users?page=6&quot;,
+    &quot;path&quot;: &quot;http://localhost/api/users&quot;
 }</code>
  </pre>
     </span>
@@ -1681,10 +2386,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="address"                data-endpoint="GETapi-users"
-               value="0x123abc..."
+               value="0x123"
                data-component="query">
     <br>
-<p>Filter by wallet address. Example: <code>0x123abc...</code></p>
+<p>Filter by wallet address (partial match). Example: <code>0x123</code></p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>sort_by</code></b>&nbsp;&nbsp;
@@ -1693,10 +2398,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort_by"                data-endpoint="GETapi-users"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Sort column (created_at). Default: created_at. Example: <code>consequatur</code></p>
+<p>Sort column. Only <code>created_at</code> is supported. Default: <code>created_at</code>.</p>
             </div>
                                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>sort_dir</code></b>&nbsp;&nbsp;
@@ -1705,10 +2410,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="sort_dir"                data-endpoint="GETapi-users"
-               value="consequatur"
+               value=""
                data-component="query">
     <br>
-<p>Sort direction (asc, desc). Default: desc. Example: <code>consequatur</code></p>
+<p>Sort direction (<code>asc</code>, <code>desc</code>). Default: <code>desc</code>.</p>
             </div>
                 </form>
 
@@ -1754,7 +2459,21 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: {}
+    &quot;data&quot;: {
+        &quot;address&quot;: &quot;0xabc123&quot;,
+        &quot;profile_picture&quot;: &quot;http://localhost/storage/users/0xabc123/avatar.jpg&quot;,
+        &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+        &quot;updated_at&quot;: &quot;2026-04-10 00:00:00&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Not Found&quot;
 }</code>
  </pre>
     </span>
@@ -1849,10 +2568,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="user"                data-endpoint="GETapi-users--user_address-"
-               value="0x..."
+               value="0xabc123"
                data-component="url">
     <br>
-<p>User address. Example: <code>0x...</code></p>
+<p>Wallet address of the user. Example: <code>0xabc123</code></p>
             </div>
                     </form>
 
@@ -1874,7 +2593,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
-    --form "profile_picture=@C:\laragon\tmp\phpB9D2.tmp" </code></pre></div>
+    --form "profile_picture=@C:\laragon\tmp\php302C.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -1906,7 +2625,22 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;data&quot;: {}
+    &quot;data&quot;: {
+        &quot;address&quot;: &quot;0xabc123&quot;,
+        &quot;profile_picture&quot;: &quot;http://localhost/storage/users/0xabc123/avatar.jpg&quot;,
+        &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+        &quot;updated_at&quot;: &quot;2026-04-11 09:00:00&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The profile picture field must be an image.&quot;,
+    &quot;errors&quot;: {}
 }</code>
  </pre>
     </span>
@@ -2004,7 +2738,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>nullable Profile picture image (max 2MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\phpB9D2.tmp</code></p>
+<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php302C.tmp</code></p>
         </div>
         </form>
 
@@ -2131,12 +2865,18 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                         </form>
 
-                    <h2 id="wallet-auth-POSTapi-auth-verify">Verify signed message (Solana/Base)</h2>
+                    <h2 id="wallet-auth-POSTapi-auth-verify">Verify wallet signature and issue token.</h2>
 
 <p>
 </p>
 
-
+<p>Verifies the signed message from a wallet and returns a Sanctum bearer
+token valid for 24 hours.</p>
+<p>The sign message must include:</p>
+<ul>
+<li><code>Address: &lt;wallet_address&gt;</code></li>
+<li><code>Nonce: &lt;nonce_from_GET_nonce&gt;</code></li>
+</ul>
 
 <span id="example-requests-POSTapi-auth-verify">
 <blockquote>Example request:</blockquote>
@@ -2148,10 +2888,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: application/json" \
     --header "Accept: application/json" \
     --data "{
-    \"message\": \"consequatur\",
-    \"signature\": \"consequatur\",
-    \"address\": \"consequatur\",
-    \"chain\": \"consequatur\"
+    \"message\": \"\\\"Raffled\\\\nAddress: 0xabc\\\\nNonce: f3a1b2c3\\\"\",
+    \"signature\": \"0xdeadbeef...\",
+    \"address\": \"0xabc123\",
+    \"chain\": \"base\"
 }"
 </code></pre></div>
 
@@ -2167,10 +2907,10 @@ const headers = {
 };
 
 let body = {
-    "message": "consequatur",
-    "signature": "consequatur",
-    "address": "consequatur",
-    "chain": "consequatur"
+    "message": "\"Raffled\\nAddress: 0xabc\\nNonce: f3a1b2c3\"",
+    "signature": "0xdeadbeef...",
+    "address": "0xabc123",
+    "chain": "base"
 };
 
 fetch(url, {
@@ -2188,9 +2928,14 @@ fetch(url, {
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
-    &quot;token&quot;: &quot;&lt;sanctum_token&gt;&quot;,
-    &quot;expires_at&quot;: &quot;2026-02-02 12:00:00&quot;,
-    &quot;user&quot;: {},
+    &quot;token&quot;: &quot;1|AbCdEf...&quot;,
+    &quot;expires_at&quot;: &quot;2026-04-12 09:00:00&quot;,
+    &quot;user&quot;: {
+        &quot;address&quot;: &quot;0xabc123&quot;,
+        &quot;profile_picture&quot;: null,
+        &quot;created_at&quot;: &quot;2026-04-01 00:00:00&quot;,
+        &quot;updated_at&quot;: &quot;2026-04-11 09:00:00&quot;
+    },
     &quot;chain&quot;: &quot;base&quot;
 }</code>
  </pre>
@@ -2204,12 +2949,31 @@ fetch(url, {
 }</code>
  </pre>
             <blockquote>
+            <p>Example response (400):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;error&quot;: &quot;Address mismatch&quot;
+}</code>
+ </pre>
+            <blockquote>
             <p>Example response (401):</p>
         </blockquote>
                 <pre>
 
 <code class="language-json" style="max-height: 300px;">{
     &quot;error&quot;: &quot;Invalid signature&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;The chain field must be one of: solana, base.&quot;,
+    &quot;errors&quot;: {}
 }</code>
  </pre>
     </span>
@@ -2292,10 +3056,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="message"                data-endpoint="POSTapi-auth-verify"
-               value="consequatur"
+               value=""Raffled\nAddress: 0xabc\nNonce: f3a1b2c3""
                data-component="body">
     <br>
-<p>Message containing Address and Nonce, signed via personal_sign (Base) or ed25519 (Solana). Example: <code>consequatur</code></p>
+<p>Signed message containing Address and Nonce. Example: <code>"Raffled\nAddress: 0xabc\nNonce: f3a1b2c3"</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>signature</code></b>&nbsp;&nbsp;
@@ -2304,10 +3068,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="signature"                data-endpoint="POSTapi-auth-verify"
-               value="consequatur"
+               value="0xdeadbeef..."
                data-component="body">
     <br>
-<p>Message signature. Base58 for Solana, 0x-hex 65-byte for Base. Example: <code>consequatur</code></p>
+<p>Wallet signature. Base58 for Solana; 0x-prefixed 65-byte hex for Base. Example: <code>0xdeadbeef...</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>address</code></b>&nbsp;&nbsp;
@@ -2316,10 +3080,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="address"                data-endpoint="POSTapi-auth-verify"
-               value="consequatur"
+               value="0xabc123"
                data-component="body">
     <br>
-<p>Signer public key. Base58 for Solana, 0x-hex for Base. Example: <code>consequatur</code></p>
+<p>Signer public key / wallet address. Example: <code>0xabc123</code></p>
         </div>
                 <div style=" padding-left: 28px;  clear: unset;">
             <b style="line-height: 2;"><code>chain</code></b>&nbsp;&nbsp;
@@ -2328,10 +3092,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="chain"                data-endpoint="POSTapi-auth-verify"
-               value="consequatur"
+               value="base"
                data-component="body">
     <br>
-<p>Network. One of: solana, base. Example: <code>consequatur</code></p>
+<p>Network. One of: <code>solana</code>, <code>base</code>. Example: <code>base</code></p>
         </div>
         </form>
 

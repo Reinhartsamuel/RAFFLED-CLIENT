@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { QueryClientProvider } from '@tanstack/react-query'
+import { QueryClientProvider, useQuery } from '@tanstack/react-query'
 import { WagmiProvider } from 'wagmi'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -17,6 +17,27 @@ import { RaffleCard } from './components/evm/RaffleCard'
 import posterImg from './assets/poster.webp'
 import { staggerContainer, staggerItem, scaleIn, fadeInUp } from './utils/animations'
 import Faucet from './pages/Faucet'
+import Activity from './pages/Activity'
+import { EventToastContainer } from './components/evm/EventToast'
+
+const RAFFLE_CACHE_TTL = 30_000 // 30 seconds
+
+function buildRafflesUrl(filter: string): string {
+  const url = new URL(`${BACKEND_URL}/raffles`)
+  if (filter === 'official') {
+    url.searchParams.set('owner_address', '0x753dfc03b4d37b3a316d0fe5ab9f677c0d3c20f8')
+  } else if (filter === 'recent') {
+    url.searchParams.set('sort_by', 'created_at')
+    url.searchParams.set('sort_dir', 'desc')
+  } else if (filter === 'tokens') {
+    url.searchParams.set('type', 'crypto')
+  } else if (filter === 'nft') {
+    url.searchParams.set('type', 'nft')
+  } else if (filter === 'ended') {
+    url.searchParams.set('status', 'completed')
+  }
+  return url.toString()
+}
 
 const onboardingSteps = [
   { icon: '✌', title: 'Welcome aboard', desc: 'Connect your wallet.', done: true },
@@ -31,18 +52,14 @@ export function HomePage() {
 
   const [activeFilter, setActiveFilter] = useState('home')
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [raffles, setRaffles] = useState<BackendRaffle[]>([])
-  const [rafflesLoading, setRafflesLoading] = useState(false)
 
   const activeToken = getAuthToken()
 
-  const fetchRaffles = useCallback(async () => {
-    try {
-      setRafflesLoading(true)
+  const { data: rafflesData, isLoading: rafflesLoading, refetch: refetchRaffles } = useQuery<BackendRaffle[]>({
+    queryKey: ['raffles', activeFilter],
+    queryFn: async () => {
       const token = getAuthToken()
-      const url = new URL(`${BACKEND_URL}/raffles`)
-
-      const res = await apiFetch(url.toString(), {
+      const res = await apiFetch(buildRafflesUrl(activeFilter), {
         method: 'GET',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -50,22 +67,15 @@ export function HomePage() {
           Accept: 'application/json',
         },
       })
-
       const data = await res.json()
-      console.log('Fetched raffles from API:', data)
-      setRaffles(data.data || [])
-    } catch (err) {
-      console.error('Failed to fetch raffles:', err)
-    } finally {
-      setRafflesLoading(false)
-    }
-  }, [])
+      return data.data || []
+    },
+    enabled: isConnected,
+    staleTime: RAFFLE_CACHE_TTL,
+    gcTime: RAFFLE_CACHE_TTL * 2,
+  })
 
-  useEffect(() => {
-    if (isConnected) {
-      fetchRaffles()
-    }
-  }, [isConnected, fetchRaffles])
+  const raffles = rafflesData ?? []
 
   const totalRaffles = Number(raffleCount || 0)
 
@@ -197,11 +207,38 @@ export function HomePage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="border border-dashed border-[#1f1f1f] rounded-xl py-16 text-center bg-[#0a0a0a]"
+                  className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                 >
-                  <div className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
-                    Loading raffles...
-                  </div>
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="w-full bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1f1f1f]">
+                      {/* Image placeholder */}
+                      <div className="aspect-square w-full bg-[#111111] animate-pulse" />
+                      {/* Body placeholder */}
+                      <div className="p-5 space-y-4">
+                        <div className="flex items-end justify-between">
+                          <div className="space-y-2">
+                            <div className="h-2 w-16 bg-[#1a1a1a] rounded animate-pulse" />
+                            <div className="h-7 w-24 bg-[#1a1a1a] rounded animate-pulse" />
+                          </div>
+                          <div className="space-y-2 items-end flex flex-col">
+                            <div className="h-2 w-10 bg-[#1a1a1a] rounded animate-pulse" />
+                            <div className="h-5 w-8 bg-[#1a1a1a] rounded animate-pulse" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex justify-between">
+                            <div className="h-2 w-20 bg-[#1a1a1a] rounded animate-pulse" />
+                            <div className="h-2 w-12 bg-[#1a1a1a] rounded animate-pulse" />
+                          </div>
+                          <div className="h-2 w-full bg-[#1a1a1a] rounded-full animate-pulse" />
+                          <div className="flex justify-between">
+                            <div className="h-2 w-14 bg-[#1a1a1a] rounded animate-pulse" />
+                            <div className="h-2 w-10 bg-[#1a1a1a] rounded animate-pulse" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </motion.div>
               ) : raffles.length === 0 ? (
                 <motion.div
@@ -223,8 +260,8 @@ export function HomePage() {
                 </motion.div>
               ) : (
                 <motion.div
-                  key="grid"
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                  key={`grid-${activeFilter}`}
+                  className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
                   variants={staggerContainer}
                   initial="initial"
                   animate="animate"
@@ -247,7 +284,7 @@ export function HomePage() {
           onClose={() => {
             setShowCreateModal(false)
             refetchRaffleCount()
-            fetchRaffles()
+            refetchRaffles()
           }}
         />
       )}
@@ -263,7 +300,10 @@ export default function Home() {
           <Route path="/" element={<HomePage />} />
           <Route path="/raffle/:id" element={<RaffleDetail />} />
           <Route path="/faucet" element={<Faucet />} />
+          <Route path="/activity" element={<Activity />} />
         </Routes>
+        {/* Global SSE toast notifications — persists across page navigations */}
+        <EventToastContainer />
       </QueryClientProvider>
     </WagmiProvider>
   )

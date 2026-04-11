@@ -10,42 +10,79 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "3c4e00b0-adf8-431f-8a63-4f98db1e1456",
+        "_postman_id": "2c9ef802-3bb9-4ad3-b2a3-d576865adc03",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
     "item": [
         {
-            "name": "Fee Change Events",
+            "name": "Endpoints",
             "description": "",
             "item": [
                 {
-                    "name": "List on-chain fee change events.",
+                    "name": "Handle incoming Alchemy webhook.",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/fee-change-events",
+                            "path": "api\/webhooks\/alchemy",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/webhooks\/alchemy"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": ""
+                    },
+                    "response": []
+                }
+            ]
+        },
+        {
+            "name": "Events",
+            "description": "",
+            "item": [
+                {
+                    "name": "List on-chain events.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/events",
                             "query": [
                                 {
+                                    "key": "event_type",
+                                    "value": "",
+                                    "description": "Filter by event type. One of: `RaffleCreated`, `TicketPurchased`, `WinnerPicked`, `RaffleExpired`, `UnderfilledPrizeReturned`, `PlatformFeeCollected`, `FeeChangeProposed`.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "since_block",
+                                    "value": "39000000",
+                                    "description": "Only return events at or after this block number.",
+                                    "disabled": false
+                                },
+                                {
                                     "key": "tx_hash",
-                                    "value": "consequatur",
+                                    "value": "0xabc123",
                                     "description": "Filter by transaction hash.",
                                     "disabled": false
                                 },
                                 {
                                     "key": "per_page",
                                     "value": "20",
-                                    "description": "Number of records per page (1-50).",
-                                    "disabled": false
-                                },
-                                {
-                                    "key": "sort_dir",
-                                    "value": "consequatur",
-                                    "description": "Sort direction (asc, desc). Default: desc",
+                                    "description": "Number of results per page (default: 20, max: 100).",
                                     "disabled": false
                                 }
                             ],
-                            "raw": "{{baseUrl}}\/api\/fee-change-events?tx_hash=consequatur&per_page=20&sort_dir=consequatur"
+                            "raw": "{{baseUrl}}\/api\/events?event_type=&since_block=39000000&tx_hash=0xabc123&per_page=20"
                         },
                         "method": "GET",
                         "header": [
@@ -59,7 +96,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "",
+                        "description": "Returns a paginated list of all successfully processed on-chain events,\nordered by blockchain ordering (`block_number` DESC, `log_index` DESC).",
                         "auth": {
                             "type": "noauth"
                         }
@@ -68,13 +105,127 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 42,\n      \"event_type\": \"TicketPurchased\",\n      \"source\": \"webhook\",\n      \"block_number\": 39000100,\n      \"log_index\": 3,\n      \"tx_hash\": \"0xabc123\",\n      \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n      \"created_at\": \"2026-04-11 09:00:00\"\n    }\n  ],\n  \"first_page_url\": \"http:\/\/localhost\/api\/events?page=1\",\n  \"from\": 1,\n  \"last_page\": 5,\n  \"last_page_url\": \"http:\/\/localhost\/api\/events?page=5\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/events?page=2\",\n  \"path\": \"http:\/\/localhost\/api\/events\",\n  \"per_page\": 20,\n  \"prev_page_url\": null,\n  \"to\": 20,\n  \"total\": 97\n}",
                             "name": ""
                         }
                     ]
                 },
                 {
-                    "name": "Show one on-chain fee change event.",
+                    "name": "Stream on-chain events (SSE).",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/events\/stream",
+                            "query": [
+                                {
+                                    "key": "last_block",
+                                    "value": "39000100",
+                                    "description": "Resume cursor \u2014 block number of the last received event.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "last_log_index",
+                                    "value": "3",
+                                    "description": "Resume cursor \u2014 log index of the last received event.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "event_type",
+                                    "value": "TicketPurchased",
+                                    "description": "Filter by event type. One of: `RaffleCreated`, `TicketPurchased`, `WinnerPicked`, `RaffleExpired`, `UnderfilledPrizeReturned`, `PlatformFeeCollected`, `FeeChangeProposed`.",
+                                    "disabled": false
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/events\/stream?last_block=39000100&last_log_index=3&event_type=TicketPurchased"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Opens a persistent **Server-Sent Events** connection that pushes every\nraffle event in blockchain order (`block_number` ASC \u2192 `log_index` ASC).\n\nOn first connection (no cursor) the server replays the latest 50 events\nand then polls every 3 seconds for new ones.\nUse the `Last-Event-ID` header (format: `{block_number}:{log_index}`) or\nthe `last_block` \/ `last_log_index` query params to resume from a cursor.\n\nEach pushed message has the SSE event name **`event_log`**:\n```\nid: 39000100:3\nevent: event_log\ndata: {\"id\":42,\"event_type\":\"TicketPurchased\",\"source\":\"webhook\", ...}\n```\n\nA `\": heartbeat\"` comment is sent when there are no new events to keep\nthe connection alive.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"id\": \"39000100:3\",\n  \"event\": \"event_log\",\n  \"data\": {\n    \"id\": 42,\n    \"event_type\": \"TicketPurchased\",\n    \"source\": \"webhook\",\n    \"block_number\": 39000100,\n    \"log_index\": 3,\n    \"tx_hash\": \"0xabc123\",\n    \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n    \"created_at\": \"2026-04-11 09:00:00\"\n  }\n}",
+                            "name": "SSE stream (text\/event-stream)"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Fee Change Events",
+            "description": "",
+            "item": [
+                {
+                    "name": "List fee change events.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/fee-change-events",
+                            "query": [
+                                {
+                                    "key": "tx_hash",
+                                    "value": "",
+                                    "description": "Filter by transaction hash.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "per_page",
+                                    "value": "20",
+                                    "description": "Records per page (1\u201350). Default: 20.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_dir",
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/fee-change-events?tx_hash=&per_page=20&sort_dir="
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns paginated on-chain fee change events, ordered by `effective_at`.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"new_fee_bps\": 250,\n      \"effective_at\": \"2026-05-01 00:00:00\",\n      \"tx_hash\": \"0xabc123\",\n      \"created_at\": \"2026-04-10 00:00:00\",\n      \"updated_at\": \"2026-04-10 00:00:00\"\n    }\n  ],\n  \"from\": 1, \"to\": 20, \"total\": 3,\n  \"per_page\": 20, \"last_page\": 1,\n  \"first_page_url\": \"http:\/\/localhost\/api\/fee-change-events?page=1\",\n  \"next_page_url\": null,\n  \"prev_page_url\": null,\n  \"last_page_url\": \"http:\/\/localhost\/api\/fee-change-events?page=1\",\n  \"path\": \"http:\/\/localhost\/api\/fee-change-events\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Show a fee change event.",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
@@ -92,7 +243,7 @@
                                     "id": "feeChangeEvent",
                                     "key": "feeChangeEvent",
                                     "value": "1",
-                                    "description": "Event id."
+                                    "description": "Fee change event ID."
                                 }
                             ]
                         },
@@ -117,7 +268,13 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"id\":1}",
+                            "body": "{\n  \"id\": 1,\n  \"new_fee_bps\": 250,\n  \"effective_at\": \"2026-05-01 00:00:00\",\n  \"tx_hash\": \"0xabc123\",\n  \"created_at\": \"2026-04-10 00:00:00\",\n  \"updated_at\": \"2026-04-10 00:00:00\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"Not Found\"}",
                             "name": ""
                         }
                     ]
@@ -129,7 +286,7 @@
             "description": "",
             "item": [
                 {
-                    "name": "Leaderboard for a raffle.",
+                    "name": "Raffle leaderboard.",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
@@ -138,7 +295,7 @@
                                 {
                                     "key": "per_page",
                                     "value": "10",
-                                    "description": "Number of records per page (1-20).",
+                                    "description": "Records per page (1\u201320). Default: 10.",
                                     "disabled": false
                                 }
                             ],
@@ -154,7 +311,7 @@
                                     "id": "raffle",
                                     "key": "raffle",
                                     "value": "1",
-                                    "description": "Raffle id."
+                                    "description": "Raffle ID."
                                 }
                             ]
                         },
@@ -170,7 +327,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "",
+                        "description": "Returns top ticket buyers for a raffle, grouped by wallet address and\nsorted by total tickets purchased (desc).",
                         "auth": {
                             "type": "noauth"
                         }
@@ -179,7 +336,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"user_address\": \"0xabc123\",\n      \"tickets\": 15,\n      \"total_spent_raw\": \"15000000\"\n    }\n  ],\n  \"from\": 1, \"to\": 10, \"total\": 42,\n  \"per_page\": 10, \"last_page\": 5,\n  \"first_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/leaderboard?page=1\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/leaderboard?page=2\",\n  \"prev_page_url\": null,\n  \"last_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/leaderboard?page=5\",\n  \"path\": \"http:\/\/localhost\/api\/raffles\/1\/leaderboard\"\n}",
                             "name": ""
                         }
                     ]
@@ -194,7 +351,7 @@
                                 {
                                     "key": "per_page",
                                     "value": "10",
-                                    "description": "Number of records per page (1-20).",
+                                    "description": "Records per page (1\u201320). Default: 10.",
                                     "disabled": false
                                 }
                             ],
@@ -210,7 +367,7 @@
                                     "id": "raffle",
                                     "key": "raffle",
                                     "value": "1",
-                                    "description": "Raffle id."
+                                    "description": "Raffle ID."
                                 }
                             ]
                         },
@@ -226,7 +383,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "",
+                        "description": "Returns the most recent ticket purchase records for a raffle,\nordered by newest first.",
                         "auth": {
                             "type": "noauth"
                         }
@@ -235,7 +392,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 99,\n      \"raffle_id\": 1,\n      \"contract_raffle_id\": 7,\n      \"user_address\": \"0xdef456\",\n      \"quantity\": 2,\n      \"ticket_tx_hash\": \"0xabc789\",\n      \"created_at\": \"2026-04-10 10:00:00\",\n      \"updated_at\": \"2026-04-10 10:00:00\"\n    }\n  ],\n  \"from\": 1, \"to\": 10, \"total\": 55,\n  \"per_page\": 10, \"last_page\": 6,\n  \"first_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/transactions?page=1\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/transactions?page=2\",\n  \"prev_page_url\": null,\n  \"last_page_url\": \"http:\/\/localhost\/api\/raffles\/1\/transactions?page=6\",\n  \"path\": \"http:\/\/localhost\/api\/raffles\/1\/transactions\"\n}",
                             "name": ""
                         }
                     ]
@@ -256,20 +413,20 @@
                                 {
                                     "key": "owner_address",
                                     "value": "0x280ed",
-                                    "description": "Filter by creator.",
+                                    "description": "Filter by creator wallet address.",
                                     "disabled": false
                                 },
                                 {
                                     "key": "type",
-                                    "value": "nft",
-                                    "description": "Filter by type (nft, crypto).",
+                                    "value": "crypto",
+                                    "description": "Filter by prize type (`nft`, `crypto`).",
                                     "disabled": false
                                 },
                                 {
                                     "key": "status",
-                                    "value": "consequatur",
-                                    "description": "Filter by status (open, completed)",
-                                    "disabled": false
+                                    "value": "",
+                                    "description": "Filter by status (`open`, `completed`).",
+                                    "disabled": true
                                 },
                                 {
                                     "key": "search",
@@ -279,18 +436,18 @@
                                 },
                                 {
                                     "key": "sort_by",
-                                    "value": "consequatur",
-                                    "description": "Sort column (contract_raffle_id, created_at, expire_at, sold_tickets, max_tickets, prize_amount_or_token_id). Default: contract_raffle_id",
-                                    "disabled": false
+                                    "value": "",
+                                    "description": "Sort column. One of: `contract_raffle_id`, `created_at`, `expire_at`, `sold_tickets`, `max_tickets`, `prize_amount_or_token_id`. Default: `contract_raffle_id`.",
+                                    "disabled": true
                                 },
                                 {
                                     "key": "sort_dir",
-                                    "value": "consequatur",
-                                    "description": "Sort direction (asc, desc). Default: desc",
-                                    "disabled": false
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
                                 }
                             ],
-                            "raw": "{{baseUrl}}\/api\/raffles?owner_address=0x280ed&type=nft&status=consequatur&search=giveaway&sort_by=consequatur&sort_dir=consequatur"
+                            "raw": "{{baseUrl}}\/api\/raffles?owner_address=0x280ed&type=crypto&status=&search=giveaway&sort_by=&sort_dir="
                         },
                         "method": "GET",
                         "header": [
@@ -304,7 +461,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "",
+                        "description": "Returns a paginated list of all on-chain-registered raffles.\nOrdered by `contract_raffle_id` desc by default.",
                         "auth": {
                             "type": "noauth"
                         }
@@ -313,7 +470,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"contract_raffle_id\": 7,\n      \"owner_address\": \"0xabc123\",\n      \"type\": \"crypto\",\n      \"status\": \"open\",\n      \"underfilled\": false,\n      \"registered_on_chain\": true,\n      \"title\": \"Raffle #7\",\n      \"description\": \"Win USDC!\",\n      \"prize_asset\": \"0xtoken\",\n      \"prize_asset_symbol\": \"USDC\",\n      \"prize_asset_name\": \"USD Coin\",\n      \"prize_asset_decimals\": 6,\n      \"prize_amount_or_token_id\": \"100000000\",\n      \"ticket_price_amount\": \"1000000\",\n      \"max_tickets\": 100,\n      \"sold_tickets\": 42,\n      \"expire_at\": \"2026-05-01 00:00:00\",\n      \"raffle_tx_hash\": \"0xdef456\",\n      \"winner_address\": null,\n      \"winner_picked_tx_hash\": null,\n      \"image_url\": \"http:\/\/localhost\/assets\/usdc.png\",\n      \"official_raffle\": false,\n      \"created_at\": \"2026-04-01 00:00:00\",\n      \"updated_at\": \"2026-04-10 00:00:00\"\n    }\n  ],\n  \"first_page_url\": \"http:\/\/localhost\/api\/raffles?page=1\",\n  \"from\": 1,\n  \"last_page\": 3,\n  \"last_page_url\": \"http:\/\/localhost\/api\/raffles?page=3\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/raffles?page=2\",\n  \"path\": \"http:\/\/localhost\/api\/raffles\",\n  \"per_page\": 20,\n  \"prev_page_url\": null,\n  \"to\": 20,\n  \"total\": 42\n}",
                             "name": ""
                         }
                     ]
@@ -337,7 +494,7 @@
                                     "id": "raffle",
                                     "key": "raffle",
                                     "value": "1",
-                                    "description": "Raffle id."
+                                    "description": "Raffle ID."
                                 }
                             ]
                         },
@@ -362,7 +519,13 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"raffle\":{},\"your_tickets\":0}",
+                            "body": "{\n  \"raffle\": {\n    \"id\": 1,\n    \"contract_raffle_id\": 7,\n    \"owner_address\": \"0xabc123\",\n    \"type\": \"crypto\",\n    \"status\": \"open\",\n    \"underfilled\": false,\n    \"registered_on_chain\": true,\n    \"title\": \"Raffle #7\",\n    \"description\": \"Win USDC!\",\n    \"prize_asset\": \"0xtoken\",\n    \"prize_asset_symbol\": \"USDC\",\n    \"prize_asset_name\": \"USD Coin\",\n    \"prize_asset_decimals\": 6,\n    \"prize_amount_or_token_id\": \"100000000\",\n    \"ticket_price_amount\": \"1000000\",\n    \"max_tickets\": 100,\n    \"sold_tickets\": 42,\n    \"expire_at\": \"2026-05-01 00:00:00\",\n    \"raffle_tx_hash\": \"0xdef456\",\n    \"winner_address\": null,\n    \"winner_picked_tx_hash\": null,\n    \"image_url\": \"http:\/\/localhost\/assets\/usdc.png\",\n    \"official_raffle\": false,\n    \"owner\": {\"address\": \"0xabc123\", \"profile_picture\": null},\n    \"winner\": null,\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-10 00:00:00\"\n  },\n  \"your_tickets\": 3\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"Not Found\"}",
                             "name": ""
                         }
                     ]
@@ -496,24 +659,24 @@
                             "query": [
                                 {
                                     "key": "address",
-                                    "value": "0x123abc...",
-                                    "description": "Filter by wallet address.",
+                                    "value": "0x123",
+                                    "description": "Filter by wallet address (partial match).",
                                     "disabled": false
                                 },
                                 {
                                     "key": "sort_by",
-                                    "value": "consequatur",
-                                    "description": "Sort column (created_at). Default: created_at.",
-                                    "disabled": false
+                                    "value": "",
+                                    "description": "Sort column. Only `created_at` is supported. Default: `created_at`.",
+                                    "disabled": true
                                 },
                                 {
                                     "key": "sort_dir",
-                                    "value": "consequatur",
-                                    "description": "Sort direction (asc, desc). Default: desc.",
-                                    "disabled": false
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
                                 }
                             ],
-                            "raw": "{{baseUrl}}\/api\/users?address=0x123abc...&sort_by=consequatur&sort_dir=consequatur"
+                            "raw": "{{baseUrl}}\/api\/users?address=0x123&sort_by=&sort_dir="
                         },
                         "method": "GET",
                         "header": [
@@ -536,7 +699,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":[],\"meta\":{},\"links\":{}}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"address\": \"0xabc123\",\n      \"profile_picture\": \"http:\/\/localhost\/storage\/users\/0xabc123\/avatar.jpg\",\n      \"created_at\": \"2026-04-01 00:00:00\",\n      \"updated_at\": \"2026-04-10 00:00:00\"\n    }\n  ],\n  \"from\": 1, \"to\": 20, \"total\": 120,\n  \"per_page\": 20, \"last_page\": 6,\n  \"first_page_url\": \"http:\/\/localhost\/api\/users?page=1\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/users?page=2\",\n  \"prev_page_url\": null,\n  \"last_page_url\": \"http:\/\/localhost\/api\/users?page=6\",\n  \"path\": \"http:\/\/localhost\/api\/users\"\n}",
                             "name": ""
                         }
                     ]
@@ -559,8 +722,8 @@
                                 {
                                     "id": "user",
                                     "key": "user",
-                                    "value": "0x...",
-                                    "description": "User address."
+                                    "value": "0xabc123",
+                                    "description": "Wallet address of the user."
                                 }
                             ]
                         },
@@ -585,7 +748,13 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":{}}",
+                            "body": "{\n  \"data\": {\n    \"address\": \"0xabc123\",\n    \"profile_picture\": \"http:\/\/localhost\/storage\/users\/0xabc123\/avatar.jpg\",\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-10 00:00:00\"\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\"message\": \"Not Found\"}",
                             "name": ""
                         }
                     ]
@@ -626,7 +795,13 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"data\":{}}",
+                            "body": "{\n  \"data\": {\n    \"address\": \"0xabc123\",\n    \"profile_picture\": \"http:\/\/localhost\/storage\/users\/0xabc123\/avatar.jpg\",\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-11 09:00:00\"\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\": \"The profile picture field must be an image.\", \"errors\": {}}",
                             "name": ""
                         }
                     ]
@@ -673,7 +848,7 @@
                     ]
                 },
                 {
-                    "name": "Verify signed message (Solana\/Base)",
+                    "name": "Verify wallet signature and issue token.",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
@@ -694,9 +869,9 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\"message\":\"consequatur\",\"signature\":\"consequatur\",\"address\":\"consequatur\",\"chain\":\"consequatur\"}"
+                            "raw": "{\"message\":\"\\\"Raffled\\\\nAddress: 0xabc\\\\nNonce: f3a1b2c3\\\"\",\"signature\":\"0xdeadbeef...\",\"address\":\"0xabc123\",\"chain\":\"base\"}"
                         },
-                        "description": "",
+                        "description": "Verifies the signed message from a wallet and returns a Sanctum bearer\ntoken valid for 24 hours.\n\nThe sign message must include:\n- `Address: <wallet_address>`\n- `Nonce: <nonce_from_GET_nonce>`",
                         "auth": {
                             "type": "noauth"
                         }
@@ -705,19 +880,31 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"token\":\"<sanctum_token>\",\"expires_at\":\"2026-02-02 12:00:00\",\"user\":{},\"chain\":\"base\"}",
+                            "body": "{\n  \"token\": \"1|AbCdEf...\",\n  \"expires_at\": \"2026-04-12 09:00:00\",\n  \"user\": {\n    \"address\": \"0xabc123\",\n    \"profile_picture\": null,\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-11 09:00:00\"\n  },\n  \"chain\": \"base\"\n}",
                             "name": ""
                         },
                         {
                             "header": [],
                             "code": 400,
-                            "body": "{\"error\":\"Invalid or expired nonce\"}",
+                            "body": "{\"error\": \"Invalid or expired nonce\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 400,
+                            "body": "{\"error\": \"Address mismatch\"}",
                             "name": ""
                         },
                         {
                             "header": [],
                             "code": 401,
-                            "body": "{\"error\":\"Invalid signature\"}",
+                            "body": "{\"error\": \"Invalid signature\"}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\": \"The chain field must be one of: solana, base.\", \"errors\": {}}",
                             "name": ""
                         }
                     ]

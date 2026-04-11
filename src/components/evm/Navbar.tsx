@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
 
-export function Navbar() {
+export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { open } = useAppKit()
   const { address, isConnected } = useAppKitAccount()
@@ -107,7 +107,20 @@ export function Navbar() {
     <>
       {/* Header */}
       <header className="bg-[#050505]/90 backdrop-blur-xl border-b border-[#1f1f1f] sticky top-0 z-50">
-        <div className="px-6 py-3.5 flex items-center justify-between gap-4">
+        <div className="px-4 py-3.5 flex items-center justify-between gap-3">
+          {/* Hamburger — mobile only, only when sidebar exists */}
+          {onMenuClick && (
+            <button
+              onClick={onMenuClick}
+              className="md:hidden flex flex-col gap-1.5 w-8 h-8 items-center justify-center flex-shrink-0"
+              aria-label="Open menu"
+            >
+              <span className="block w-5 h-px bg-[#999999]" />
+              <span className="block w-5 h-px bg-[#999999]" />
+              <span className="block w-5 h-px bg-[#999999]" />
+            </button>
+          )}
+
           {/* Logo */}
           <div
             className="flex items-center gap-3 cursor-pointer select-none"
@@ -122,7 +135,7 @@ export function Navbar() {
               <h1 className="font-sans font-bold text-xl tracking-tight text-[#F5F5F5] leading-none">
                 RAFFLED<span className="text-[#FFB800]">.</span>
               </h1>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5 hidden sm:block">
                 On-chain · Chainlink VRF
               </p>
             </div>
@@ -141,8 +154,8 @@ export function Navbar() {
             )}
             {isConnected && authStatus === 'ok' && (
               <span className="font-mono text-xs text-[#22C55E] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-                Authenticated
+                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse flex-shrink-0" />
+                <span className="hidden sm:inline">Authenticated</span>
               </span>
             )}
             <WalletConnect />

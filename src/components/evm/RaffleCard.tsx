@@ -4,6 +4,8 @@ import { formatUnits } from 'viem'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { staggerItem } from '../../utils/animations'
+import fallbackImg from '../../assets/USDC-grey.webp'
+import { safeBigInt } from "../../utils/safeBigInt"
 
 interface TimeUnitProps {
     value: number
@@ -13,12 +15,12 @@ interface TimeUnitProps {
 function TimeUnit({ value, label }: TimeUnitProps) {
     return (
         <div className="flex flex-col items-center">
-            <div className="bg-[#050505] border border-[#1f1f1f] rounded px-1.5 py-0.5 min-w-[28px] text-center">
-                <span className="text-[#FFB800] font-mono text-xs font-bold">
+            <div className="bg-[#050505] border border-[#1f1f1f] rounded px-1 py-0.5 min-w-[18px] sm:min-w-[24px] text-center">
+                <span className="text-[#FFB800] font-mono text-[9px] sm:text-[11px] font-bold leading-none">
                     {value.toString().padStart(2, '0')}
                 </span>
             </div>
-            <span className="text-[#666] text-[8px] mt-0.5 font-mono uppercase">{label}</span>
+            <span className="text-[#666] text-[6px] sm:text-[8px] mt-0.5 font-mono uppercase">{label}</span>
         </div>
     )
 }
@@ -73,10 +75,11 @@ export function RaffleCard({
     const maxTickets = Number(raffle.max_tickets ?? 0)
     const remainingTickets = maxTickets - soldTickets
     const isSoldOut = soldTickets >= maxTickets
-    const ticketPriceBig = BigInt(raffle.ticket_price_amount ?? '0')
-    const ticketPrice = formatUnits(ticketPriceBig, decimals)
+    const ticketPrice = raffle.ticket_price_usd
+        ? Number(raffle.ticket_price_usd).toFixed(2)
+        : formatUnits(safeBigInt(raffle.ticket_price_amount), decimals)
     const progressPct = maxTickets > 0 ? Math.min((soldTickets / maxTickets) * 100, 100) : 0
-    
+
     // Determine if raffle is over 70% sold (for progress bar color)
     const isAlmostSoldOut = progressPct >= 70
 
@@ -106,7 +109,7 @@ export function RaffleCard({
     const isNftPrize = raffle.type === 'nft' || raffle.prize_type === 'erc721'
     const prizeAmountDisplay = isNftPrize
         ? <><span className="text-xs border border-[#FFB800]/40 text-[#FFB800] px-1.5 py-0.5 rounded">NFT</span> #{prizeValue}</>
-        : <>{formatUnits(BigInt(prizeValue), decimals)} <span className="text-[#999999] text-sm">{symbol}</span></>
+        : <>{formatUnits(safeBigInt(prizeValue), decimals)} <span className="text-[#999999] text-sm">{symbol}</span></>
 
     return (
         <motion.div
@@ -141,50 +144,51 @@ export function RaffleCard({
             {/* Image Section */}
             <div className="relative aspect-square w-full overflow-hidden">
                 <img
-                    src={raffle.image_url ?? '/src/assets/USDC-grey.webp'}
+                    src={raffle.image_url || fallbackImg}
                     alt={raffle.title}
                     className="w-full h-full object-cover"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImg }}
                 />
                 
                 {/* Gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-60" />
                 
-                {/* Countdown Timer at Top - Made smaller */}
-                <div className="absolute top-2 left-0 right-0 px-2">
+                {/* Countdown Timer at Top */}
+                <div className="absolute top-2 left-0 right-0 px-1.5">
                     {!isEnded ? (
-                        <div className="flex gap-1 items-center justify-center">
+                        <div className="flex gap-0.5 sm:gap-1 items-center justify-center">
                             <TimeUnit value={timeLeft.days} label="Days" />
-                            <span className="text-[#FFB800] font-mono text-xs mb-2">:</span>
+                            <span className="text-[#FFB800] font-mono text-[9px] sm:text-xs mb-2">:</span>
                             <TimeUnit value={timeLeft.hours} label="Hrs" />
-                            <span className="text-[#FFB800] font-mono text-xs mb-2">:</span>
+                            <span className="text-[#FFB800] font-mono text-[9px] sm:text-xs mb-2">:</span>
                             <TimeUnit value={timeLeft.minutes} label="Min" />
-                            <span className="text-[#FFB800] font-mono text-xs mb-2">:</span>
+                            <span className="text-[#FFB800] font-mono text-[9px] sm:text-xs mb-2">:</span>
                             <TimeUnit value={timeLeft.seconds} label="Sec" />
                         </div>
                     ) : (
                         <div className="flex items-center justify-center">
-                            <div className="bg-[#050505] border border-[#1f1f1f] rounded px-3 py-1">
-                                <span className="text-[#555555] font-mono text-sm font-bold">ENDED</span>
+                            <div className="bg-[#050505] border border-[#1f1f1f] rounded px-2 py-0.5">
+                                <span className="text-[#555555] font-mono text-[10px] sm:text-sm font-bold">ENDED</span>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Status dot - only show when not ended */}
+                {/* Status dot — bottom-right to avoid collision with countdown */}
                 {!isEnded && !isSoldOut && (
-                    <div className="absolute top-2 right-2">
-                        <span className="flex items-center gap-1.5 bg-[#050505]/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-[#1f1f1f]">
-                            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse" />
-                            <span className="font-mono text-[9px] text-[#22C55E] uppercase tracking-wider">Live</span>
+                    <div className="absolute bottom-2 right-2">
+                        <span className="flex items-center gap-1 bg-[#050505]/80 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-[#1f1f1f]">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse flex-shrink-0" />
+                            <span className="font-mono text-[8px] sm:text-[9px] text-[#22C55E] uppercase tracking-wider">Live</span>
                         </span>
                     </div>
                 )}
 
                 {/* Sold Out Badge */}
                 {isSoldOut && (
-                    <div className="absolute top-2 right-2">
-                        <span className="flex items-center gap-1.5 bg-[#050505]/80 backdrop-blur-sm rounded-full px-2 py-0.5 border border-[#1f1f1f]">
-                            <span className="font-mono text-[9px] text-[#EF4444] uppercase tracking-wider">Sold Out</span>
+                    <div className="absolute bottom-2 right-2">
+                        <span className="flex items-center gap-1 bg-[#050505]/80 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-[#1f1f1f]">
+                            <span className="font-mono text-[8px] sm:text-[9px] text-[#EF4444] uppercase tracking-wider">Sold Out</span>
                         </span>
                     </div>
                 )}
@@ -223,26 +227,26 @@ export function RaffleCard({
             </div>
 
             {/* Card Body */}
-            <div className="p-5 space-y-4">
+            <div className="p-3 sm:p-5 space-y-3 sm:space-y-4">
                 {/* Prize Pool + Ticket Price */}
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className="text-[#666] text-xs font-mono uppercase tracking-wider mb-1">Prize Pool</p>
-                        <p className="text-[#FFB800] text-2xl font-mono font-bold">
+                <div className="flex items-center justify-between gap-1">
+                    <div className="min-w-0">
+                        <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Prize Pool</p>
+                        <p className="text-[#FFB800] text-base sm:text-2xl font-mono font-bold truncate">
                             {prizeAmountDisplay}
                         </p>
                     </div>
-                    <div className="text-right">
-                        <p className="text-[#666] text-xs font-mono uppercase tracking-wider mb-1">Ticket</p>
-                        <p className="text-white text-lg font-mono font-semibold">${ticketPrice}</p>
+                    <div className="text-right flex-shrink-0">
+                        <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Ticket</p>
+                        <p className="text-white text-sm sm:text-lg font-mono font-semibold">${ticketPrice}</p>
                     </div>
                 </div>
 
                 {/* Progress Bar with Shimmer */}
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between text-sm font-mono">
-                        <span className="text-[#666]">Tickets Sold</span>
-                        <span className="text-white font-semibold">
+                <div className="space-y-1.5 sm:space-y-2">
+                    <div className="flex items-center justify-between text-xs font-mono">
+                        <span className="text-[#666] text-[9px] sm:text-xs">Tickets Sold</span>
+                        <span className="text-white font-semibold text-[9px] sm:text-xs">
                             {soldTickets} / {maxTickets}
                         </span>
                     </div>
@@ -261,9 +265,9 @@ export function RaffleCard({
                         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
                     </div>
                     
-                    <div className="flex items-center justify-between text-xs font-mono">
-                        <span className="text-[#666]">{progressPct.toFixed(1)}% Sold</span>
-                        <span className={isAlmostSoldOut ? 'text-[#EF4444]' : 'text-[#FFB800]'}>
+                    <div className="flex items-center justify-between font-mono">
+                        <span className="text-[#666] text-[9px] sm:text-xs">{progressPct.toFixed(1)}% Sold</span>
+                        <span className={`text-[9px] sm:text-xs ${isAlmostSoldOut ? 'text-[#EF4444]' : 'text-[#FFB800]'}`}>
                             {remainingTickets} Left
                         </span>
                     </div>

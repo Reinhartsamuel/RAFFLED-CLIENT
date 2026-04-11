@@ -1,6 +1,6 @@
-import { ReactNode } from 'react'
+import { ReactNode, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { pageVariants } from '../../utils/animations'
 
@@ -11,12 +11,58 @@ interface LayoutProps {
 }
 
 export function Layout({ children, sidebar }: LayoutProps) {
+  const [drawerOpen, setDrawerOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-[#050505] text-[#F5F5F5] flex flex-col">
-      <Navbar />
+      <Navbar onMenuClick={sidebar ? () => setDrawerOpen((v) => !v) : undefined} />
+
+      {/* Mobile drawer */}
+      <AnimatePresence>
+        {drawerOpen && sidebar && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              key="backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-40 bg-black/60 md:hidden"
+              onClick={() => setDrawerOpen(false)}
+            />
+            {/* Drawer */}
+            <motion.aside
+              key="drawer"
+              initial={{ x: '-100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '-100%' }}
+              transition={{ type: 'tween', duration: 0.25, ease: 'easeInOut' }}
+              className="fixed top-0 left-0 z-50 h-full w-64 bg-[#050505] border-r border-[#1f1f1f] overflow-y-auto md:hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Drawer header */}
+              <div className="flex items-center justify-between px-4 py-4 border-b border-[#1f1f1f]">
+                <span className="font-sans font-bold text-base text-[#F5F5F5]">
+                  RAFFLED<span className="text-[#FFB800]">.</span>
+                </span>
+                <button
+                  onClick={() => setDrawerOpen(false)}
+                  className="w-8 h-8 flex items-center justify-center text-[#555555] hover:text-[#F5F5F5] transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+              <div onClick={() => setDrawerOpen(false)}>
+                {sidebar}
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
 
       <div className="flex flex-1 min-h-0">
-        {/* Sidebar */}
+        {/* Desktop sidebar */}
         {sidebar && (
           <aside className="w-52 flex-shrink-0 border-r border-[#1f1f1f] bg-[#050505] sticky top-[57px] h-[calc(100vh-57px)] overflow-y-auto hidden md:block">
             {sidebar}
@@ -65,6 +111,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
     { id: 'official', label: 'Official', icon: '★' },
     { id: 'recent', label: 'Recent', icon: '↻' },
     { id: 'tokens', label: 'Tokens', icon: '◈' },
+    { id: 'nft', label: 'NFT', icon: '⬡' },
     { id: 'ended', label: 'Ended', icon: '✓' },
   ]
 
@@ -111,6 +158,17 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
         >
           <span className="w-4 text-center">⬡</span>
           <span>Faucet</span>
+        </button>
+        <button
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
+            activeFilter === 'activity'
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
+              : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
+          }`}
+          onClick={() => navigate('/app/activity')}
+        >
+          <span className="w-4 text-center">↻</span>
+          <span>Activity</span>
         </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
