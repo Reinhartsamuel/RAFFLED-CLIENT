@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { useSSEEvents } from '../../hooks/useSSEEvents'
 import type { ActivityEvent, EventType } from '../../hooks/useActivityEvents'
 
@@ -56,7 +56,7 @@ function truncate(addr: string): string {
 }
 
 function formatMessage(event: ActivityEvent): { title: string; subtitle: string; label: string } {
-  const d = event.event_data as Record<string, unknown>
+  const d = event.event_data as unknown as Record<string, unknown>
   switch (event.event_type) {
     case 'TicketPurchased': {
       const count = Number(d.ticket_count)
@@ -104,19 +104,19 @@ function formatMessage(event: ActivityEvent): { title: string; subtitle: string;
 }
 
 // ─── Animation variants ─────────────────────────────────────────────────────
-const toastVariants = {
+const toastVariants: Variants = {
   initial: { opacity: 0, x: 80, scale: 0.94 },
   animate: {
     opacity: 1,
     x: 0,
     scale: 1,
-    transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
   },
   exit: {
     opacity: 0,
     x: 80,
     scale: 0.94,
-    transition: { duration: 0.2, ease: [0.55, 0, 1, 0.45] },
+    transition: { duration: 0.2, ease: [0.55, 0, 1, 0.45] as [number, number, number, number] },
   },
 }
 
