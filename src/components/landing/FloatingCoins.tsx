@@ -1,5 +1,45 @@
 import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
-import { useRef, type ReactNode } from 'react';
+import { useRef, useState, useEffect, type ReactNode } from 'react';
+
+/* ------------------------------------------------------------------ */
+/*  Device capability detection — FPS benchmark                        */
+/* ------------------------------------------------------------------ */
+
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+function useLowEndDevice(): boolean | null {
+  // null = benchmark still running, boolean = result
+  const [isLowEnd, setIsLowEnd] = useState<boolean | null>(isIOS ? false : null);
+
+  useEffect(() => {
+    if (isIOS) return; // iOS always capable — skip benchmark
+
+    let frameCount = 0;
+    const TARGET_FRAMES = 60;
+    let startTime: number | null = null;
+    let rafId: number;
+
+    const tick = (timestamp: number) => {
+      if (startTime === null) startTime = timestamp;
+      frameCount++;
+
+      if (frameCount < TARGET_FRAMES) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
+      const elapsed = timestamp - startTime;
+      const avgFrameMs = elapsed / TARGET_FRAMES;
+      // > 20ms average = below 50fps = low-end
+      setIsLowEnd(avgFrameMs > 20);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, []);
+
+  return isLowEnd;
+}
 
 /* ------------------------------------------------------------------ */
 /*  SVG COIN MARKS — hand-built, no external deps                     */
@@ -199,15 +239,16 @@ const COINS: CoinConfig[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Single coin — idle float + scroll-driven transform                */
+/*  Low-end coin — static, no blur, no animation                      */
 /* ------------------------------------------------------------------ */
 
 interface CoinProps {
   config: CoinConfig;
   scrollY: MotionValue<number>;
+  lowEnd?: boolean;
 }
 
-const Coin = ({ config, scrollY }: CoinProps) => {
+const Coin = ({ config, scrollY, lowEnd = false }: CoinProps) => {
   const Component = COIN_COMPONENTS[config.kind];
 
   // Scroll depth mapping:
@@ -236,6 +277,31 @@ const Coin = ({ config, scrollY }: CoinProps) => {
     [0, 0.6, 1],
     config.depth === 'front' ? [config.opacity, config.opacity * 0.6, 0] : [config.opacity, config.opacity, config.opacity * 0.3]
   );
+
+  if (lowEnd) {
+    // Static div — zero rAF cost, no blur, no scroll transform, no compositing layer
+    return (
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: config.top,
+          left: config.left,
+          width: config.size,
+          height: config.size,
+          opacity: config.opacity,
+          transform: `rotate(${config.rotateInit}deg)`,
+          filter:
+            config.depth === 'front'
+              ? 'drop-shadow(0 16px 28px rgba(255,184,0,0.35)) drop-shadow(0 6px 14px rgba(0,0,0,0.7))'
+              : config.depth === 'mid'
+              ? 'drop-shadow(0 20px 40px rgba(0,0,0,0.65))'
+              : 'drop-shadow(0 30px 60px rgba(0,0,0,0.8))',
+        }}
+      >
+        <Component />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -287,12 +353,21 @@ const Coin = ({ config, scrollY }: CoinProps) => {
 
 export const FloatingCoins = () => {
   const ref = useRef<HTMLDivElement>(null);
+  const isLowEnd = useLowEndDevice();
 
   // Scroll progress relative to this container — normalized 0..1 for its entry/exit
   const { scrollYProgress } = useScroll({
     target: ref,
     offset: ['start start', 'end start'],
   });
+
+  // Benchmark still running — render nothing to avoid layout work before we know
+  if (isLowEnd === null) return null;
+
+  // Low-end: 4 coins only — one from each visual zone so the layout still reads well
+  const coins = isLowEnd
+    ? [COINS[0], COINS[3], COINS[6], COINS[8]] // gold-back, usdc-mid, gold-front, eth-front
+    : COINS;
 
   return (
     <div
@@ -301,8 +376,8 @@ export const FloatingCoins = () => {
       className="absolute inset-0 overflow-hidden pointer-events-none"
       style={{ perspective: '1200px' }}
     >
-      {COINS.map((c, i) => (
-        <Coin key={`${c.kind}-${i}`} config={c} scrollY={scrollYProgress} />
+      {coins.map((c, i) => (
+        <Coin key={`${c.kind}-${i}`} config={c} scrollY={scrollYProgress} lowEnd={isLowEnd} />
       ))}
     </div>
   );
