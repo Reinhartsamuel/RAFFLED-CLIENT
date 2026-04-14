@@ -1,5 +1,7 @@
-import { useReadContract, useWriteContract, useSimulateContract, useChainId } from 'wagmi'
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { useReadContract, useWriteContract, useSimulateContract, useChainId, usePublicClient } from 'wagmi'
 import { parseUnits, formatUnits, type Address } from 'viem'
+import { simulateContract } from 'viem/actions'
 import { getRaffleManagerAddress } from '../config/evm.config'
 import RaffleManagerABI from '../abis/RaffleManager.json'
 import { PrizeType } from '../types/evm.types'
@@ -128,6 +130,7 @@ export function usePaymentToken() {
 export function useCreateRaffleERC20() {
   const contract = useRaffleContract()
   const { writeContractAsync, isPending } = useWriteContract()
+  const publicClient = usePublicClient()
 
   const createRaffleERC20 = async (params: {
     prizeAsset: Address
@@ -138,17 +141,39 @@ export function useCreateRaffleERC20() {
     maxCap: number
     duration: number     // Seconds
   }) => {
+    const args = [
+      params.prizeAsset,
+      parseUnits(params.prizeAmount, params.prizeDecimals),
+      parseUnits(params.ticketPrice, params.ticketDecimals),
+      BigInt(params.maxCap),
+      BigInt(params.duration),
+    ]
+
+    // Estimate gas using simulateContract for mobile wallet compatibility
+    let gasLimit: bigint | undefined
+    if (publicClient) {
+      try {
+        const { request } = await simulateContract(publicClient, {
+          address: contract.address,
+          abi: contract.abi,
+          functionName: 'createRaffleERC20',
+          args,
+        })
+        // Add 20% buffer to ensure sufficient gas for mobile wallets
+        if (request.gas) {
+          gasLimit = BigInt(Math.floor(Number(request.gas) * 1.2))
+        }
+      } catch (err) {
+        console.warn('Gas estimation failed, wallet will estimate:', err)
+      }
+    }
+
     return writeContractAsync({
       address: contract.address,
       abi: contract.abi,
       functionName: 'createRaffleERC20',
-      args: [
-        params.prizeAsset,
-        parseUnits(params.prizeAmount, params.prizeDecimals),
-        parseUnits(params.ticketPrice, params.ticketDecimals),
-        BigInt(params.maxCap),
-        BigInt(params.duration),
-      ],
+      args,
+      gas: gasLimit,
     })
   }
 
@@ -162,6 +187,7 @@ export function useCreateRaffleERC20() {
 export function useCreateRaffleERC721() {
   const contract = useRaffleContract()
   const { writeContractAsync, isPending } = useWriteContract()
+  const publicClient = usePublicClient()
 
   const createRaffleERC721 = async (params: {
     nftAsset: Address
@@ -171,17 +197,39 @@ export function useCreateRaffleERC721() {
     maxCap: number
     duration: number     // Seconds
   }) => {
+    const args = [
+      params.nftAsset,
+      params.tokenId,
+      parseUnits(params.ticketPrice, params.ticketDecimals),
+      BigInt(params.maxCap),
+      BigInt(params.duration),
+    ]
+
+    // Estimate gas using simulateContract for mobile wallet compatibility
+    let gasLimit: bigint | undefined
+    if (publicClient) {
+      try {
+        const { request } = await simulateContract(publicClient, {
+          address: contract.address,
+          abi: contract.abi,
+          functionName: 'createRaffleERC721',
+          args,
+        })
+        // Add 20% buffer to ensure sufficient gas for mobile wallets
+        if (request.gas) {
+          gasLimit = BigInt(Math.floor(Number(request.gas) * 1.2))
+        }
+      } catch (err) {
+        console.warn('Gas estimation failed, wallet will estimate:', err)
+      }
+    }
+
     return writeContractAsync({
       address: contract.address,
       abi: contract.abi,
       functionName: 'createRaffleERC721',
-      args: [
-        params.nftAsset,
-        params.tokenId,
-        parseUnits(params.ticketPrice, params.ticketDecimals),
-        BigInt(params.maxCap),
-        BigInt(params.duration),
-      ],
+      args,
+      gas: gasLimit,
     })
   }
 
@@ -196,16 +244,39 @@ export function useCreateRaffleERC721() {
 export function useEnterRaffle() {
   const contract = useRaffleContract()
   const { writeContractAsync, isPending } = useWriteContract()
+  const publicClient = usePublicClient()
 
   const enterRaffle = async (params: {
     raffleId: number
     ticketCount: number
   }) => {
+    const args = [BigInt(params.raffleId), BigInt(params.ticketCount)]
+
+    // Estimate gas using simulateContract for mobile wallet compatibility
+    let gasLimit: bigint | undefined
+    if (publicClient) {
+      try {
+        const { request } = await simulateContract(publicClient, {
+          address: contract.address,
+          abi: contract.abi,
+          functionName: 'enterRaffle',
+          args,
+        })
+        // Add 20% buffer to ensure sufficient gas for mobile wallets
+        if (request.gas) {
+          gasLimit = BigInt(Math.floor(Number(request.gas) * 1.2))
+        }
+      } catch (err) {
+        console.warn('Gas estimation failed, wallet will estimate:', err)
+      }
+    }
+
     return writeContractAsync({
       address: contract.address,
       abi: contract.abi,
       functionName: 'enterRaffle',
-      args: [BigInt(params.raffleId), BigInt(params.ticketCount)],
+      args,
+      gas: gasLimit,
     })
   }
 
