@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
+import { useSignMessage, useDisconnect, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,6 +15,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
+  const { data: walletClient } = useWalletClient()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -26,6 +27,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [, setNonce] = useState<string | null>(null)
   const [pendingSignature, setPendingSignature] = useState<{ message: string; nonce: string } | null>(null)
   const [signatureError, setSignatureError] = useState<string | null>(null)
+  const [debugLog, setDebugLog] = useState<string[]>([])
+
+  const addDebug = (msg: string) => {
+    console.log('[DEBUG]', msg)
+    setDebugLog(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${msg}`])
+  }
 
   useEffect(() => {
     if (!authMessage) return
@@ -40,31 +47,55 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
-  // Sign message bypassing wagmi's connector chain validation
-  // Uses window.ethereum.personal_sign directly - falls back to wagmi only if unavailable
+  // Sign message bypassing wagmi-core's connector chain validation
+  // Priority: 1) viem walletClient (works over WalletConnect), 2) window.ethereum, 3) wagmi
   const signMessageBypass = async (message: string): Promise<string> => {
-    type EthereumProvider = {
-      request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-    }
-    const ethereum = window.ethereum as EthereumProvider | undefined
+    addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}`)
 
-    if (ethereum?.request && address) {
+    // Try 1: viem walletClient - works for both injected and WalletConnect
+    if (walletClient && address) {
       try {
-        const signature = (await ethereum.request({
-          method: 'personal_sign',
-          params: [message, address],
-        })) as string
+        addDebug('Trying viem walletClient.signMessage')
+        const signature = await walletClient.signMessage({
+          account: address as `0x${string}`,
+          message,
+        })
+        addDebug('walletClient SUCCESS')
         return signature
       } catch (err) {
-        console.error('personal_sign failed, falling back to wagmi:', err)
-        // Don't swallow user rejection
-        const errMsg = (err as { message?: string })?.message || ''
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`walletClient FAIL: ${errMsg.slice(0, 100)}`)
         if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
           throw err
         }
       }
     }
-    // Last resort fallback
+
+    // Try 2: window.ethereum (for injected providers like MetaMask extension)
+    type EthereumProvider = {
+      request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+    }
+    const ethereum = window.ethereum as EthereumProvider | undefined
+    if (ethereum?.request && address) {
+      try {
+        addDebug('Trying window.ethereum personal_sign')
+        const signature = (await ethereum.request({
+          method: 'personal_sign',
+          params: [message, address],
+        })) as string
+        addDebug('personal_sign SUCCESS')
+        return signature
+      } catch (err) {
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`personal_sign FAIL: ${errMsg.slice(0, 100)}`)
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+    }
+
+    // Try 3: wagmi signMessageAsync (last resort, may hit chain validation)
+    addDebug('Falling back to wagmi signMessageAsync')
     return await signMessageAsync({ message })
   }
 
@@ -561,6 +592,28 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Mobile Debug Panel */}
+      {debugLog.length > 0 && (
+        <div className="fixed bottom-20 left-2 right-2 z-[55] bg-[#0a0a0a] border border-[#FFB800]/40 rounded-lg p-3 max-h-60 overflow-y-auto">
+          <div className="flex items-center justify-between mb-2">
+            <span className="font-mono text-[10px] text-[#FFB800] uppercase">Debug Log</span>
+            <button
+              onClick={() => setDebugLog([])}
+              className="font-mono text-[10px] text-[#888888]"
+            >
+              clear
+            </button>
+          </div>
+          <div className="space-y-1">
+            {debugLog.map((line, i) => (
+              <div key={i} className="font-mono text-[9px] text-[#CCCCCC] break-all">
+                {line}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Signature Error Popup */}
       <AnimatePresence>
