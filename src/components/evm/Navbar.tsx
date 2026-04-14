@@ -55,23 +55,70 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     const connections = getConnections(wagmiConfig)
     addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}, connections=${connections.length}`)
 
-    // Try 1: Get connector's provider and call personal_sign directly
+    // Hex-encode message (WalletConnect/MetaMask requires hex for personal_sign)
+    const messageHex = '0x' + Array.from(new TextEncoder().encode(message))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('')
+
+    // Try 1: Get connector's provider and call personal_sign with hex message
     if (address && connections.length > 0) {
+      const connector = connections[0].connector
+
+      // Try 1a: personal_sign with hex message [hexMsg, address]
       try {
-        addDebug('Trying connector.getProvider().request personal_sign')
-        const connector = connections[0].connector
+        addDebug('Try 1a: personal_sign [hexMsg, address]')
         const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
           request: (args: { method: string; params: unknown[] }) => Promise<unknown>
         }
         const signature = (await provider.request({
           method: 'personal_sign',
-          params: [message, address],
+          params: [messageHex, address],
         })) as string
-        addDebug('connector provider SUCCESS')
+        addDebug('1a SUCCESS')
         return signature
       } catch (err) {
         const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`connector provider FAIL: ${errMsg.slice(0, 120)}`)
+        addDebug(`1a FAIL: ${errMsg.slice(0, 100)}`)
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+
+      // Try 1b: personal_sign with reversed params [address, hexMsg] (legacy)
+      try {
+        addDebug('Try 1b: personal_sign [address, hexMsg]')
+        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
+          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
+        }
+        const signature = (await provider.request({
+          method: 'personal_sign',
+          params: [address, messageHex],
+        })) as string
+        addDebug('1b SUCCESS')
+        return signature
+      } catch (err) {
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`1b FAIL: ${errMsg.slice(0, 100)}`)
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+
+      // Try 1c: eth_sign fallback
+      try {
+        addDebug('Try 1c: eth_sign')
+        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
+          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
+        }
+        const signature = (await provider.request({
+          method: 'eth_sign',
+          params: [address, messageHex],
+        })) as string
+        addDebug('1c SUCCESS')
+        return signature
+      } catch (err) {
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`1c FAIL: ${errMsg.slice(0, 100)}`)
         if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
           throw err
         }
