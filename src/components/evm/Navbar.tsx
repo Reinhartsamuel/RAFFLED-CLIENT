@@ -41,17 +41,54 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [isConnected, chainId, switchChain])
 
   const ensureCorrectChain = async () => {
-    if (chainId === baseSepolia.id) return // Already on correct chain
-
     try {
+      // Try direct wallet_switchEthereumChain RPC method for mobile compatibility
+      if (window.ethereum) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: '0x14a34' }], // 84532 in hex
+          })
+          // Give wallet time to update
+          await new Promise(resolve => setTimeout(resolve, 1500))
+          return
+        } catch (switchErr) {
+          // If chain doesn't exist, try to add it
+          if ((switchErr as { code?: number }).code === 4902) {
+            try {
+              await window.ethereum.request({
+                method: 'wallet_addEthereumChain',
+                params: [
+                  {
+                    chainId: '0x14a34',
+                    chainName: 'Base Sepolia',
+                    rpcUrls: ['https://sepolia.base.org'],
+                    blockExplorerUrls: ['https://sepolia.basescan.org'],
+                    nativeCurrency: {
+                      name: 'ETH',
+                      symbol: 'ETH',
+                      decimals: 18,
+                    },
+                  },
+                ],
+              })
+              await new Promise(resolve => setTimeout(resolve, 1500))
+              return
+            } catch (addErr) {
+              console.error('Failed to add chain:', addErr)
+            }
+          }
+          console.error('Switch chain error:', switchErr)
+        }
+      }
+
+      // Fallback to wagmi switchChain
       switchChain({ chainId: baseSepolia.id })
-      // Give MetaMask time to switch and wagmi to update state
-      await new Promise(resolve => setTimeout(resolve, 2500))
+      await new Promise(resolve => setTimeout(resolve, 2000))
     } catch (err) {
       console.error('Failed to switch chain:', err)
-      // Open AppKit so user can manually switch networks
       open({ view: 'Networks' })
-      throw new Error('Please switch to Base Sepolia network in your wallet.')
+      throw new Error('Please manually switch to Base Sepolia network in your wallet.')
     }
   }
 
