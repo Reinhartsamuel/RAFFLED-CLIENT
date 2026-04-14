@@ -42,24 +42,36 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const ensureCorrectChain = async () => {
     try {
-      // Try direct wallet_switchEthereumChain RPC method for mobile compatibility
       type EthereumProvider = {
         request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
       }
       const ethereum = window.ethereum as EthereumProvider | undefined
+
+      // First, check current chain ID
       if (ethereum?.request) {
         try {
-          await ethereum.request({
-            method: 'wallet_switchEthereumChain',
-            params: [{ chainId: '0x14a34' }], // 84532 in hex
+          const currentChainId = await ethereum.request({
+            method: 'eth_chainId',
+            params: [],
           })
-          // Give wallet time to update
-          await new Promise(resolve => setTimeout(resolve, 1500))
-          return
-        } catch (switchErr) {
-          // If chain doesn't exist, try to add it
-          if ((switchErr as { code?: number }).code === 4902) {
-            try {
+          console.log('Current chain ID:', currentChainId)
+
+          // If already on correct chain, return
+          if (currentChainId === '0x14a34') {
+            return
+          }
+
+          // Try to switch
+          try {
+            await ethereum.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: '0x14a34' }],
+            })
+            await new Promise(resolve => setTimeout(resolve, 2000))
+            return
+          } catch (switchErr) {
+            // If chain doesn't exist, add it
+            if ((switchErr as { code?: number }).code === 4902) {
               await ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [
@@ -76,29 +88,33 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   },
                 ],
               })
-              await new Promise(resolve => setTimeout(resolve, 1500))
+              await new Promise(resolve => setTimeout(resolve, 2000))
               return
-            } catch (addErr) {
-              console.error('Failed to add chain:', addErr)
             }
+            throw switchErr
           }
-          console.error('Switch chain error:', switchErr)
+        } catch (rpcErr) {
+          console.error('RPC request failed:', rpcErr)
         }
       }
 
-      // Fallback to wagmi switchChain
+      // Fallback to wagmi
       switchChain({ chainId: baseSepolia.id })
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      await new Promise(resolve => setTimeout(resolve, 2500))
     } catch (err) {
-      console.error('Failed to switch chain:', err)
+      console.error('Chain switch failed:', err)
       open({ view: 'Networks' })
-      throw new Error('Please manually switch to Base Sepolia network in your wallet.')
+      throw new Error('Failed to connect to Base Sepolia. Please manually switch networks in MetaMask and try again.')
     }
   }
 
   const handleSignIn = async (auto = false) => {
     if (!isConnected || !address) {
-      if (!auto) open()
+      if (!auto) {
+        // Disconnect first to ensure clean wallet connection
+        try { disconnect() } catch { /* ignore */ }
+        setTimeout(() => open(), 300)
+      }
       return
     }
 
@@ -155,7 +171,51 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         `Issued At: ${new Date().toISOString()}`,
       ].join('\n')
 
-      const signature = await signMessageAsync({ message })
+      // Get actual wallet chain ID (not just wagmi state which might be undefined)
+      let actualChainId = chainId
+      if (!actualChainId && window.ethereum) {
+        try {
+          type EthereumProvider = {
+            request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+          }
+          const ethereum = window.ethereum as EthereumProvider
+          const chainIdHex = (await ethereum?.request?.({
+            method: 'eth_chainId',
+            params: [],
+          })) as string
+          actualChainId = parseInt(chainIdHex, 16)
+        } catch (e) {
+          console.error('Failed to get chain ID from wallet:', e)
+        }
+      }
+
+      // Verify we're on correct chain before signing
+      if (actualChainId && actualChainId !== baseSepolia.id) {
+        throw new Error(
+          `Wrong chain detected. Your wallet is on chain ${actualChainId}, but Base Sepolia is required (84532). ` +
+          `Please switch networks in MetaMask before signing.`
+        )
+      }
+
+      // Use native wallet signing if wagmi connector is undefined
+      let signature: string
+      if (!chainId && window.ethereum) {
+        type EthereumProvider = {
+          request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+        }
+        const ethereum = window.ethereum as EthereumProvider
+        try {
+          signature = (await ethereum?.request?.({
+            method: 'personal_sign',
+            params: [message, address],
+          })) as string
+        } catch (e) {
+          console.error('personal_sign failed, trying signMessage:', e)
+          signature = await signMessageAsync({ message })
+        }
+      } else {
+        signature = await signMessageAsync({ message })
+      }
 
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
@@ -196,7 +256,52 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
     try {
       await ensureCorrectChain()
-      const signature = await signMessageAsync({ message: pendingSignature.message })
+
+      // Get actual wallet chain ID (not just wagmi state which might be undefined)
+      let actualChainId = chainId
+      if (!actualChainId && window.ethereum) {
+        try {
+          type EthereumProvider = {
+            request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+          }
+          const ethereum = window.ethereum as EthereumProvider
+          const chainIdHex = (await ethereum?.request?.({
+            method: 'eth_chainId',
+            params: [],
+          })) as string
+          actualChainId = parseInt(chainIdHex, 16)
+        } catch (e) {
+          console.error('Failed to get chain ID from wallet:', e)
+        }
+      }
+
+      // Verify we're on correct chain before signing
+      if (actualChainId && actualChainId !== baseSepolia.id) {
+        throw new Error(
+          `Wrong chain detected. Your wallet is on chain ${actualChainId}, but Base Sepolia is required (84532). ` +
+          `Please switch networks in MetaMask and try again.`
+        )
+      }
+
+      // Use native wallet signing if wagmi connector is undefined
+      let signature: string
+      if (!chainId && window.ethereum) {
+        type EthereumProvider = {
+          request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+        }
+        const ethereum = window.ethereum as EthereumProvider
+        try {
+          signature = (await ethereum?.request?.({
+            method: 'personal_sign',
+            params: [pendingSignature.message, address],
+          })) as string
+        } catch (e) {
+          console.error('personal_sign failed, trying signMessage:', e)
+          signature = await signMessageAsync({ message: pendingSignature.message })
+        }
+      } else {
+        signature = await signMessageAsync({ message: pendingSignature.message })
+      }
 
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
