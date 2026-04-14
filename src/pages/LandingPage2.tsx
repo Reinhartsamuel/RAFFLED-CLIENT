@@ -35,7 +35,7 @@ const LandingPage2 = () => {
         >
           <ShaderGradient
             animate="on"
-            axesHelper="off"
+            // axesHelper="off"
             brightness={1.2}
             cAzimuthAngle={180}
             cDistance={4.89}
@@ -44,16 +44,16 @@ const LandingPage2 = () => {
             color1="#4c3500"
             color2="#000157"
             color3="#000000"
-            destination="onCanvas"
-            embedMode="off"
+            // destination="onCanvas"
+            // embedMode="off"
             envPreset="city"
-            format="gif"
-            fov={30}
-            frameRate={10}
-            gizmoHelper="hide"
+            // format="gif"
+            // fov={30}
+            // frameRate={10}
+            // gizmoHelper="hide"
             grain="off"
             lightType="3d"
-            pixelDensity={1}
+            // pixelDensity={1}
             positionX={-0.1}
             positionY={0}
             positionZ={0}

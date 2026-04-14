@@ -20,7 +20,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   // Terms of Service modal state
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [nonce, setNonce] = useState<string | null>(null)
+  const [, setNonce] = useState<string | null>(null)
   const [pendingSignature, setPendingSignature] = useState<{ message: string; nonce: string } | null>(null)
   const [signatureError, setSignatureError] = useState<string | null>(null)
 
