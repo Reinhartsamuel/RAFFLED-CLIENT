@@ -43,9 +43,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const ensureCorrectChain = async () => {
     try {
       // Try direct wallet_switchEthereumChain RPC method for mobile compatibility
-      if (window.ethereum) {
+      type EthereumProvider = {
+        request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+      }
+      const ethereum = window.ethereum as EthereumProvider | undefined
+      if (ethereum?.request) {
         try {
-          await window.ethereum.request({
+          await ethereum.request({
             method: 'wallet_switchEthereumChain',
             params: [{ chainId: '0x14a34' }], // 84532 in hex
           })
@@ -56,7 +60,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
           // If chain doesn't exist, try to add it
           if ((switchErr as { code?: number }).code === 4902) {
             try {
-              await window.ethereum.request({
+              await ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [
                   {
