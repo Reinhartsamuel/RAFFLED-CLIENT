@@ -142,7 +142,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setNonce(null)
     } catch (err) {
       console.error('EVM sign-in error:', err)
-      setSignatureError('Signature denied or verification failed.')
+      setSignatureError('Signature denied or verification failed. Error' + (err as Error).message)
       setShowTermsModal(false)
       setPendingSignature(null)
       setNonce(null)
