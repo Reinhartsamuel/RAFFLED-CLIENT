@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
+import { getConnectorClient, getConnections } from '@wagmi/core'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
+import { wagmiConfig } from '../../config/evm.config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -48,11 +50,36 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [isConnected, chainId, switchChain])
 
   // Sign message bypassing wagmi-core's connector chain validation
-  // Priority: 1) viem walletClient (works over WalletConnect), 2) window.ethereum, 3) wagmi
+  // Priority: 1) getConnectorClient (direct provider access), 2) viem walletClient, 3) window.ethereum, 4) wagmi
   const signMessageBypass = async (message: string): Promise<string> => {
-    addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}`)
+    const connections = getConnections(wagmiConfig)
+    addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}, connections=${connections.length}`)
 
-    // Try 1: viem walletClient - works for both injected and WalletConnect
+    // Try 1: Get connector client directly with explicit chainId
+    if (address && connections.length > 0) {
+      try {
+        addDebug('Trying getConnectorClient with chainId=84532')
+        const client = await getConnectorClient(wagmiConfig, {
+          chainId: baseSepolia.id,
+          connector: connections[0].connector,
+        })
+        addDebug(`Got client, calling signMessage`)
+        const signature = await client.signMessage({
+          account: address as `0x${string}`,
+          message,
+        })
+        addDebug('getConnectorClient SUCCESS')
+        return signature
+      } catch (err) {
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`getConnectorClient FAIL: ${errMsg.slice(0, 120)}`)
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+    }
+
+    // Try 2: viem walletClient - works for both injected and WalletConnect
     if (walletClient && address) {
       try {
         addDebug('Trying viem walletClient.signMessage')
