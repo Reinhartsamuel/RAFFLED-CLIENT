@@ -48,7 +48,10 @@ export const wagmiConfig = wagmiAdapter.wagmiConfig
 // Create AppKit instance
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [baseSepolia, base] as any,
+  networks: [
+    baseSepolia, 
+    base
+  ] as any,
   metadata,
   projectId,
   features: {

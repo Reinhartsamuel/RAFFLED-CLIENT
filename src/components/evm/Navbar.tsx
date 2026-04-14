@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect } from 'wagmi'
+import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { baseSepolia } from '@reown/appkit/networks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -12,6 +13,8 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { address, isConnected } = useAppKitAccount()
   const { signMessageAsync } = useSignMessage()
   const { disconnect } = useDisconnect()
+  const chainId = useChainId()
+  const { switchChain } = useSwitchChain()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -30,12 +33,32 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
+  // Auto-switch to Base Sepolia when wallet connects and not on correct chain
+  useEffect(() => {
+    if (isConnected && chainId !== baseSepolia.id) {
+      switchChain({ chainId: baseSepolia.id })
+    }
+  }, [isConnected, chainId, switchChain])
+
+  const ensureCorrectChain = () => {
+    if (chainId !== baseSepolia.id) {
+      try {
+        switchChain({ chainId: baseSepolia.id })
+        // Give wallet a moment to switch
+        return new Promise(resolve => setTimeout(resolve, 1500))
+      } catch (err) {
+        console.error('Failed to switch chain:', err)
+        throw new Error('Failed to switch to Base Sepolia. Please switch manually in your wallet.')
+      }
+    }
+  }
+
   const handleSignIn = async (auto = false) => {
     if (!isConnected || !address) {
       if (!auto) open()
       return
     }
-    
+
     // If not logged in and wallet is connected, show Terms of Service modal
     const existingToken = getAuthToken()
     if (!existingToken) {
@@ -46,7 +69,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         })
         const { nonce: fetchedNonce } = await nonceRes.json()
         setNonce(fetchedNonce)
-        
+
         const message = [
           'Welcome to Raffled!',
           '',
@@ -55,7 +78,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
           `Wallet address: ${address}`,
           `Nonce: ${fetchedNonce}`,
         ].join('\n')
-        
+
         setPendingSignature({ message, nonce: fetchedNonce })
         setShowTermsModal(true)
         setTermsAccepted(false)
@@ -67,11 +90,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         return
       }
     }
-    
+
     // Proceed with signature if token exists (re-authentication)
     setAuthStatus('loading')
     setAuthMessage(null)
     try {
+      await ensureCorrectChain()
+
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
@@ -112,12 +137,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleProceedWithSignature = async () => {
     if (!pendingSignature || !termsAccepted) return
-    
+
     setAuthStatus('loading')
     setShowTermsModal(false)
     setSignatureError(null)
-    
+
     try {
+      await ensureCorrectChain()
       const signature = await signMessageAsync({ message: pendingSignature.message })
 
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
