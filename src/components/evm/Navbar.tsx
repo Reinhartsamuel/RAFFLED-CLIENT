@@ -40,6 +40,34 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
+  // Sign message bypassing wagmi's connector chain validation
+  // Uses window.ethereum.personal_sign directly - falls back to wagmi only if unavailable
+  const signMessageBypass = async (message: string): Promise<string> => {
+    type EthereumProvider = {
+      request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
+    }
+    const ethereum = window.ethereum as EthereumProvider | undefined
+
+    if (ethereum?.request && address) {
+      try {
+        const signature = (await ethereum.request({
+          method: 'personal_sign',
+          params: [message, address],
+        })) as string
+        return signature
+      } catch (err) {
+        console.error('personal_sign failed, falling back to wagmi:', err)
+        // Don't swallow user rejection
+        const errMsg = (err as { message?: string })?.message || ''
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+    }
+    // Last resort fallback
+    return await signMessageAsync({ message })
+  }
+
   const ensureCorrectChain = async () => {
     try {
       type EthereumProvider = {
@@ -197,25 +225,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         )
       }
 
-      // Use native wallet signing if wagmi connector is undefined
-      let signature: string
-      if (!chainId && window.ethereum) {
-        type EthereumProvider = {
-          request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-        }
-        const ethereum = window.ethereum as EthereumProvider
-        try {
-          signature = (await ethereum?.request?.({
-            method: 'personal_sign',
-            params: [message, address],
-          })) as string
-        } catch (e) {
-          console.error('personal_sign failed, trying signMessage:', e)
-          signature = await signMessageAsync({ message })
-        }
-      } else {
-        signature = await signMessageAsync({ message })
-      }
+      const signature = await signMessageBypass(message)
 
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
@@ -283,25 +293,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         )
       }
 
-      // Use native wallet signing if wagmi connector is undefined
-      let signature: string
-      if (!chainId && window.ethereum) {
-        type EthereumProvider = {
-          request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-        }
-        const ethereum = window.ethereum as EthereumProvider
-        try {
-          signature = (await ethereum?.request?.({
-            method: 'personal_sign',
-            params: [pendingSignature.message, address],
-          })) as string
-        } catch (e) {
-          console.error('personal_sign failed, trying signMessage:', e)
-          signature = await signMessageAsync({ message: pendingSignature.message })
-        }
-      } else {
-        signature = await signMessageAsync({ message: pendingSignature.message })
-      }
+      const signature = await signMessageBypass(pendingSignature.message)
 
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
