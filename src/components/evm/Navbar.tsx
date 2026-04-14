@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
-import { getConnectorClient, getConnections } from '@wagmi/core'
+import { getConnections } from '@wagmi/core'
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
 import { wagmiConfig } from '../../config/evm.config'
@@ -55,24 +55,23 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     const connections = getConnections(wagmiConfig)
     addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}, connections=${connections.length}`)
 
-    // Try 1: Get connector client directly with explicit chainId
+    // Try 1: Get connector's provider and call personal_sign directly
     if (address && connections.length > 0) {
       try {
-        addDebug('Trying getConnectorClient with chainId=84532')
-        const client = await getConnectorClient(wagmiConfig, {
-          chainId: baseSepolia.id,
-          connector: connections[0].connector,
-        })
-        addDebug(`Got client, calling signMessage`)
-        const signature = await client.signMessage({
-          account: address as `0x${string}`,
-          message,
-        })
-        addDebug('getConnectorClient SUCCESS')
+        addDebug('Trying connector.getProvider().request personal_sign')
+        const connector = connections[0].connector
+        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
+          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
+        }
+        const signature = (await provider.request({
+          method: 'personal_sign',
+          params: [message, address],
+        })) as string
+        addDebug('connector provider SUCCESS')
         return signature
       } catch (err) {
         const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`getConnectorClient FAIL: ${errMsg.slice(0, 120)}`)
+        addDebug(`connector provider FAIL: ${errMsg.slice(0, 120)}`)
         if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
           throw err
         }
