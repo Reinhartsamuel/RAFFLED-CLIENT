@@ -1,5 +1,32 @@
-import { motion, useScroll, useTransform, type MotionValue } from 'framer-motion';
-import { useRef, useState, useEffect, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
+
+/* CSS keyframe animations — GPU-accelerated, no JS overhead */
+const coinStyles = `
+  @keyframes float-coin {
+    0%, 100% {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    25% {
+      translate: 0 -14px;
+      rotate: 6deg;
+    }
+    50% {
+      translate: 0 0;
+      rotate: 0deg;
+    }
+    75% {
+      translate: 0 10px;
+      rotate: -5deg;
+    }
+  }
+
+  .floating-coin-animated {
+    rotate: var(--base-rotate, 0deg);
+    animation: float-coin var(--float-duration, 8s) ease-in-out infinite;
+    animation-delay: var(--float-delay, 0s);
+  }
+`;
 
 /* ------------------------------------------------------------------ */
 /*  Device capability detection — FPS benchmark                        */
@@ -239,47 +266,19 @@ const COINS: CoinConfig[] = [
 ];
 
 /* ------------------------------------------------------------------ */
-/*  Low-end coin — static, no blur, no animation                      */
+/*  Coin — idle float + drop shadow (no scroll parallax)               */
 /* ------------------------------------------------------------------ */
 
 interface CoinProps {
   config: CoinConfig;
-  scrollY: MotionValue<number>;
   lowEnd?: boolean;
 }
 
-const Coin = ({ config, scrollY, lowEnd = false }: CoinProps) => {
+const Coin = ({ config, lowEnd = false }: CoinProps) => {
   const Component = COIN_COMPONENTS[config.kind];
 
-  // Scroll depth mapping:
-  //  - back coins drift DOWN slowly (feels far away, lags behind)
-  //  - mid coins move up moderately
-  //  - front coins move up aggressively AND counter-rotate (tumble toward viewer)
-  const depthY =
-    config.depth === 'back' ? 120 :
-    config.depth === 'mid'  ? -180 :
-                              -340;
-  const depthRotate =
-    config.depth === 'back' ? 15 :
-    config.depth === 'mid'  ? -35 :
-                              -90;
-  const depthScale =
-    config.depth === 'back' ? 0.85 :
-    config.depth === 'mid'  ? 1.05 :
-                              1.25;
-
-  const y        = useTransform(scrollY, [0, 1], [0, depthY]);
-  const rotate   = useTransform(scrollY, [0, 1], [config.rotateInit, config.rotateInit + depthRotate]);
-  const scale    = useTransform(scrollY, [0, 1], [1, depthScale]);
-  // Front layer coins fade slightly as user scrolls past — reinforces depth
-  const fadeOut  = useTransform(
-    scrollY,
-    [0, 0.6, 1],
-    config.depth === 'front' ? [config.opacity, config.opacity * 0.6, 0] : [config.opacity, config.opacity, config.opacity * 0.3]
-  );
-
   if (lowEnd) {
-    // Static div — zero rAF cost, no blur, no scroll transform, no compositing layer
+    // Static div — zero animation cost, no blur, no compositing layer
     return (
       <div
         className="absolute pointer-events-none"
@@ -303,47 +302,31 @@ const Coin = ({ config, scrollY, lowEnd = false }: CoinProps) => {
     );
   }
 
+  // Static coin with depth shadows + CSS keyframe float animation
+  const shadowStr =
+    config.depth === 'front'
+      ? 'drop-shadow(0 16px 28px rgba(255,184,0,0.35)) drop-shadow(0 6px 14px rgba(0,0,0,0.7))'
+      : config.depth === 'mid'
+      ? 'drop-shadow(0 20px 40px rgba(0,0,0,0.65)) drop-shadow(0 0 24px rgba(255,184,0,0.08))'
+      : 'drop-shadow(0 30px 60px rgba(0,0,0,0.8))';
+
   return (
-    <motion.div
-      className="absolute pointer-events-none will-change-transform"
+    <div
+      className="absolute pointer-events-none floating-coin-animated"
       style={{
         top: config.top,
         left: config.left,
         width: config.size,
         height: config.size,
-        filter: config.blur > 0 ? `blur(${config.blur}px)` : undefined,
-        y,
-        rotate,
-        scale,
-        opacity: fadeOut,
-      }}
+        opacity: config.opacity,
+        filter: shadowStr,
+        '--float-duration': `${config.floatDuration}s`,
+        '--float-delay': `${config.floatDelay}s`,
+        '--base-rotate': `${config.rotateInit}deg`,
+      } as React.CSSProperties}
     >
-      {/* Nested wrapper handles the infinite idle float — keeps scroll transforms clean */}
-      <motion.div
-        className="w-full h-full"
-        animate={{
-          y: [0, -14, 0, 10, 0],
-          rotate: [0, 6, 0, -5, 0],
-        }}
-        transition={{
-          duration: config.floatDuration,
-          delay: config.floatDelay,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-        style={{
-          // Drop shadow anchored to depth — front coins get amber glow + hard shadow for pop
-          filter:
-            config.depth === 'front'
-              ? 'drop-shadow(0 16px 28px rgba(255,184,0,0.35)) drop-shadow(0 6px 14px rgba(0,0,0,0.7))'
-              : config.depth === 'mid'
-              ? 'drop-shadow(0 20px 40px rgba(0,0,0,0.65)) drop-shadow(0 0 24px rgba(255,184,0,0.08))'
-              : 'drop-shadow(0 30px 60px rgba(0,0,0,0.8))',
-        }}
-      >
-        <Component />
-      </motion.div>
-    </motion.div>
+      <Component />
+    </div>
   );
 };
 
@@ -352,14 +335,7 @@ const Coin = ({ config, scrollY, lowEnd = false }: CoinProps) => {
 /* ------------------------------------------------------------------ */
 
 export const FloatingCoins = () => {
-  const ref = useRef<HTMLDivElement>(null);
   const isLowEnd = useLowEndDevice();
-
-  // Scroll progress relative to this container — normalized 0..1 for its entry/exit
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ['start start', 'end start'],
-  });
 
   // Benchmark still running — render nothing to avoid layout work before we know
   if (isLowEnd === null) return null;
@@ -370,16 +346,18 @@ export const FloatingCoins = () => {
     : COINS;
 
   return (
-    <div
-      ref={ref}
-      aria-hidden
-      className="absolute inset-0 overflow-hidden pointer-events-none"
-      style={{ perspective: '1200px' }}
-    >
-      {coins.map((c, i) => (
-        <Coin key={`${c.kind}-${i}`} config={c} scrollY={scrollYProgress} lowEnd={isLowEnd} />
-      ))}
-    </div>
+    <>
+      <style>{coinStyles}</style>
+      <div
+        aria-hidden
+        className="absolute inset-0 overflow-hidden pointer-events-none"
+        style={{ perspective: '1200px' }}
+      >
+        {coins.map((c, i) => (
+          <Coin key={`${c.kind}-${i}`} config={c} lowEnd={isLowEnd} />
+        ))}
+      </div>
+    </>
   );
 };
 
