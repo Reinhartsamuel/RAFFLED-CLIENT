@@ -109,6 +109,8 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         const { nonce: fetchedNonce } = await nonceRes.json()
         setNonce(fetchedNonce)
 
+
+        
         const message = [
           'Welcome to Raffled!',
           '',
