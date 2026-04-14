@@ -40,16 +40,18 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
-  const ensureCorrectChain = () => {
-    if (chainId !== baseSepolia.id) {
-      try {
-        switchChain({ chainId: baseSepolia.id })
-        // Give wallet a moment to switch
-        return new Promise(resolve => setTimeout(resolve, 1500))
-      } catch (err) {
-        console.error('Failed to switch chain:', err)
-        throw new Error('Failed to switch to Base Sepolia. Please switch manually in your wallet.')
-      }
+  const ensureCorrectChain = async () => {
+    if (chainId === baseSepolia.id) return // Already on correct chain
+
+    try {
+      switchChain({ chainId: baseSepolia.id })
+      // Give MetaMask time to switch and wagmi to update state
+      await new Promise(resolve => setTimeout(resolve, 2500))
+    } catch (err) {
+      console.error('Failed to switch chain:', err)
+      // Open AppKit so user can manually switch networks
+      open({ view: 'Networks' })
+      throw new Error('Please switch to Base Sepolia network in your wallet.')
     }
   }
 
@@ -118,7 +120,10 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         body: JSON.stringify({ message, signature, address, chain: 'base' }),
       })
 
-      if (!verifyRes.ok) throw new Error('Verification failed')
+      if (!verifyRes.ok) {
+        const error = await verifyRes.text()
+        throw new Error(`Verification failed: ${error}`)
+      }
 
       const data = await verifyRes.json()
       localStorage.setItem('access_token', data.token)
@@ -127,7 +132,11 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     } catch (err) {
       console.error('EVM sign-in error:', err)
       setAuthStatus('error')
-      setAuthMessage('Login failed. Ensure wallet is connected.')
+      const errorMessage = (err as Error).message
+      const displayMessage = errorMessage.includes('Network mismatch')
+        ? errorMessage
+        : 'Login failed. Ensure wallet is connected to Base Sepolia.'
+      setAuthMessage(displayMessage)
       if (auto) {
         setAutoAuthRan(false)
         try { disconnect() } catch { /* ignore */ }
@@ -168,7 +177,11 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setNonce(null)
     } catch (err) {
       console.error('EVM sign-in error:', err)
-      setSignatureError('Signature denied or verification failed. Error' + (err as Error).message)
+      const errorMessage = (err as Error).message
+      const userMessage = errorMessage.includes('Network mismatch')
+        ? errorMessage
+        : `Signature denied or verification failed. ${errorMessage}`
+      setSignatureError(userMessage)
       setShowTermsModal(false)
       setPendingSignature(null)
       setNonce(null)

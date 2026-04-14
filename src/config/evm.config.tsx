@@ -33,6 +33,7 @@ export const networks = [baseSepolia, base]
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks,
+  defaultNetwork: baseSepolia,
 } as any)
 
 export const metadata = {
