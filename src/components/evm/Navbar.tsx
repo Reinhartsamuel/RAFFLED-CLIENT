@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
 import { getConnections } from '@wagmi/core'
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
 import { wagmiConfig } from '../../config/evm.config'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -18,6 +18,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
   const { data: walletClient } = useWalletClient()
+  const { walletProvider } = useAppKitProvider<{
+    request: (args: { method: string; params: unknown[] }) => Promise<unknown>
+  }>('eip155')
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -59,6 +62,27 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     const messageHex = '0x' + Array.from(new TextEncoder().encode(message))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('')
+
+    // Try 0: AppKit's walletProvider (Reown-managed, has active session)
+    if (walletProvider && address) {
+      try {
+        addDebug('Try 0: AppKit walletProvider personal_sign')
+        const signature = (await walletProvider.request({
+          method: 'personal_sign',
+          params: [messageHex, address],
+        })) as string
+        addDebug('0 SUCCESS')
+        return signature
+      } catch (err) {
+        const errMsg = (err as { message?: string })?.message || String(err)
+        addDebug(`0 FAIL: ${errMsg.slice(0, 120)}`)
+        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+          throw err
+        }
+      }
+    } else {
+      addDebug(`walletProvider=${!!walletProvider}, address=${!!address}`)
+    }
 
     // Try 1: Get connector's provider and call personal_sign with hex message
     if (address && connections.length > 0) {
