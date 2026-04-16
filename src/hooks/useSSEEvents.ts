@@ -3,7 +3,7 @@ import { BACKEND_URL } from '../config'
 import type { ActivityEvent } from './useActivityEvents'
 
 // ─── Toggle mock vs real SSE ───────────────────────────────────────────────
-const USE_MOCK_DATA = true
+const USE_MOCK_DATA = false;
 
 // ─── Singleton module-level state ─────────────────────────────────────────
 // One SSE connection shared across all hook consumers.
