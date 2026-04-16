@@ -3,7 +3,6 @@ import { Routes, Route } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useAccount } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
-import { networks } from './config/evm.config'
 import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
 import { WalletConnect } from './components/evm/WalletConnect'
 import { CreateRaffleModal } from './components/evm/CreateRaffleModal'
@@ -103,7 +102,7 @@ export function HomePage() {
               Connect to Base network to create raffles and buy tickets with smart contract integration
             </p>
             <p className="font-mono text-xs text-[#333333] mb-8">
-              {networks.map((n) => n.name).join(' · ')}
+              Base Network
             </p>
             <div className='flex w-full justify-center'>
               <WalletConnect />
