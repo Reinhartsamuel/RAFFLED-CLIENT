@@ -12,6 +12,7 @@ export type EventType =
   | 'RaffleExpired'
   | 'UnderfilledPrizeReturned'
   | 'PlatformFeeCollected'
+  | 'FeeChangeProposed'
 
 export type ActivityFilter = 'all' | EventType
 
@@ -46,6 +47,10 @@ interface FeeCollectedData {
   raffle_id: number
   amount: string
 }
+interface FeeChangeProposedData {
+  new_fee_bps: string
+  effective_at: string
+}
 
 export type EventData =
   | TicketPurchasedData
@@ -54,6 +59,7 @@ export type EventData =
   | RaffleExpiredData
   | UnderfilledData
   | FeeCollectedData
+  | FeeChangeProposedData
 
 export interface ActivityEvent {
   id: number

@@ -119,7 +119,9 @@ function openSSEConnection() {
       sessionStorage.setItem('sse_last_event_id', e.lastEventId)
     }
     try {
-      const event: ActivityEvent = JSON.parse(e.data)
+      const eventData: Omit<ActivityEvent, 'source'> = JSON.parse(e.data)
+      // Add 'source' field since backend doesn't include it
+      const event: ActivityEvent = { ...eventData, source: 'sse' }
       listeners.forEach((cb) => cb(event))
     } catch {
       // ignore malformed data
