@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { WagmiProvider, useAccount } from 'wagmi'
+import { useQuery } from '@tanstack/react-query'
+import { useAccount } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
-import { wagmiConfig, queryClient, networks } from './config/evm.config'
+import { networks } from './config/evm.config'
 import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
 import { WalletConnect } from './components/evm/WalletConnect'
 import { CreateRaffleModal } from './components/evm/CreateRaffleModal'
@@ -294,17 +294,15 @@ export function HomePage() {
 
 export default function Home() {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/raffle/:id" element={<RaffleDetail />} />
-          <Route path="/faucet" element={<Faucet />} />
-          <Route path="/activity" element={<Activity />} />
-        </Routes>
-        {/* Global SSE toast notifications — persists across page navigations */}
-        <EventToastContainer />
-      </QueryClientProvider>
-    </WagmiProvider>
+    <>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/raffle/:id" element={<RaffleDetail />} />
+        <Route path="/faucet" element={<Faucet />} />
+        <Route path="/activity" element={<Activity />} />
+      </Routes>
+      {/* Global SSE toast notifications — persists across page navigations */}
+      <EventToastContainer />
+    </>
   )
 }

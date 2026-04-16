@@ -46,24 +46,26 @@ export const metadata = {
 // Create wagmi config
 export const wagmiConfig = wagmiAdapter.wagmiConfig
 
-// Create AppKit instance - Base ONLY (like working example)
-createAppKit({
-  adapters: [wagmiAdapter],
-  networks: [base],
-  projectId,
-  metadata,
-  features: {
-    analytics: true,
-  },
-  themeVariables: {
-    '--w3m-accent': '#DFFF00',
-    '--w3m-color-mix': '#000000',
-    '--w3m-color-mix-strength': 25,
-    '--w3m-border-radius-master': '0px',
-    '--w3m-font-family': "'JetBrains Mono', monospace",
-  },
-  themeMode: 'dark',
-})
+// Get appkit instance initializer function (call this inside React component)
+export function initAppKit() {
+  createAppKit({
+    adapters: [wagmiAdapter],
+    networks: [base],
+    projectId,
+    metadata,
+    features: {
+      analytics: true,
+    },
+    themeVariables: {
+      '--w3m-accent': '#DFFF00',
+      '--w3m-color-mix': '#000000',
+      '--w3m-color-mix-strength': 25,
+      '--w3m-border-radius-master': '0px',
+      '--w3m-font-family': "'JetBrains Mono', monospace",
+    },
+    themeMode: 'dark',
+  })
+}
 
 // ──────────────────────────────────────────────────────────────────────
 // React Query Setup
