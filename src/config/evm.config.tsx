@@ -28,12 +28,13 @@ if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-export const networks = [baseSepolia, base]
+// Set networks - Base mainnet first (like working example)
+export const networks = [base, baseSepolia]
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks,
-  defaultNetwork: baseSepolia,
+  ssr: true,
 } as any)
 
 export const metadata = {
@@ -46,28 +47,24 @@ export const metadata = {
 // Create wagmi config
 export const wagmiConfig = wagmiAdapter.wagmiConfig
 
-// Create AppKit instance
+// Create AppKit instance - Base mainnet first (like working example)
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [
-    baseSepolia, 
-    base
-  ] as any,
-  metadata,
+  networks: [base, baseSepolia],
   projectId,
+  metadata,
   features: {
     analytics: true,
-    allWallets: true,
   },
   themeVariables: {
-    '--w3m-accent': '#DFFF00', // Safety Lime (neo-brutalist theme)
-    '--w3m-color-mix': '#000000', // Pure Black
+    '--w3m-accent': '#DFFF00',
+    '--w3m-color-mix': '#000000',
     '--w3m-color-mix-strength': 25,
-    '--w3m-border-radius-master': '0px', // No border radius (neo-brutalist)
+    '--w3m-border-radius-master': '0px',
     '--w3m-font-family': "'JetBrains Mono', monospace",
   },
   themeMode: 'dark',
-} as any)
+})
 
 // ──────────────────────────────────────────────────────────────────────
 // React Query Setup

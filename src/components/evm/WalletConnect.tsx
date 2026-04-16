@@ -1,6 +1,6 @@
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { baseSepolia, base } from '@reown/appkit/networks'
+import { base, baseSepolia } from '@reown/appkit/networks'
 import { formatAddress, isSupportedChain } from '../../utils/evm.utils'
 
 export function WalletConnect() {
@@ -15,7 +15,7 @@ export function WalletConnect() {
     return (
       <button
         className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs uppercase tracking-wider hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200"
-        onClick={() => open({ view: 'Connect' })}
+        onClick={() => open()}
       >
         <span className="text-base leading-none">⬡</span>
         <span>Connect Wallet</span>
@@ -28,7 +28,7 @@ export function WalletConnect() {
       {!isSupported && (
         <button
           className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B] font-mono text-xs hover:bg-[#F59E0B]/20 transition-all duration-200"
-          onClick={() => switchChain({ chainId: baseSepolia.id })}
+          onClick={() => switchChain({ chainId: base.id })}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
           Switch to Base
@@ -37,7 +37,7 @@ export function WalletConnect() {
 
       <button
         className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs hover:border-[#FFB800]/40 transition-all duration-200"
-        onClick={() => open({ view: 'Account' })}
+        onClick={() => open()}
         title={address}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />

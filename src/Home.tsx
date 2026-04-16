@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { QueryClientProvider, useQuery } from '@tanstack/react-query'
-import { WagmiProvider } from 'wagmi'
-import { useAppKitAccount } from '@reown/appkit/react'
+import { WagmiProvider, useAccount } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { wagmiConfig, queryClient, networks } from './config/evm.config'
 import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
@@ -47,7 +46,7 @@ const onboardingSteps = [
 ]
 
 export function HomePage() {
-  const { isConnected } = useAppKitAccount()
+  const { isConnected } = useAccount()
   const { data: raffleCount, refetch: refetchRaffleCount } = useRaffleCount()
 
   const [activeFilter, setActiveFilter] = useState('home')
@@ -55,6 +54,7 @@ export function HomePage() {
 
   const activeToken = getAuthToken()
 
+  // Fetch raffles whenever wallet is connected (regardless of auth status)
   const { data: rafflesData, isLoading: rafflesLoading, refetch: refetchRaffles } = useQuery<BackendRaffle[]>({
     queryKey: ['raffles', activeFilter],
     queryFn: async () => {
@@ -70,7 +70,7 @@ export function HomePage() {
       const data = await res.json()
       return data.data || []
     },
-    enabled: isConnected,
+    enabled: true, // Always fetch to show public raffles
     staleTime: RAFFLE_CACHE_TTL,
     gcTime: RAFFLE_CACHE_TTL * 2,
   })

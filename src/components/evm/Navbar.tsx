@@ -1,40 +1,26 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
-import { createWalletClient, custom } from 'viem'
-import { baseSepolia } from '@reown/appkit/networks'
-import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
+import { useSignMessage, useDisconnect, useAccount } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
-  const { open } = useAppKit()
-  const { address, isConnected } = useAppKitAccount()
-  const { walletProvider } = useAppKitProvider()
-  const { signMessageAsync } = useSignMessage()
   const { disconnect } = useDisconnect()
-  const chainId = useChainId()
-  const { switchChain } = useSwitchChain()
-
+  const { address } = useAccount()
+  const { signMessageAsync } = useSignMessage()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
-  const [autoAuthRan, setAutoAuthRan] = useState(false)
+  const [, setNonce] = useState<string | null>(null)
   
   // Terms of Service modal state
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
-  const [, setNonce] = useState<string | null>(null)
   const [pendingSignature, setPendingSignature] = useState<{ message: string; nonce: string } | null>(null)
   const [signatureError, setSignatureError] = useState<string | null>(null)
-  const [debugLog, setDebugLog] = useState<string[]>([])
-
-  const addDebug = (msg: string) => {
-    console.log('[DEBUG]', msg)
-    setDebugLog(prev => [...prev.slice(-9), `${new Date().toLocaleTimeString()}: ${msg}`])
-  }
+  const [autoAuthRan, setAutoAuthRan] = useState(false)
 
   useEffect(() => {
     if (!authMessage) return
@@ -42,239 +28,46 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
-  // Auto-switch to Base Sepolia when wallet connects and not on correct chain
   useEffect(() => {
-    if (isConnected && chainId !== baseSepolia.id) {
-      switchChain({ chainId: baseSepolia.id })
+    // Auto-trigger sign-in when wallet connects and no token exists
+    if (address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
+      handleSignIn()
     }
-  }, [isConnected, chainId, switchChain])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address])
 
-  // Sign message using AppKit provider directly
-  const signMessageBypass = useCallback(async (message: string): Promise<string> => {
-    try {
-      addDebug('Getting provider from AppKit...')
-      
-      if (!walletProvider) {
-        throw new Error('No wallet provider available. Please connect your wallet first.')
-      }
-
-      addDebug('Creating wallet client...')
-      const walletClient = createWalletClient({
-        chain: baseSepolia,
-        transport: custom(walletProvider),
-      })
-
-      addDebug('Signing message...')
-      const [account] = walletClient.account ? [walletClient.account] : await walletClient.getAddresses()
-      
-      const signature = await walletClient.signMessage({
-        account,
-        message,
-      })
-      
-      addDebug('SUCCESS!')
-      return signature
-    } catch (err) {
-      const errMsg = (err as { message?: string })?.message || String(err)
-      addDebug(`AppKit signing FAIL: ${errMsg.slice(0, 120)}`)
-      
-      // If user rejected the signature, don't fallback
-      if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User') || errMsg.includes('cancelled')) {
-        throw err
-      }
-    }
-
-    // Last resort - try wagmi
-    addDebug('Falling back to wagmi signMessageAsync')
-    return await signMessageAsync({ message })
-  }, [walletProvider, signMessageAsync])
-
-  const ensureCorrectChain = async () => {
-    try {
-      type EthereumProvider = {
-        request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-      }
-      const ethereum = window.ethereum as EthereumProvider | undefined
-
-      // First, check current chain ID
-      if (ethereum?.request) {
-        try {
-          const currentChainId = await ethereum.request({
-            method: 'eth_chainId',
-            params: [],
-          })
-          console.log('Current chain ID:', currentChainId)
-
-          // If already on correct chain, return
-          if (currentChainId === '0x14a34') {
-            return
-          }
-
-          // Try to switch
-          try {
-            await ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: '0x14a34' }],
-            })
-            await new Promise(resolve => setTimeout(resolve, 2000))
-            return
-          } catch (switchErr) {
-            // If chain doesn't exist, add it
-            if ((switchErr as { code?: number }).code === 4902) {
-              await ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [
-                  {
-                    chainId: '0x14a34',
-                    chainName: 'Base Sepolia',
-                    rpcUrls: ['https://sepolia.base.org'],
-                    blockExplorerUrls: ['https://sepolia.basescan.org'],
-                    nativeCurrency: {
-                      name: 'ETH',
-                      symbol: 'ETH',
-                      decimals: 18,
-                    },
-                  },
-                ],
-              })
-              await new Promise(resolve => setTimeout(resolve, 2000))
-              return
-            }
-            throw switchErr
-          }
-        } catch (rpcErr) {
-          console.error('RPC request failed:', rpcErr)
-        }
-      }
-
-      // Fallback to wagmi
-      switchChain({ chainId: baseSepolia.id })
-      await new Promise(resolve => setTimeout(resolve, 2500))
-    } catch (err) {
-      console.error('Chain switch failed:', err)
-      open({ view: 'Networks' })
-      throw new Error('Failed to connect to Base Sepolia. Please manually switch networks in MetaMask and try again.')
-    }
-  }
-
-  const handleSignIn = async (auto = false) => {
-    if (!isConnected || !address) {
-      if (!auto) {
-        // Disconnect first to ensure clean wallet connection
-        try { disconnect() } catch { /* ignore */ }
-        setTimeout(() => open(), 300)
-      }
+  const handleSignIn = async () => {
+    // If already authenticated, skip
+    if (getAuthToken()) {
+      setAuthStatus('ok')
       return
     }
 
-    // If not logged in and wallet is connected, show Terms of Service modal
-    const existingToken = getAuthToken()
-    if (!existingToken) {
-      // Fetch nonce for the modal display
-      try {
-        const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        })
-        const { nonce: fetchedNonce } = await nonceRes.json()
-        setNonce(fetchedNonce)
-
-
-        
-        const message = [
-          'Welcome to Raffled!',
-          '',
-          'Click to sign in and accept the Raffled Terms of Service and Privacy Policy. This request will not cost any gas fees.',
-          '',
-          `Wallet address: ${address}`,
-          `Nonce: ${fetchedNonce}`,
-        ].join('\n')
-
-        setPendingSignature({ message, nonce: fetchedNonce })
-        setShowTermsModal(true)
-        setTermsAccepted(false)
-        return
-      } catch (err) {
-        console.error('Error fetching nonce:', err)
-        setAuthStatus('error')
-        setAuthMessage('Failed to initialize sign-in.')
-        return
-      }
-    }
-
-    // Proceed with signature if token exists (re-authentication)
-    setAuthStatus('loading')
-    setAuthMessage(null)
+    // Fetch nonce and show terms modal
     try {
-      await ensureCorrectChain()
-
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
       const { nonce: fetchedNonce } = await nonceRes.json()
+      setNonce(fetchedNonce)
 
+      // Compose message - same format as working example
       const message = [
-        'Sign in with Base to Raffled',
+        'Welcome to Raffled!',
         '',
-        `Address: ${address}`,
+        'Click to sign in and accept the Raffled Terms of Service and Privacy Policy. This request will not cost any gas fees.',
+        '',
+        `Wallet address: ${address || 'connected'}`,
         `Nonce: ${fetchedNonce}`,
-        `Issued At: ${new Date().toISOString()}`,
       ].join('\n')
 
-      // Get actual wallet chain ID (not just wagmi state which might be undefined)
-      let actualChainId = chainId
-      if (!actualChainId && window.ethereum) {
-        try {
-          type EthereumProvider = {
-            request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-          }
-          const ethereum = window.ethereum as EthereumProvider
-          const chainIdHex = (await ethereum?.request?.({
-            method: 'eth_chainId',
-            params: [],
-          })) as string
-          actualChainId = parseInt(chainIdHex, 16)
-        } catch (e) {
-          console.error('Failed to get chain ID from wallet:', e)
-        }
-      }
-
-      // Verify we're on correct chain before signing
-      if (actualChainId && actualChainId !== baseSepolia.id) {
-        throw new Error(
-          `Wrong chain detected. Your wallet is on chain ${actualChainId}, but Base Sepolia is required (84532). ` +
-          `Please switch networks in MetaMask before signing.`
-        )
-      }
-
-      const signature = await signMessageBypass(message)
-
-      const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ message, signature, address, chain: 'base' }),
-      })
-
-      if (!verifyRes.ok) {
-        const error = await verifyRes.text()
-        throw new Error(`Verification failed: ${error}`)
-      }
-
-      const data = await verifyRes.json()
-      localStorage.setItem('access_token', data.token)
-      setAuthStatus('ok')
-      setAuthMessage('Signed in with Base.')
+      setPendingSignature({ message, nonce: fetchedNonce })
+      setShowTermsModal(true)
+      setTermsAccepted(false)
     } catch (err) {
-      console.error('EVM sign-in error:', err)
+      console.error('Error fetching nonce:', err)
       setAuthStatus('error')
-      const errorMessage = (err as Error).message
-      const displayMessage = errorMessage.includes('Network mismatch')
-        ? errorMessage
-        : 'Login failed. Ensure wallet is connected to Base Sepolia.'
-      setAuthMessage(displayMessage)
-      if (auto) {
-        setAutoAuthRan(false)
-        try { disconnect() } catch { /* ignore */ }
-      }
+      setAuthMessage('Failed to initialize sign-in.')
     }
   }
 
@@ -286,36 +79,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      await ensureCorrectChain()
+      // Sign using wagmi directly - same as working example
+      const signature = await signMessageAsync({
+        message: pendingSignature.message,
+      })
 
-      // Get actual wallet chain ID (not just wagmi state which might be undefined)
-      let actualChainId = chainId
-      if (!actualChainId && window.ethereum) {
-        try {
-          type EthereumProvider = {
-            request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-          }
-          const ethereum = window.ethereum as EthereumProvider
-          const chainIdHex = (await ethereum?.request?.({
-            method: 'eth_chainId',
-            params: [],
-          })) as string
-          actualChainId = parseInt(chainIdHex, 16)
-        } catch (e) {
-          console.error('Failed to get chain ID from wallet:', e)
-        }
-      }
-
-      // Verify we're on correct chain before signing
-      if (actualChainId && actualChainId !== baseSepolia.id) {
-        throw new Error(
-          `Wrong chain detected. Your wallet is on chain ${actualChainId}, but Base Sepolia is required (84532). ` +
-          `Please switch networks in MetaMask and try again.`
-        )
-      }
-
-      const signature = await signMessageBypass(pendingSignature.message)
-
+      // Verify with backend - use wagmi address
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -333,24 +102,20 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       const data = await verifyRes.json()
       localStorage.setItem('access_token', data.token)
       setAuthStatus('ok')
-      setAuthMessage('Signed in with Base.')
+      setAuthMessage('Signed in successfully.')
       setPendingSignature(null)
       setNonce(null)
     } catch (err) {
-      console.error('EVM sign-in error:', err)
+      console.error('Sign-in error:', err)
       const errorMessage = (err as Error).message
-      const userMessage = errorMessage.includes('Network mismatch')
-        ? errorMessage
-        : `Signature denied or verification failed. ${errorMessage}`
-      setSignatureError(userMessage)
+      setSignatureError(`Signature denied or verification failed. ${errorMessage}`)
       setShowTermsModal(false)
       setPendingSignature(null)
       setNonce(null)
       setTermsAccepted(false)
-      // Automatically disconnect wallet on signature denial
       try { disconnect() } catch { /* ignore */ }
       setAuthStatus('error')
-      setAuthMessage('Login failed. Wallet disconnected.')
+      setAuthMessage('Login failed.')
     }
   }
 
@@ -369,25 +134,25 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   // Auto sign-in when wallet connects
   useEffect(() => {
-    if (isConnected && !autoAuthRan && authStatus !== 'loading') {
+    if (!autoAuthRan && authStatus !== 'loading') {
       const existingToken = getAuthToken()
       if (existingToken) {
         setAutoAuthRan(true)
         setAuthStatus('ok')
         setAuthMessage('Authenticated with existing session.')
-      } else {
-        setAutoAuthRan(true)
-        // Delay auto-sign to let WalletConnect session fully initialize
-        setTimeout(() => handleSignIn(true), 3000)
       }
     }
-    if (!isConnected && autoAuthRan) {
+    if (!existingTokenIsSet()) {
       setAutoAuthRan(false)
       setAuthStatus('idle')
       localStorage.removeItem('access_token')
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, authStatus, autoAuthRan, address])
+  }, [authStatus, autoAuthRan])
+
+  function existingTokenIsSet() {
+    return !!getAuthToken()
+  }
 
   return (
     <>
@@ -429,21 +194,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
           {/* Controls */}
           <div className="flex items-center gap-3">
-            {isConnected && authStatus !== 'ok' && (
-              <button
-                className="font-mono font-semibold text-xs uppercase tracking-wider px-4 py-2 rounded-md bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => handleSignIn(false)}
-                disabled={authStatus === 'loading'}
-              >
-                {authStatus === 'loading' ? 'Signing...' : 'Sign In'}
-              </button>
-            )}
-            {isConnected && authStatus === 'ok' && (
-              <span className="font-mono text-xs text-[#22C55E] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E] animate-pulse flex-shrink-0" />
-                <span className="hidden sm:inline">Authenticated</span>
-              </span>
-            )}
             <WalletConnect />
           </div>
         </div>
@@ -521,7 +271,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     <span className="text-[#888888] text-xs font-mono uppercase">Wallet Address</span>
                   </div>
                   <p className="text-[#F5F5F5] font-mono text-sm truncate">
-                    {address}
+                    {address || 'Connected'}
                   </p>
                   <div className="pt-2 border-t border-[#222222]">
                     <span className="text-[#888888] text-xs font-mono uppercase">Nonce</span>
@@ -565,7 +315,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     setPendingSignature(null)
                     setNonce(null)
                     setTermsAccepted(false)
-                    try { disconnect() } catch { /* ignore */ }
                   }}
                   className="font-sans font-medium text-sm text-[#888888] hover:text-[#AAAAAA] transition-colors px-4 py-2"
                 >
@@ -584,31 +333,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile Debug Panel — pointer-events-none on container, auto on inner so clicks pass through */}
-      {debugLog.length > 0 && (
-        <div className="fixed bottom-20 left-2 right-2 z-30 pointer-events-none">
-          <div className="pointer-events-auto bg-[#0a0a0a] border border-[#FFB800]/40 rounded-lg p-3 max-h-60 overflow-y-auto">
-            <div className="flex items-center justify-between mb-2">
-              <span className="font-mono text-[10px] text-[#FFB800] uppercase">Debug Log</span>
-              <button
-                onClick={() => setDebugLog([])}
-                className="font-mono text-[10px] text-[#888888]"
-              >
-                clear
-              </button>
-            </div>
-            <div className="space-y-1">
-              {debugLog.map((line, i) => (
-                <div key={i} className="font-mono text-[9px] text-[#CCCCCC] break-all">
-                  {line}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Signature Error Popup — pointer-events-none wrapper */}
+      {/* Signature Error Popup */}
       <AnimatePresence>
         {signatureError && (
           <motion.div
