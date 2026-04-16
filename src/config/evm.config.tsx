@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { base, baseSepolia } from '@reown/appkit/networks'
+import { base } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
 
 // ──────────────────────────────────────────────────────────────────────
@@ -9,11 +9,9 @@ import { QueryClient } from '@tanstack/react-query'
 
 export const CONTRACTS = {
   RaffleManager: {
-    baseSepolia: (import.meta.env.VITE_RAFFLE_MANAGER_ADDRESS_SEPOLIA || '0x0000000000000000000000000000000000000000') as `0x${string}`,
     base: (import.meta.env.VITE_RAFFLE_MANAGER_ADDRESS_BASE || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
   MockUSDC: {
-    baseSepolia: (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA || '0x0000000000000000000000000000000000000000') as `0x${string}`,
     base: '0x49f49CfE89050a8F8E48d3A31E33a8e26Bc80D1d' as const,
   },
 } as const
@@ -22,19 +20,19 @@ export const CONTRACTS = {
 // Wagmi & Reown Setup
 // ──────────────────────────────────────────────────────────────────────
 
-const projectId = import.meta.env.VITE_PROJECT_ID || 'b56e18d47c72ab683b10814fe9495694'
+// Use the SAME project ID as the working example (appkit-connect-wallet2)
+const projectId = '8fae13c2c3be9ccf19dbf5a66ec12f04'
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-// Set networks - Base mainnet first (like working example)
-export const networks = [base, baseSepolia]
+// Set networks - Base ONLY (like working example)
+export const networks = [base]
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
   networks,
-  defaultNetwork: baseSepolia,
   ssr: true,
 } as any)
 
@@ -48,10 +46,10 @@ export const metadata = {
 // Create wagmi config
 export const wagmiConfig = wagmiAdapter.wagmiConfig
 
-// Create AppKit instance - Base mainnet first (like working example)
+// Create AppKit instance - Base ONLY (like working example)
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [base, baseSepolia],
+  networks: [base],
   projectId,
   metadata,
   features: {
@@ -89,42 +87,35 @@ export const queryClient = new QueryClient({
  * Get the RaffleManager contract address for the current network
  */
 export function getRaffleManagerAddress(chainId: number): `0x${string}` {
-  if (chainId === 84532) {
-    return CONTRACTS.RaffleManager.baseSepolia
-  }
   if (chainId === 8453) {
     return CONTRACTS.RaffleManager.base
   }
-  return CONTRACTS.RaffleManager.baseSepolia
+  // Default to Base mainnet
+  return CONTRACTS.RaffleManager.base
 }
 
 /**
  * Get MockUSDC contract address for the current network
  */
 export function getMockUSDCAddress(chainId: number): `0x${string}` {
-  if (chainId === 84532) {
-    return CONTRACTS.MockUSDC.baseSepolia
-  }
   if (chainId === 8453) {
     return CONTRACTS.MockUSDC.base
   }
-  return CONTRACTS.MockUSDC.baseSepolia
+  // Default to Base mainnet
+  return CONTRACTS.MockUSDC.base
 }
 
 /**
- * Check if the current chain is supported
+ * Check if the current chain is supported (Base mainnet only)
  */
 export function isSupportedChain(chainId: number): boolean {
-  return chainId === 84532 || chainId === 8453
+  return chainId === 8453
 }
 
 /**
  * Get network name from chain ID
  */
 export function getNetworkName(chainId: number): string {
-  if (chainId === 84532) {
-    return 'Base Sepolia'
-  }
   if (chainId === 8453) {
     return 'Base'
   }

@@ -28,13 +28,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
-  useEffect(() => {
-    // Auto-trigger sign-in when wallet connects and no token exists
-    if (isConnected && address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
-      handleSignIn()
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isConnected, address])
+  // Don't auto-trigger - let user manually click Sign In button like working example does
 
   const handleSignIn = async () => {
     // If already authenticated, skip
@@ -79,8 +73,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      // Sign using wagmi's useSignMessage - same as working example
-      // This handles both browser extension wallets and WalletConnect automatically
+      // Always use wagmi - works for both desktop and mobile now that project ID matches working example
       const signature = await signMessageAsync({
         message: pendingSignature.message,
       })
@@ -193,10 +186,19 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
           </div>
 
-          {/* Controls */}
-          <div className="flex items-center gap-3">
-            <WalletConnect />
-          </div>
+      {/* Controls */}
+      <div className="flex items-center gap-3">
+        {isConnected && !getAuthToken() && authStatus !== 'ok' && (
+          <button
+            className="px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#FFB800] text-[#050505] font-mono text-xs uppercase tracking-wider hover:bg-[#FFCC33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={() => handleSignIn()}
+            disabled={authStatus === 'loading'}
+          >
+            {authStatus === 'loading' ? 'Signing...' : 'Sign In'}
+          </button>
+        )}
+        <WalletConnect />
+      </div>
         </div>
       </header>
 
