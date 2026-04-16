@@ -97,7 +97,7 @@ function stopMockSSE() {
 
 // ─── Real SSE connection helpers ───────────────────────────────────────────
 function buildSSEUrl(): string {
-  const url = new URL(`${BACKEND_URL}/api/events/stream`)
+  const url = new URL(`${BACKEND_URL}/events/stream`)
   const lastId = sessionStorage.getItem('sse_last_event_id')
   if (lastId) {
     const [block, logIndex] = lastId.split(':')
