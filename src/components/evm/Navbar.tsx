@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect, useAccount } from 'wagmi'
+import { useDisconnect, useAccount } from 'wagmi'
+import { createWalletClient, custom } from 'viem'
+import { base } from '@reown/appkit/networks'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -8,8 +10,7 @@ import { WalletConnect } from './WalletConnect'
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
-  const { address } = useAccount()
-  const { signMessageAsync } = useSignMessage()
+  const { address, isConnected } = useAccount()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -30,11 +31,11 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   useEffect(() => {
     // Auto-trigger sign-in when wallet connects and no token exists
-    if (address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
+    if (isConnected && address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
       handleSignIn()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [address])
+  }, [isConnected, address])
 
   const handleSignIn = async () => {
     // If already authenticated, skip
@@ -79,12 +80,27 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      // Sign using wagmi directly - same as working example
-      const signature = await signMessageAsync({
+      // Use window.ethereum for signing when available (works better with mobile wallets)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const ethereum = (window as typeof globalThis & { ethereum?: { request: (...args: any[]) => Promise<any> } }).ethereum
+      
+      if (!ethereum) {
+        throw new Error('No wallet provider available. Please reconnect your wallet.')
+      }
+
+      // Create wallet client using window.ethereum - this works on mobile
+      const walletClient = createWalletClient({
+        chain: base,
+        transport: custom(ethereum),
+      })
+
+      // Sign message using the wallet client directly
+      const signature = await walletClient.signMessage({
+        account: address as `0x${string}`,
         message: pendingSignature.message,
       })
 
-      // Verify with backend - use wagmi address
+      // Verify with backend
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
