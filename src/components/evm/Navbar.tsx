@@ -1,11 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
-import { getConnectorClient } from '@wagmi/core'
-import { signMessage as viemSignMessage } from 'viem/actions'
-import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
+import { createWalletClient, custom } from 'viem'
 import { baseSepolia } from '@reown/appkit/networks'
-import { wagmiConfig } from '../../config/evm.config'
+import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -14,6 +12,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { open } = useAppKit()
   const { address, isConnected } = useAppKitAccount()
+  const { walletProvider } = useAppKitProvider()
   const { signMessageAsync } = useSignMessage()
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
@@ -50,32 +49,45 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
-  // Sign message — bypasses wagmi's assertChainId check which fails when connector.getChainId() returns undefined
-  const signMessageBypass = async (message: string): Promise<string> => {
-    // Use getConnectorClient with assertChainId:false to skip the broken chain validation
-    // This is the exact wagmi source flag that skips: connector.getChainId() !== connection.chainId
+  // Sign message using AppKit provider directly
+  const signMessageBypass = useCallback(async (message: string): Promise<string> => {
     try {
-      addDebug('Trying getConnectorClient assertChainId=false')
-      const client = await getConnectorClient(wagmiConfig, {
-        chainId: baseSepolia.id,
-        assertChainId: false,
-      } as Parameters<typeof getConnectorClient>[1])
-      addDebug('Got client, signing...')
-      const signature = await viemSignMessage(client, { message })
+      addDebug('Getting provider from AppKit...')
+      
+      if (!walletProvider) {
+        throw new Error('No wallet provider available. Please connect your wallet first.')
+      }
+
+      addDebug('Creating wallet client...')
+      const walletClient = createWalletClient({
+        chain: baseSepolia,
+        transport: custom(walletProvider),
+      })
+
+      addDebug('Signing message...')
+      const [account] = walletClient.account ? [walletClient.account] : await walletClient.getAddresses()
+      
+      const signature = await walletClient.signMessage({
+        account,
+        message,
+      })
+      
       addDebug('SUCCESS!')
       return signature
     } catch (err) {
       const errMsg = (err as { message?: string })?.message || String(err)
-      addDebug(`getConnectorClient FAIL: ${errMsg.slice(0, 120)}`)
-      if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+      addDebug(`AppKit signing FAIL: ${errMsg.slice(0, 120)}`)
+      
+      // If user rejected the signature, don't fallback
+      if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User') || errMsg.includes('cancelled')) {
         throw err
       }
     }
 
-    // Last resort
+    // Last resort - try wagmi
     addDebug('Falling back to wagmi signMessageAsync')
     return await signMessageAsync({ message })
-  }
+  }, [walletProvider, signMessageAsync])
 
   const ensureCorrectChain = async () => {
     try {
