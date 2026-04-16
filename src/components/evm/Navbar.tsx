@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
-import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
+import { getConnectorClient } from '@wagmi/core'
+import { signMessage as viemSignMessage } from 'viem/actions'
+import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
+import { wagmiConfig } from '../../config/evm.config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -15,9 +18,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
-  const { walletProvider } = useAppKitProvider<{
-    request: (args: { method: string; params: unknown[] }) => Promise<unknown>
-  }>('eip155')
+
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -49,51 +50,30 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
-  // Sign message — retries if WalletConnect session isn't ready yet
-  const signMessageBypass = async (message: string, attempt = 1): Promise<string> => {
-    const maxAttempts = 4
-    addDebug(`Attempt ${attempt}/${maxAttempts} | walletProvider=${!!walletProvider}`)
-
-    // Hex-encode message for personal_sign
-    const messageHex = '0x' + Array.from(new TextEncoder().encode(message))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('')
-
-    if (walletProvider && address) {
-      try {
-        const signature = (await walletProvider.request({
-          method: 'personal_sign',
-          params: [messageHex, address],
-        })) as string
-        addDebug('SUCCESS!')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`FAIL: ${errMsg.slice(0, 100)}`)
-
-        // User rejected — stop immediately
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-
-        // "call connect() before request()" — session not ready, retry
-        if (errMsg.includes('connect()') && attempt < maxAttempts) {
-          const waitSec = attempt * 2
-          addDebug(`Session not ready. Waiting ${waitSec}s...`)
-          await new Promise(resolve => setTimeout(resolve, waitSec * 1000))
-          return signMessageBypass(message, attempt + 1)
-        }
+  // Sign message — bypasses wagmi's assertChainId check which fails when connector.getChainId() returns undefined
+  const signMessageBypass = async (message: string): Promise<string> => {
+    // Use getConnectorClient with assertChainId:false to skip the broken chain validation
+    // This is the exact wagmi source flag that skips: connector.getChainId() !== connection.chainId
+    try {
+      addDebug('Trying getConnectorClient assertChainId=false')
+      const client = await getConnectorClient(wagmiConfig, {
+        chainId: baseSepolia.id,
+        assertChainId: false,
+      } as Parameters<typeof getConnectorClient>[1])
+      addDebug('Got client, signing...')
+      const signature = await viemSignMessage(client, { message })
+      addDebug('SUCCESS!')
+      return signature
+    } catch (err) {
+      const errMsg = (err as { message?: string })?.message || String(err)
+      addDebug(`getConnectorClient FAIL: ${errMsg.slice(0, 120)}`)
+      if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
+        throw err
       }
-    } else if (attempt < maxAttempts) {
-      // walletProvider not available yet — wait for React state to populate
-      const waitSec = attempt * 2
-      addDebug(`No walletProvider yet. Waiting ${waitSec}s...`)
-      await new Promise(resolve => setTimeout(resolve, waitSec * 1000))
-      return signMessageBypass(message, attempt + 1)
     }
 
     // Last resort
-    addDebug('All retries exhausted, trying wagmi signMessageAsync')
+    addDebug('Falling back to wagmi signMessageAsync')
     return await signMessageAsync({ message })
   }
 
