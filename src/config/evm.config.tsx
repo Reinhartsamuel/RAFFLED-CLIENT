@@ -2,6 +2,7 @@ import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { base } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
+import { useState, useEffect } from 'react'
 
 // ──────────────────────────────────────────────────────────────────────
 // Contract Addresses
@@ -46,25 +47,35 @@ export const metadata = {
 // Create wagmi config
 export const wagmiConfig = wagmiAdapter.wagmiConfig
 
-// Get appkit instance initializer function (call this inside React component)
-export function initAppKit() {
-  createAppKit({
-    adapters: [wagmiAdapter],
-    networks: [base],
-    projectId,
-    metadata,
-    features: {
-      analytics: true,
-    },
-    themeVariables: {
-      '--w3m-accent': '#DFFF00',
-      '--w3m-color-mix': '#000000',
-      '--w3m-color-mix-strength': 25,
-      '--w3m-border-radius-master': '0px',
-      '--w3m-font-family': "'JetBrains Mono', monospace",
-    },
-    themeMode: 'dark',
-  })
+// Initialize AppKit hook - call this once in a component rendered INSIDE providers
+export function useInitAppKit() {
+  const [initialized, setInitialized] = useState(false)
+  
+  useEffect(() => {
+    if (!initialized) {
+      createAppKit({
+        adapters: [wagmiAdapter],
+        networks: [base],
+        projectId,
+        metadata,
+        features: {
+          analytics: true,
+        },
+        themeVariables: {
+          '--w3m-accent': '#DFFF00',
+          '--w3m-color-mix': '#000000',
+          '--w3m-color-mix-strength': 25,
+          '--w3m-border-radius-master': '0px',
+          '--w3m-font-family': "'JetBrains Mono', monospace",
+        },
+        themeMode: 'dark',
+      })
+      setInitialized(true)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized])
+  
+  return initialized
 }
 
 // ──────────────────────────────────────────────────────────────────────
