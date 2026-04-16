@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useAccount } from 'wagmi'
-import { createWalletClient, custom } from 'viem'
-import { base } from '@reown/appkit/networks'
+import { useDisconnect, useAccount, useSignMessage } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -11,6 +9,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
   const { address, isConnected } = useAccount()
+  const { signMessageAsync } = useSignMessage()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -80,23 +79,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      // Use window.ethereum for signing when available (works better with mobile wallets)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const ethereum = (window as typeof globalThis & { ethereum?: { request: (...args: any[]) => Promise<any> } }).ethereum
-      
-      if (!ethereum) {
-        throw new Error('No wallet provider available. Please reconnect your wallet.')
-      }
-
-      // Create wallet client using window.ethereum - this works on mobile
-      const walletClient = createWalletClient({
-        chain: base,
-        transport: custom(ethereum),
-      })
-
-      // Sign message using the wallet client directly
-      const signature = await walletClient.signMessage({
-        account: address as `0x${string}`,
+      // Sign using wagmi's useSignMessage - same as working example
+      // This handles both browser extension wallets and WalletConnect automatically
+      const signature = await signMessageAsync({
         message: pendingSignature.message,
       })
 
@@ -356,7 +341,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-30 max-w-md w-full px-4 pointer-events-none"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-60 max-w-md w-full px-4 pointer-events-none"
           >
             <div className="pointer-events-auto bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 flex items-center gap-4 shadow-2xl">
               <div className="w-8 h-8 rounded-full bg-[#EF4444]/20 flex items-center justify-center flex-shrink-0">
