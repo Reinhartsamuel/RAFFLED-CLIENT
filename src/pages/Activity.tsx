@@ -118,6 +118,7 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   RaffleExpired: '#555555',
   UnderfilledPrizeReturned: '#EF4444',
   PlatformFeeCollected: '#8B5CF6',
+  FeeChangeProposed: '#8B5CF6',
 }
 
 // ─── Activity Row ────────────────────────────────────────────────────────────

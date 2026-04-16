@@ -47,6 +47,12 @@ const EVENT_COLORS: Record<EventType, { border: string; badge: string; dot: stri
     dot: 'bg-[#8B5CF6]',
     icon: '◈',
   },
+  FeeChangeProposed: {
+    border: 'border-[#555555]/40',
+    badge: 'bg-[#555555]/20 text-[#999999] border border-[#555555]/30',
+    dot: 'bg-[#8B5CF6]',
+    icon: '◈',
+  },
 }
 
 // ─── Message formatting ─────────────────────────────────────────────────────

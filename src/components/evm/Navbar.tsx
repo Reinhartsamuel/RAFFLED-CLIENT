@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect, useChainId, useSwitchChain, useWalletClient } from 'wagmi'
-import { getConnections } from '@wagmi/core'
+import { useSignMessage, useDisconnect, useChainId, useSwitchChain } from 'wagmi'
 import { useAppKit, useAppKitAccount, useAppKitProvider } from '@reown/appkit/react'
 import { baseSepolia } from '@reown/appkit/networks'
-import { wagmiConfig } from '../../config/evm.config'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -17,7 +15,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { disconnect } = useDisconnect()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
-  const { data: walletClient } = useWalletClient()
   const { walletProvider } = useAppKitProvider<{
     request: (args: { method: string; params: unknown[] }) => Promise<unknown>
   }>('eip155')
@@ -52,147 +49,51 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     }
   }, [isConnected, chainId, switchChain])
 
-  // Sign message bypassing wagmi-core's connector chain validation
-  // Priority: 1) getConnectorClient (direct provider access), 2) viem walletClient, 3) window.ethereum, 4) wagmi
-  const signMessageBypass = async (message: string): Promise<string> => {
-    const connections = getConnections(wagmiConfig)
-    addDebug(`chainId=${chainId}, walletClient=${!!walletClient}, eth=${!!window.ethereum}, connections=${connections.length}`)
+  // Sign message — retries if WalletConnect session isn't ready yet
+  const signMessageBypass = async (message: string, attempt = 1): Promise<string> => {
+    const maxAttempts = 4
+    addDebug(`Attempt ${attempt}/${maxAttempts} | walletProvider=${!!walletProvider}`)
 
-    // Hex-encode message (WalletConnect/MetaMask requires hex for personal_sign)
+    // Hex-encode message for personal_sign
     const messageHex = '0x' + Array.from(new TextEncoder().encode(message))
       .map(b => b.toString(16).padStart(2, '0'))
       .join('')
 
-    // Try 0: AppKit's walletProvider (Reown-managed, has active session)
     if (walletProvider && address) {
       try {
-        addDebug('Try 0: AppKit walletProvider personal_sign')
         const signature = (await walletProvider.request({
           method: 'personal_sign',
           params: [messageHex, address],
         })) as string
-        addDebug('0 SUCCESS')
+        addDebug('SUCCESS!')
         return signature
       } catch (err) {
         const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`0 FAIL: ${errMsg.slice(0, 120)}`)
+        addDebug(`FAIL: ${errMsg.slice(0, 100)}`)
+
+        // User rejected — stop immediately
         if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
           throw err
         }
+
+        // "call connect() before request()" — session not ready, retry
+        if (errMsg.includes('connect()') && attempt < maxAttempts) {
+          const waitSec = attempt * 2
+          addDebug(`Session not ready. Waiting ${waitSec}s...`)
+          await new Promise(resolve => setTimeout(resolve, waitSec * 1000))
+          return signMessageBypass(message, attempt + 1)
+        }
       }
-    } else {
-      addDebug(`walletProvider=${!!walletProvider}, address=${!!address}`)
+    } else if (attempt < maxAttempts) {
+      // walletProvider not available yet — wait for React state to populate
+      const waitSec = attempt * 2
+      addDebug(`No walletProvider yet. Waiting ${waitSec}s...`)
+      await new Promise(resolve => setTimeout(resolve, waitSec * 1000))
+      return signMessageBypass(message, attempt + 1)
     }
 
-    // Try 1: Get connector's provider and call personal_sign with hex message
-    if (address && connections.length > 0) {
-      const connector = connections[0].connector
-
-      // Try 1a: personal_sign with hex message [hexMsg, address]
-      try {
-        addDebug('Try 1a: personal_sign [hexMsg, address]')
-        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
-          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
-        }
-        const signature = (await provider.request({
-          method: 'personal_sign',
-          params: [messageHex, address],
-        })) as string
-        addDebug('1a SUCCESS')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`1a FAIL: ${errMsg.slice(0, 100)}`)
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-      }
-
-      // Try 1b: personal_sign with reversed params [address, hexMsg] (legacy)
-      try {
-        addDebug('Try 1b: personal_sign [address, hexMsg]')
-        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
-          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
-        }
-        const signature = (await provider.request({
-          method: 'personal_sign',
-          params: [address, messageHex],
-        })) as string
-        addDebug('1b SUCCESS')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`1b FAIL: ${errMsg.slice(0, 100)}`)
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-      }
-
-      // Try 1c: eth_sign fallback
-      try {
-        addDebug('Try 1c: eth_sign')
-        const provider = await connector.getProvider({ chainId: baseSepolia.id }) as {
-          request: (args: { method: string; params: unknown[] }) => Promise<unknown>
-        }
-        const signature = (await provider.request({
-          method: 'eth_sign',
-          params: [address, messageHex],
-        })) as string
-        addDebug('1c SUCCESS')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`1c FAIL: ${errMsg.slice(0, 100)}`)
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-      }
-    }
-
-    // Try 2: viem walletClient - works for both injected and WalletConnect
-    if (walletClient && address) {
-      try {
-        addDebug('Trying viem walletClient.signMessage')
-        const signature = await walletClient.signMessage({
-          account: address as `0x${string}`,
-          message,
-        })
-        addDebug('walletClient SUCCESS')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`walletClient FAIL: ${errMsg.slice(0, 100)}`)
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-      }
-    }
-
-    // Try 2: window.ethereum (for injected providers like MetaMask extension)
-    type EthereumProvider = {
-      request?: (args: { method: string; params: unknown[] }) => Promise<unknown>
-    }
-    const ethereum = window.ethereum as EthereumProvider | undefined
-    if (ethereum?.request && address) {
-      try {
-        addDebug('Trying window.ethereum personal_sign')
-        const signature = (await ethereum.request({
-          method: 'personal_sign',
-          params: [message, address],
-        })) as string
-        addDebug('personal_sign SUCCESS')
-        return signature
-      } catch (err) {
-        const errMsg = (err as { message?: string })?.message || String(err)
-        addDebug(`personal_sign FAIL: ${errMsg.slice(0, 100)}`)
-        if (errMsg.includes('reject') || errMsg.includes('denied') || errMsg.includes('User')) {
-          throw err
-        }
-      }
-    }
-
-    // Try 3: wagmi signMessageAsync (last resort, may hit chain validation)
-    addDebug('Falling back to wagmi signMessageAsync')
+    // Last resort
+    addDebug('All retries exhausted, trying wagmi signMessageAsync')
     return await signMessageAsync({ message })
   }
 
@@ -484,7 +385,8 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         setAuthMessage('Authenticated with existing session.')
       } else {
         setAutoAuthRan(true)
-        handleSignIn(true)
+        // Delay auto-sign to let WalletConnect session fully initialize
+        setTimeout(() => handleSignIn(true), 3000)
       }
     }
     if (!isConnected && autoAuthRan) {
