@@ -1,10 +1,10 @@
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { base, baseSepolia } from '@reown/appkit/networks'
+import { base } from '@reown/appkit/networks'
 import { formatAddress, isSupportedChain } from '../../utils/evm.utils'
 
 export function WalletConnect() {
-  const { open } = useAppKit()
+  const appKit = useAppKit()
   const { address, isConnected } = useAppKitAccount()
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
@@ -15,7 +15,7 @@ export function WalletConnect() {
     return (
       <button
         className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs uppercase tracking-wider hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200"
-        onClick={() => open()}
+        onClick={() => appKit.open()}
       >
         <span className="text-base leading-none">⬡</span>
         <span>Connect Wallet</span>
@@ -37,7 +37,7 @@ export function WalletConnect() {
 
       <button
         className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs hover:border-[#FFB800]/40 transition-all duration-200"
-        onClick={() => open()}
+        onClick={() => appKit.open()}
         title={address}
       >
         <span className="w-1.5 h-1.5 rounded-full bg-[#22C55E]" />
@@ -114,35 +114,4 @@ export function WalletStatus() {
   )
 }
 
-/**
- * Network selector component
- */
-export function NetworkSelector() {
-  const chainId = useChainId()
-  const { switchChain } = useSwitchChain()
-
-  return (
-    <div className="flex items-center gap-2">
-      <button
-        className={`px-3 py-1.5 rounded-md border font-mono text-xs transition-all duration-200 ${
-          chainId === baseSepolia.id
-            ? 'border-[#FFB800] bg-[#FFB800]/10 text-[#FFB800]'
-            : 'border-[#2a2a2a] bg-[#0a0a0a] text-[#555555] hover:border-[#FFB800]/40 hover:text-[#F5F5F5]'
-        }`}
-        onClick={() => switchChain({ chainId: baseSepolia.id })}
-      >
-        Base Sepolia
-      </button>
-      <button
-        className={`px-3 py-1.5 rounded-md border font-mono text-xs transition-all duration-200 ${
-          chainId === base.id
-            ? 'border-[#FFB800] bg-[#FFB800]/10 text-[#FFB800]'
-            : 'border-[#2a2a2a] bg-[#0a0a0a] text-[#555555] hover:border-[#FFB800]/40 hover:text-[#F5F5F5]'
-        }`}
-        onClick={() => switchChain({ chainId: base.id })}
-      >
-        Base
-      </button>
-    </div>
-  )
-}
+// NetworkSelector removed - only using Base mainnet now
