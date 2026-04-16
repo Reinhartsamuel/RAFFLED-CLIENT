@@ -321,7 +321,7 @@ export function useActivityEvents(filter: ActivityFilter) {
         setTotal(source.length)
         setPage(pageNum)
       } else {
-        const url = new URL(`${BACKEND_URL}/api/events`)
+        const url = new URL(`${BACKEND_URL}/events`)
         url.searchParams.set('per_page', '20')
         url.searchParams.set('page', String(pageNum))
         if (currentFilter !== 'all') {
