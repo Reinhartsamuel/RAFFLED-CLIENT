@@ -14,8 +14,10 @@ export function WalletConnect() {
   if (!isConnected) {
     return (
       <button
-        className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs uppercase tracking-wider hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200"
-        onClick={() => appKit.open()}
+        className="flex items-center gap-2 px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#0a0a0a] text-[#F5F5F5] font-mono text-xs uppercase tracking-wider hover:border-[#FFB800] hover:text-[#FFB800] transition-all duration-200 touch-manipulation active:scale-[0.98]"
+        onClick={(e) => { e.preventDefault(); e.stopPropagation(); appKit.open(); }}
+        onTouchStart={(e) => { e.preventDefault(); }}
+        style={{ WebkitTapHighlightColor: 'transparent', cursor: 'pointer' }}
       >
         <span className="text-base leading-none">⬡</span>
         <span>Connect Wallet</span>
