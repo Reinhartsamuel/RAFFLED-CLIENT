@@ -690,38 +690,40 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile Debug Panel */}
+      {/* Mobile Debug Panel — pointer-events-none on container, auto on inner so clicks pass through */}
       {debugLog.length > 0 && (
-        <div className="fixed bottom-20 left-2 right-2 z-[55] bg-[#0a0a0a] border border-[#FFB800]/40 rounded-lg p-3 max-h-60 overflow-y-auto">
-          <div className="flex items-center justify-between mb-2">
-            <span className="font-mono text-[10px] text-[#FFB800] uppercase">Debug Log</span>
-            <button
-              onClick={() => setDebugLog([])}
-              className="font-mono text-[10px] text-[#888888]"
-            >
-              clear
-            </button>
-          </div>
-          <div className="space-y-1">
-            {debugLog.map((line, i) => (
-              <div key={i} className="font-mono text-[9px] text-[#CCCCCC] break-all">
-                {line}
-              </div>
-            ))}
+        <div className="fixed bottom-20 left-2 right-2 z-30 pointer-events-none">
+          <div className="pointer-events-auto bg-[#0a0a0a] border border-[#FFB800]/40 rounded-lg p-3 max-h-60 overflow-y-auto">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[10px] text-[#FFB800] uppercase">Debug Log</span>
+              <button
+                onClick={() => setDebugLog([])}
+                className="font-mono text-[10px] text-[#888888]"
+              >
+                clear
+              </button>
+            </div>
+            <div className="space-y-1">
+              {debugLog.map((line, i) => (
+                <div key={i} className="font-mono text-[9px] text-[#CCCCCC] break-all">
+                  {line}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Signature Error Popup */}
+      {/* Signature Error Popup — pointer-events-none wrapper */}
       <AnimatePresence>
         {signatureError && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-[60] max-w-md w-full px-4"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-30 max-w-md w-full px-4 pointer-events-none"
           >
-            <div className="bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 flex items-center gap-4 shadow-2xl">
+            <div className="pointer-events-auto bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 flex items-center gap-4 shadow-2xl">
               <div className="w-8 h-8 rounded-full bg-[#EF4444]/20 flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

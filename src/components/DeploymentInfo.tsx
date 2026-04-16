@@ -26,7 +26,7 @@ export function DeploymentInfo() {
       {/* Deployment Badge */}
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-40 px-3 py-1.5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/40 text-[#FFB800] font-mono text-[10px] hover:bg-[#FFB800]/20 transition-colors"
+        className="fixed bottom-4 right-4 z-30 px-3 py-1.5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/40 text-[#FFB800] font-mono text-[10px] hover:bg-[#FFB800]/20 transition-colors"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -41,7 +41,7 @@ export function DeploymentInfo() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-            className="fixed bottom-16 right-4 z-40 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg shadow-2xl p-4 max-w-xs"
+            className="fixed bottom-16 right-4 z-30 bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg shadow-2xl p-4 max-w-xs"
           >
             <div className="space-y-3 font-mono text-xs">
               <div>
