@@ -32,14 +32,14 @@ export const wagmiAdapter = new WagmiAdapter({
 export const wagmiConfig = wagmiAdapter.wagmiConfig
 export const queryClient = new QueryClient()
 
-// Initialize AppKit (exactly like working example)
+// Initialize AppKit with analytics disabled to avoid blocking issues
 createAppKit({
   adapters: [wagmiAdapter],
   networks: networks as any,
   projectId,
   metadata,
   features: {
-    analytics: true,
+    analytics: false,
   },
 })
 
