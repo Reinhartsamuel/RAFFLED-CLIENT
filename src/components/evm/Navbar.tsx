@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useAccount, useSignMessage } from 'wagmi'
+import { useSignMessage, useDisconnect } from 'wagmi'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
@@ -8,7 +9,7 @@ import { WalletConnect } from './WalletConnect'
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
-  const { address, isConnected } = useAccount()
+  const { address } = useAppKitAccount()
   const { signMessageAsync } = useSignMessage()
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
@@ -28,7 +29,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
-  // Don't auto-trigger - let user manually click Sign In button like working example does
+  useEffect(() => {
+    // Auto-trigger sign-in when wallet connects and no token exists
+    if (address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
+      handleSignIn()
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address])
 
   const handleSignIn = async () => {
     // If already authenticated, skip
@@ -73,12 +80,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      // Always use wagmi - works for both desktop and mobile now that project ID matches working example
+      // Sign using wagmi directly - same as working example
       const signature = await signMessageAsync({
         message: pendingSignature.message,
       })
 
-      // Verify with backend
+      // Verify with backend - use wagmi address
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -186,19 +193,10 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             </div>
           </div>
 
-      {/* Controls */}
-      <div className="flex items-center gap-3">
-        {isConnected && !getAuthToken() && authStatus !== 'ok' && (
-          <button
-            className="px-4 py-2 rounded-md border border-[#2a2a2a] bg-[#FFB800] text-[#050505] font-mono text-xs uppercase tracking-wider hover:bg-[#FFCC33] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            onClick={() => handleSignIn()}
-            disabled={authStatus === 'loading'}
-          >
-            {authStatus === 'loading' ? 'Signing...' : 'Sign In'}
-          </button>
-        )}
-        <WalletConnect />
-      </div>
+          {/* Controls */}
+          <div className="flex items-center gap-3">
+            <WalletConnect />
+          </div>
         </div>
       </header>
 
@@ -343,7 +341,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-60 max-w-md w-full px-4 pointer-events-none"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-30 max-w-md w-full px-4 pointer-events-none"
           >
             <div className="pointer-events-auto bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 flex items-center gap-4 shadow-2xl">
               <div className="w-8 h-8 rounded-full bg-[#EF4444]/20 flex items-center justify-center flex-shrink-0">
