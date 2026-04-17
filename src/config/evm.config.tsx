@@ -10,7 +10,7 @@ export const networks = [base]
 const metadata = {
   name: 'Raffled',
   description: 'On-chain raffles powered by Chainlink VRF',
-  url: 'https://raffled.live',
+  url: window.location.origin,
   icons: ['https://avatars.githubusercontent.com/u/179229932'],
 }
 
