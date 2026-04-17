@@ -1,21 +1,14 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import { WagmiProvider } from 'wagmi'
-import { QueryClientProvider } from '@tanstack/react-query'
-import { wagmiConfig, queryClient } from './config/evm.config'
 import App from './App'
 import './styles/globals.css'
 
-// Wrap everything with providers like working example
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
+// Match working example exactly - providers inside App.tsx
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
     <BrowserRouter>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={queryClient}>
-          <App />
-        </QueryClientProvider>
-      </WagmiProvider>
+      <App />
     </BrowserRouter>
-  </StrictMode>,
+  </React.StrictMode>,
 )

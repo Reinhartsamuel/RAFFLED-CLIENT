@@ -1,14 +1,17 @@
+import { WagmiProvider } from 'wagmi';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { lazy, Suspense } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { DeploymentInfo } from './components/DeploymentInfo';
+import { wagmiConfig, queryClient } from './config/evm.config';
 import LandingPageOriginal from './pages/LandingPageOriginal';
 import LandingPage2 from './pages/LandingPage2';
 
 // Lazy load Home to prevent its CSS from loading on landing page
 const Home = lazy(() => import('./Home'));
 
-export const App = () => {
+function AppContent() {
   const location = useLocation();
 
   return (
@@ -34,6 +37,16 @@ export const App = () => {
       <DeploymentInfo />
     </>
   );
-};
+}
+
+export function App() {
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <AppContent />
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
 
 export default App;
