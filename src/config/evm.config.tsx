@@ -3,8 +3,8 @@ import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { base } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
 
-// Project ID from working example
-const projectId = '8fae13c2c3be9ccf19dbf5a66ec12f04'
+// Use VITE_PROJECT_ID from environment (set in Vercel)
+const projectId = import.meta.env.VITE_PROJECT_ID || '8fae13c2c3be9ccf19dbf5a66ec12f04'
 export const networks = [base]
 
 const metadata = {
