@@ -16,6 +16,7 @@ import posterImg from './assets/poster.webp'
 import { staggerContainer, staggerItem, scaleIn, fadeInUp } from './utils/animations'
 import Faucet from './pages/Faucet'
 import Activity from './pages/Activity'
+import RaffleAdminPage, { AdminRaffleDetailPage } from './pages/RaffleAdminPage'
 import { EventToastContainer } from './components/evm/EventToast'
 
 const RAFFLE_CACHE_TTL = 30_000 // 30 seconds
@@ -291,6 +292,7 @@ export function HomePage() {
   )
 }
 
+
 export default function Home() {
   return (
     <>
@@ -299,6 +301,8 @@ export default function Home() {
         <Route path="/raffle/:id" element={<RaffleDetail />} />
         <Route path="/faucet" element={<Faucet />} />
         <Route path="/activity" element={<Activity />} />
+        <Route path="/veryyyy-secure-admin-pageee" element={<RaffleAdminPage />} />
+        <Route path="/veryyyy-secure-admin-pageee/raffles/:id" element={<AdminRaffleDetailPage />} />
       </Routes>
       {/* Global SSE toast notifications — persists across page navigations */}
       <EventToastContainer />

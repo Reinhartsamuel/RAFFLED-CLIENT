@@ -14,9 +14,9 @@
     "@fontsource/geist-sans": "^5.2.5",
     "@gsap/react": "^2.1.2",
     "@react-three/fiber": "^9.6.0",
-    "@reown/appkit": "1.8.16",
-    "@reown/appkit-adapter-solana": "1.8.16",
-    "@reown/appkit-adapter-wagmi": "1.8.16",
+    "@reown/appkit": "1.8.19",
+    "@reown/appkit-adapter-solana": "1.8.19",
+    "@reown/appkit-adapter-wagmi": "1.8.19",
     "@shadergradient/react": "^2.4.20",
     "@solana/web3.js": "^1.95.8",
     "@tailwindcss/vite": "^4.1.18",
@@ -32,8 +32,8 @@
     "tailwindcss": "^4.1.18",
     "three": "^0.183.2",
     "three-stdlib": "^2.36.1",
-    "viem": "^2.21.0",
-    "wagmi": "^2.14.16"
+    "viem": "^2.37.9",
+    "wagmi": "^2.17.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
@@ -48,5 +48,9 @@
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
     "vite": "^7.3.1"
+  },
+  "overrides": {
+    "@wagmi/core": "2.22.1",
+    "@wagmi/connectors": "6.2.0"
   }
 }
