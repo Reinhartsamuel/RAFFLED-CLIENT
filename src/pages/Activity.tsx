@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Layout, DashboardSidebar } from '../components/evm/Layout'
 import {
   useActivityEvents,
   type ActivityFilter,
@@ -211,143 +210,137 @@ export function ActivityPage() {
   const [filter, setFilter] = useState<ActivityFilter>('all')
   const { events, loading, hasMore, loadMore, total } = useActivityEvents(filter)
 
-  const sidebar = (
-    <DashboardSidebar activeFilter="activity" onFilterChange={() => {}} />
-  )
-
   return (
-    <Layout sidebar={sidebar}>
-      <div className="p-6 lg:p-8 space-y-6">
-        {/* ── Header ── */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          className="flex items-start justify-between"
-        >
-          <div>
-            <div className="flex items-center gap-3">
-              <h2 className="font-sans font-bold text-2xl text-[#F5F5F5]">
-                Platform Activity
-              </h2>
-              {/* Live indicator */}
-              <span className="relative flex h-2 w-2 mt-1">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-60" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]" />
-              </span>
-              <span className="font-mono text-[10px] text-[#22C55E] uppercase tracking-widest">
-                Live
-              </span>
-            </div>
-            <p className="font-mono text-xs text-[#555555] mt-1">
-              {total} events · Real-time blockchain feed
-            </p>
+    <div className="p-6 lg:p-8 space-y-6">
+      {/* ── Header ── */}
+      <motion.div
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        className="flex items-start justify-between"
+      >
+        <div>
+          <div className="flex items-center gap-3">
+            <h2 className="font-sans font-bold text-2xl text-[#F5F5F5]">
+              Platform Activity
+            </h2>
+            {/* Live indicator */}
+            <span className="relative flex h-2 w-2 mt-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C55E] opacity-60" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#22C55E]" />
+            </span>
+            <span className="font-mono text-[10px] text-[#22C55E] uppercase tracking-widest">
+              Live
+            </span>
           </div>
-        </motion.div>
+          <p className="font-mono text-xs text-[#555555] mt-1">
+            {total} events · Real-time blockchain feed
+          </p>
+        </div>
+      </motion.div>
 
-        {/* ── Stats ── */}
-        <motion.div variants={fadeInUp} initial="initial" animate="animate">
-          <StatsBar events={events} />
-        </motion.div>
+      {/* ── Stats ── */}
+      <motion.div variants={fadeInUp} initial="initial" animate="animate">
+        <StatsBar events={events} />
+      </motion.div>
 
-        {/* ── Filter Tabs ── */}
-        <motion.div
-          variants={fadeInUp}
-          initial="initial"
-          animate="animate"
-          className="flex items-center gap-0 border-b border-[#1f1f1f] overflow-x-auto"
-        >
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={`font-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border-b-2 transition-all whitespace-nowrap flex-shrink-0 ${
-                filter === f.id
-                  ? 'border-[#FFB800] text-[#FFB800]'
-                  : 'border-transparent text-[#555555] hover:text-[#999999]'
+      {/* ── Filter Tabs ── */}
+      <motion.div
+        variants={fadeInUp}
+        initial="initial"
+        animate="animate"
+        className="flex items-center gap-0 border-b border-[#1f1f1f] overflow-x-auto"
+      >
+        {FILTERS.map((f) => (
+          <button
+            key={f.id}
+            onClick={() => setFilter(f.id)}
+            className={`font-mono text-[11px] uppercase tracking-wider px-4 py-2.5 border-b-2 transition-all whitespace-nowrap flex-shrink-0 ${
+              filter === f.id
+                ? 'border-[#FFB800] text-[#FFB800]'
+                : 'border-transparent text-[#555555] hover:text-[#999999]'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </motion.div>
+
+      {/* ── Table ── */}
+      <div className="border border-[#1f1f1f] rounded-xl overflow-hidden">
+        {/* Table header */}
+        <div className="grid grid-cols-[110px_64px_minmax(0,140px)_1fr_72px] gap-4 px-4 py-3 border-b border-[#1a1a1a] bg-[#080808]">
+          {['Type', 'Raffle', 'Address', 'Details', 'Time'].map((col, i) => (
+            <span
+              key={col}
+              className={`font-mono text-[9px] uppercase tracking-widest text-[#333333] ${
+                i === 4 ? 'text-right' : ''
               }`}
             >
-              {f.label}
-            </button>
+              {col}
+            </span>
           ))}
-        </motion.div>
-
-        {/* ── Table ── */}
-        <div className="border border-[#1f1f1f] rounded-xl overflow-hidden">
-          {/* Table header */}
-          <div className="grid grid-cols-[110px_64px_minmax(0,140px)_1fr_72px] gap-4 px-4 py-3 border-b border-[#1a1a1a] bg-[#080808]">
-            {['Type', 'Raffle', 'Address', 'Details', 'Time'].map((col, i) => (
-              <span
-                key={col}
-                className={`font-mono text-[9px] uppercase tracking-widest text-[#333333] ${
-                  i === 4 ? 'text-right' : ''
-                }`}
-              >
-                {col}
-              </span>
-            ))}
-          </div>
-
-          {/* Rows */}
-          <AnimatePresence mode="wait">
-            {loading && events.length === 0 ? (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="py-16 text-center"
-              >
-                <div className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
-                  Loading activity...
-                </div>
-              </motion.div>
-            ) : events.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="py-16 text-center"
-              >
-                <p className="font-mono text-sm text-[#333333]">No events found.</p>
-              </motion.div>
-            ) : (
-              <motion.div
-                key={filter}
-                variants={staggerContainer}
-                initial="initial"
-                animate="animate"
-              >
-                {events.map((event) => (
-                  <ActivityRow key={`${event.id}-${event.block_number}-${event.log_index}`} event={event} />
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Load More */}
-          {hasMore && !loading && events.length > 0 && (
-            <div className="border-t border-[#111111] p-4 text-center">
-              <button
-                onClick={loadMore}
-                className="font-mono text-xs uppercase tracking-wider px-6 py-2.5 border border-[#2a2a2a] text-[#555555] hover:border-[#FFB800] hover:text-[#FFB800] rounded-lg transition-all"
-              >
-                Load more ↓
-              </button>
-            </div>
-          )}
-
-          {loading && events.length > 0 && (
-            <div className="border-t border-[#111111] p-4 text-center">
-              <span className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
-                Loading...
-              </span>
-            </div>
-          )}
         </div>
+
+        {/* Rows */}
+        <AnimatePresence mode="wait">
+          {loading && events.length === 0 ? (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-16 text-center"
+            >
+              <div className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
+                Loading activity...
+              </div>
+            </motion.div>
+          ) : events.length === 0 ? (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="py-16 text-center"
+            >
+              <p className="font-mono text-sm text-[#333333]">No events found.</p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key={filter}
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {events.map((event) => (
+                <ActivityRow key={`${event.id}-${event.block_number}-${event.log_index}`} event={event} />
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Load More */}
+        {hasMore && !loading && events.length > 0 && (
+          <div className="border-t border-[#111111] p-4 text-center">
+            <button
+              onClick={loadMore}
+              className="font-mono text-xs uppercase tracking-wider px-6 py-2.5 border border-[#2a2a2a] text-[#555555] hover:border-[#FFB800] hover:text-[#FFB800] rounded-lg transition-all"
+            >
+              Load more ↓
+            </button>
+          </div>
+        )}
+
+        {loading && events.length > 0 && (
+          <div className="border-t border-[#111111] p-4 text-center">
+            <span className="font-mono text-xs text-[#333333] uppercase tracking-widest animate-pulse">
+              Loading...
+            </span>
+          </div>
+        )}
       </div>
-    </Layout>
+    </div>
   )
 }
 

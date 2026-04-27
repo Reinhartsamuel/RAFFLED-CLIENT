@@ -29,7 +29,7 @@ if (!projectId) {
 }
 
 // Set networks - Base mainnet first (like working example)
-export const networks = [base, baseSepolia]
+export const networks = [baseSepolia]
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,

@@ -115,6 +115,11 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
     { id: 'ended', label: 'Ended', icon: '✓' },
   ]
 
+  const handleFilterClick = (filterId: string) => {
+    onFilterChange(filterId)
+    navigate('/app')
+  }
+
   return (
     <nav className="flex flex-col gap-0 py-4">
       <div className="flex flex-col gap-0.5 px-2">
@@ -126,7 +131,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
                 ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
                 : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
               }`}
-            onClick={() => onFilterChange(f.id)}
+            onClick={() => handleFilterClick(f.id)}
           >
             <span className="w-4 text-center">{f.icon}</span>
             <span>{f.label}</span>
@@ -137,6 +142,17 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
       <div className="h-px bg-[#1f1f1f] mx-3 my-3" />
 
       <div className="flex flex-col gap-0.5 px-2">
+        <button
+          className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
+            activeFilter === 'create'
+              ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
+              : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
+          }`}
+          onClick={() => navigate('/app/create-raffle')}
+        >
+          <span className="w-4 text-center">+</span>
+          <span>Create Raffle</span>
+        </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
             activeFilter === 'discover'

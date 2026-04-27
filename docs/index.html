@@ -102,6 +102,22 @@
                             </li>
                                                                         </ul>
                             </ul>
+                    <ul id="tocify-header-free-raffle-tasks" class="tocify-header">
+                <li class="tocify-item level-1" data-unique="free-raffle-tasks">
+                    <a href="#free-raffle-tasks">Free Raffle Tasks</a>
+                </li>
+                                    <ul id="tocify-subheader-free-raffle-tasks" class="tocify-subheader">
+                                                    <li class="tocify-item level-2" data-unique="free-raffle-tasks-GETapi-raffles--raffle_id--task-participants">
+                                <a href="#free-raffle-tasks-GETapi-raffles--raffle_id--task-participants">Get free raffle participants.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="free-raffle-tasks-POSTapi-raffles--raffle_id--task">
+                                <a href="#free-raffle-tasks-POSTapi-raffles--raffle_id--task">Create a task for a raffle.</a>
+                            </li>
+                                                                                <li class="tocify-item level-2" data-unique="free-raffle-tasks-POSTapi-raffles--raffle_id--task-submit">
+                                <a href="#free-raffle-tasks-POSTapi-raffles--raffle_id--task-submit">Submit task participation for a free raffle.</a>
+                            </li>
+                                                                        </ul>
+                            </ul>
                     <ul id="tocify-header-raffle-stats" class="tocify-header">
                 <li class="tocify-item level-1" data-unique="raffle-stats">
                     <a href="#raffle-stats">Raffle Stats</a>
@@ -171,7 +187,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: April 11, 2026</li>
+        <li>Last updated: April 23, 2026</li>
     </ul>
 </div>
 
@@ -381,7 +397,6 @@ fetch(url, {
         {
             &quot;id&quot;: 42,
             &quot;event_type&quot;: &quot;TicketPurchased&quot;,
-            &quot;source&quot;: &quot;webhook&quot;,
             &quot;block_number&quot;: 39000100,
             &quot;log_index&quot;: 3,
             &quot;tx_hash&quot;: &quot;0xabc123&quot;,
@@ -542,7 +557,7 @@ the <code>last_block</code> / <code>last_log_index</code> query params to resume
 <p>Each pushed message has the SSE event name <strong><code>event_log</code></strong>:</p>
 <pre><code>id: 39000100:3
 event: event_log
-data: {"id":42,"event_type":"TicketPurchased","source":"webhook", ...}</code></pre>
+data: {"id":42,"event_type":"TicketPurchased",...}</code></pre>
 <p>A <code>": heartbeat"</code> comment is sent when there are no new events to keep
 the connection alive.</p>
 
@@ -594,7 +609,6 @@ fetch(url, {
     &quot;data&quot;: {
         &quot;id&quot;: 42,
         &quot;event_type&quot;: &quot;TicketPurchased&quot;,
-        &quot;source&quot;: &quot;webhook&quot;,
         &quot;block_number&quot;: 39000100,
         &quot;log_index&quot;: 3,
         &quot;tx_hash&quot;: &quot;0xabc123&quot;,
@@ -1061,6 +1075,727 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>Fee change event ID. Example: <code>1</code></p>
             </div>
                     </form>
+
+                <h1 id="free-raffle-tasks">Free Raffle Tasks</h1>
+
+    <p>APIs for managing and participating in free raffle tasks.</p>
+
+                                <h2 id="free-raffle-tasks-GETapi-raffles--raffle_id--task-participants">Get free raffle participants.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Get the paginated list of wallet addresses and Twitter usernames of participants who have successfully completed the task for a specific free raffle.</p>
+
+<span id="example-requests-GETapi-raffles--raffle_id--task-participants">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://api.raffled.live/api/raffles/1/task/participants?per_page=50&amp;page=1&amp;search=0x123" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/raffles/1/task/participants"
+);
+
+const params = {
+    "per_page": "50",
+    "page": "1",
+    "search": "0x123",
+};
+Object.keys(params)
+    .forEach(key =&gt; url.searchParams.append(key, params[key]));
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-raffles--raffle_id--task-participants">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: [
+        {
+            &quot;wallet_address&quot;: &quot;0x1234567890abcdef1234567890abcdef12345678&quot;,
+            &quot;twitter_username&quot;: &quot;johndoe&quot;,
+            &quot;submitted_at&quot;: &quot;2024-04-23T10:00:00.000000Z&quot;
+        }
+    ],
+    &quot;total&quot;: 1,
+    &quot;current_page&quot;: 1,
+    &quot;last_page&quot;: 1,
+    &quot;per_page&quot;: 50,
+    &quot;max_participants&quot;: 100,
+    &quot;slots_remaining&quot;: 99,
+    &quot;raffle_id&quot;: 1,
+    &quot;tweet_id&quot;: &quot;1234567890123456789&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This is not a free raffle.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-raffles--raffle_id--task-participants" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-raffles--raffle_id--task-participants"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-raffles--raffle_id--task-participants"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-raffles--raffle_id--task-participants" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-raffles--raffle_id--task-participants">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-raffles--raffle_id--task-participants" data-method="GET"
+      data-path="api/raffles/{raffle_id}/task/participants"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-raffles--raffle_id--task-participants', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-raffles--raffle_id--task-participants"
+                    onclick="tryItOut('GETapi-raffles--raffle_id--task-participants');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-raffles--raffle_id--task-participants"
+                    onclick="cancelTryOut('GETapi-raffles--raffle_id--task-participants');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-raffles--raffle_id--task-participants"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/raffles/{raffle_id}/task/participants</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle_id"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>Query Parameters</b></h4>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>per_page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="per_page"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="50"
+               data-component="query">
+    <br>
+<p>The number of items per page (default: 50, max: 200). Example: <code>50</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>page</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="page"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="1"
+               data-component="query">
+    <br>
+<p>The page number to retrieve. Example: <code>1</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>search</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="search"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value="0x123"
+               data-component="query">
+    <br>
+<p>Search by wallet address or twitter username. Example: <code>0x123</code></p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>sort_by</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sort_by"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value=""
+               data-component="query">
+    <br>
+<p>Sort column. One of: <code>submitted_at</code>, <code>wallet_address</code>, <code>twitter_username</code>. Default: <code>submitted_at</code>.</p>
+            </div>
+                                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>sort_dir</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+<i>optional</i> &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="sort_dir"                data-endpoint="GETapi-raffles--raffle_id--task-participants"
+               value=""
+               data-component="query">
+    <br>
+<p>Sort direction (<code>asc</code>, <code>desc</code>). Default: <code>desc</code>.</p>
+            </div>
+                </form>
+
+                    <h2 id="free-raffle-tasks-POSTapi-raffles--raffle_id--task">Create a task for a raffle.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Only raffles created by the official address can have a task created for them.</p>
+
+<span id="example-requests-POSTapi-raffles--raffle_id--task">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://api.raffled.live/api/raffles/1/task" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"tweet_id\": \"1234567890\",
+    \"max_participants\": 100
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/raffles/1/task"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "tweet_id": "1234567890",
+    "max_participants": 100
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-raffles--raffle_id--task">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Task created and attached to raffle successfully.&quot;,
+    &quot;task&quot;: {
+        &quot;id&quot;: 1,
+        &quot;tweet_id&quot;: &quot;1234567890&quot;,
+        &quot;max_participants&quot;: 100,
+        &quot;created_at&quot;: &quot;...&quot;,
+        &quot;updated_at&quot;: &quot;...&quot;
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (403):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Only official raffles can have tasks.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This raffle already has a task.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-raffles--raffle_id--task" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-raffles--raffle_id--task"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-raffles--raffle_id--task"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-raffles--raffle_id--task" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-raffles--raffle_id--task">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-raffles--raffle_id--task" data-method="POST"
+      data-path="api/raffles/{raffle_id}/task"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-raffles--raffle_id--task', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-raffles--raffle_id--task"
+                    onclick="tryItOut('POSTapi-raffles--raffle_id--task');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-raffles--raffle_id--task"
+                    onclick="cancelTryOut('POSTapi-raffles--raffle_id--task');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-raffles--raffle_id--task"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/raffles/{raffle_id}/task</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle_id"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>tweet_id</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="tweet_id"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="1234567890"
+               data-component="body">
+    <br>
+<p>The ID of the promotional tweet. Example: <code>1234567890</code></p>
+        </div>
+                <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>max_participants</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="max_participants"                data-endpoint="POSTapi-raffles--raffle_id--task"
+               value="100"
+               data-component="body">
+    <br>
+<p>The maximum number of participants allowed. Example: <code>100</code></p>
+        </div>
+        </form>
+
+                    <h2 id="free-raffle-tasks-POSTapi-raffles--raffle_id--task-submit">Submit task participation for a free raffle.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Validates and processes a user's participation in a free raffle.
+Checks if the raffle is free, if slots are available, if the user hasn't already submitted,
+and verifies that all required Twitter tasks (follow, retweet, reply) have been completed.</p>
+
+<span id="example-requests-POSTapi-raffles--raffle_id--task-submit">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request POST \
+    "https://api.raffled.live/api/raffles/1/task/submit" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json" \
+    --data "{
+    \"twitter_username\": \"johndoe\"
+}"
+</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/raffles/1/task/submit"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+let body = {
+    "twitter_username": "johndoe"
+};
+
+fetch(url, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-POSTapi-raffles--raffle_id--task-submit">
+            <blockquote>
+            <p>Example response (201):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Success! You have been registered as a participant in the free raffle.&quot;,
+    &quot;data&quot;: {
+        &quot;wallet_address&quot;: &quot;0x1234567890abcdef1234567890abcdef12345678&quot;,
+        &quot;twitter_username&quot;: &quot;johndoe&quot;,
+        &quot;submitted_at&quot;: &quot;2024-04-23T10:00:00.000000Z&quot;,
+        &quot;raffle_id&quot;: 1
+    }
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This is not a free raffle.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Participant slots are full.&quot;,
+    &quot;max_participants&quot;: 100,
+    &quot;current_participants&quot;: 100
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This wallet address has already been used for this raffle.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This Twitter username has already been used for this raffle.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;Some Twitter tasks have not been completed.&quot;,
+    &quot;failed_tasks&quot;: [
+        &quot;follow @useRaffled&quot;,
+        &quot;retweet the specified tweet&quot;
+    ],
+    &quot;verification&quot;: {
+        &quot;all_passed&quot;: false,
+        &quot;follow&quot;: false,
+        &quot;retweet&quot;: false,
+        &quot;reply&quot;: true
+    }
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-POSTapi-raffles--raffle_id--task-submit" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-POSTapi-raffles--raffle_id--task-submit"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-POSTapi-raffles--raffle_id--task-submit"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-POSTapi-raffles--raffle_id--task-submit" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-POSTapi-raffles--raffle_id--task-submit">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-POSTapi-raffles--raffle_id--task-submit" data-method="POST"
+      data-path="api/raffles/{raffle_id}/task/submit"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('POSTapi-raffles--raffle_id--task-submit', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-POSTapi-raffles--raffle_id--task-submit"
+                    onclick="tryItOut('POSTapi-raffles--raffle_id--task-submit');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-POSTapi-raffles--raffle_id--task-submit"
+                    onclick="cancelTryOut('POSTapi-raffles--raffle_id--task-submit');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-POSTapi-raffles--raffle_id--task-submit"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-black">POST</small>
+            <b><code>api/raffles/{raffle_id}/task/submit</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle_id"                data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle"                data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                            <h4 class="fancy-heading-panel"><b>Body Parameters</b></h4>
+        <div style=" padding-left: 28px;  clear: unset;">
+            <b style="line-height: 2;"><code>twitter_username</code></b>&nbsp;&nbsp;
+<small>string</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="twitter_username"                data-endpoint="POSTapi-raffles--raffle_id--task-submit"
+               value="johndoe"
+               data-component="body">
+    <br>
+<p>The Twitter username of the participant (without @). Example: <code>johndoe</code></p>
+        </div>
+        </form>
 
                 <h1 id="raffle-stats">Raffle Stats</h1>
 
@@ -1882,7 +2617,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --form "raffle_tx_hash=0xabc123"\
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php3019.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php4061.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2038,7 +2773,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php3019.tmp</code></p>
+<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php4061.tmp</code></p>
         </div>
         </form>
 
@@ -2061,7 +2796,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php301B.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php4072.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2229,7 +2964,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php301B.tmp</code></p>
+<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php4072.tmp</code></p>
         </div>
         </form>
 
@@ -2593,7 +3328,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
-    --form "profile_picture=@C:\laragon\tmp\php302C.tmp" </code></pre></div>
+    --form "profile_picture=@C:\laragon\tmp\php4074.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2738,7 +3473,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php302C.tmp</code></p>
+<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php4074.tmp</code></p>
         </div>
         </form>
 

@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "2c9ef802-3bb9-4ad3-b2a3-d576865adc03",
+        "_postman_id": "75e15fdf-9200-459a-b918-c0bb8ddd1e81",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -105,7 +105,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 42,\n      \"event_type\": \"TicketPurchased\",\n      \"source\": \"webhook\",\n      \"block_number\": 39000100,\n      \"log_index\": 3,\n      \"tx_hash\": \"0xabc123\",\n      \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n      \"created_at\": \"2026-04-11 09:00:00\"\n    }\n  ],\n  \"first_page_url\": \"http:\/\/localhost\/api\/events?page=1\",\n  \"from\": 1,\n  \"last_page\": 5,\n  \"last_page_url\": \"http:\/\/localhost\/api\/events?page=5\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/events?page=2\",\n  \"path\": \"http:\/\/localhost\/api\/events\",\n  \"per_page\": 20,\n  \"prev_page_url\": null,\n  \"to\": 20,\n  \"total\": 97\n}",
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 42,\n      \"event_type\": \"TicketPurchased\",\n      \"block_number\": 39000100,\n      \"log_index\": 3,\n      \"tx_hash\": \"0xabc123\",\n      \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n      \"created_at\": \"2026-04-11 09:00:00\"\n    }\n  ],\n  \"first_page_url\": \"http:\/\/localhost\/api\/events?page=1\",\n  \"from\": 1,\n  \"last_page\": 5,\n  \"last_page_url\": \"http:\/\/localhost\/api\/events?page=5\",\n  \"next_page_url\": \"http:\/\/localhost\/api\/events?page=2\",\n  \"path\": \"http:\/\/localhost\/api\/events\",\n  \"per_page\": 20,\n  \"prev_page_url\": null,\n  \"to\": 20,\n  \"total\": 97\n}",
                             "name": ""
                         }
                     ]
@@ -150,7 +150,7 @@
                             }
                         ],
                         "body": null,
-                        "description": "Opens a persistent **Server-Sent Events** connection that pushes every\nraffle event in blockchain order (`block_number` ASC \u2192 `log_index` ASC).\n\nOn first connection (no cursor) the server replays the latest 50 events\nand then polls every 3 seconds for new ones.\nUse the `Last-Event-ID` header (format: `{block_number}:{log_index}`) or\nthe `last_block` \/ `last_log_index` query params to resume from a cursor.\n\nEach pushed message has the SSE event name **`event_log`**:\n```\nid: 39000100:3\nevent: event_log\ndata: {\"id\":42,\"event_type\":\"TicketPurchased\",\"source\":\"webhook\", ...}\n```\n\nA `\": heartbeat\"` comment is sent when there are no new events to keep\nthe connection alive.",
+                        "description": "Opens a persistent **Server-Sent Events** connection that pushes every\nraffle event in blockchain order (`block_number` ASC \u2192 `log_index` ASC).\n\nOn first connection (no cursor) the server replays the latest 50 events\nand then polls every 3 seconds for new ones.\nUse the `Last-Event-ID` header (format: `{block_number}:{log_index}`) or\nthe `last_block` \/ `last_log_index` query params to resume from a cursor.\n\nEach pushed message has the SSE event name **`event_log`**:\n```\nid: 39000100:3\nevent: event_log\ndata: {\"id\":42,\"event_type\":\"TicketPurchased\",...}\n```\n\nA `\": heartbeat\"` comment is sent when there are no new events to keep\nthe connection alive.",
                         "auth": {
                             "type": "noauth"
                         }
@@ -159,7 +159,7 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\n  \"id\": \"39000100:3\",\n  \"event\": \"event_log\",\n  \"data\": {\n    \"id\": 42,\n    \"event_type\": \"TicketPurchased\",\n    \"source\": \"webhook\",\n    \"block_number\": 39000100,\n    \"log_index\": 3,\n    \"tx_hash\": \"0xabc123\",\n    \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n    \"created_at\": \"2026-04-11 09:00:00\"\n  }\n}",
+                            "body": "{\n  \"id\": \"39000100:3\",\n  \"event\": \"event_log\",\n  \"data\": {\n    \"id\": 42,\n    \"event_type\": \"TicketPurchased\",\n    \"block_number\": 39000100,\n    \"log_index\": 3,\n    \"tx_hash\": \"0xabc123\",\n    \"event_data\": {\"raffle_id\": 7, \"buyer\": \"0xdef456\", \"ticket_count\": 2},\n    \"created_at\": \"2026-04-11 09:00:00\"\n  }\n}",
                             "name": "SSE stream (text\/event-stream)"
                         }
                     ]
@@ -275,6 +275,235 @@
                             "header": [],
                             "code": 404,
                             "body": "{\"message\": \"Not Found\"}",
+                            "name": ""
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "name": "Free Raffle Tasks",
+            "description": "\nAPIs for managing and participating in free raffle tasks.",
+            "item": [
+                {
+                    "name": "Get free raffle participants.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id\/task\/participants",
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "50",
+                                    "description": "The number of items per page (default: 50, max: 200).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "The page number to retrieve.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "0x123",
+                                    "description": "Search by wallet address or twitter username.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "",
+                                    "description": "Sort column. One of: `submitted_at`, `wallet_address`, `twitter_username`. Default: `submitted_at`.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort_dir",
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task\/participants?per_page=50&page=1&search=0x123&sort_by=&sort_dir=",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Get the paginated list of wallet addresses and Twitter usernames of participants who have successfully completed the task for a specific free raffle."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n      \"twitter_username\": \"johndoe\",\n      \"submitted_at\": \"2024-04-23T10:00:00.000000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 50,\n  \"max_participants\": 100,\n  \"slots_remaining\": 99,\n  \"raffle_id\": 1,\n  \"tweet_id\": \"1234567890123456789\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This is not a free raffle.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a task for a raffle.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id\/task",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"tweet_id\":\"1234567890\",\"max_participants\":100}"
+                        },
+                        "description": "Only raffles created by the official address can have a task created for them."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"message\": \"Task created and attached to raffle successfully.\",\n  \"task\": {\n    \"id\": 1,\n    \"tweet_id\": \"1234567890\",\n    \"max_participants\": 100,\n    \"created_at\": \"...\",\n    \"updated_at\": \"...\"\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 403,
+                            "body": "{\n  \"message\": \"Only official raffles can have tasks.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This raffle already has a task.\"\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Submit task participation for a free raffle.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id\/task\/submit",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task\/submit",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\"twitter_username\":\"johndoe\"}"
+                        },
+                        "description": "Validates and processes a user's participation in a free raffle.\nChecks if the raffle is free, if slots are available, if the user hasn't already submitted,\nand verifies that all required Twitter tasks (follow, retweet, reply) have been completed."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\n  \"message\": \"Success! You have been registered as a participant in the free raffle.\",\n  \"data\": {\n    \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n    \"twitter_username\": \"johndoe\",\n    \"submitted_at\": \"2024-04-23T10:00:00.000000Z\",\n    \"raffle_id\": 1\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This is not a free raffle.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"Participant slots are full.\",\n  \"max_participants\": 100,\n  \"current_participants\": 100\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This wallet address has already been used for this raffle.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This Twitter username has already been used for this raffle.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"Some Twitter tasks have not been completed.\",\n  \"failed_tasks\": [\"follow @useRaffled\", \"retweet the specified tweet\"],\n  \"verification\": {\n    \"all_passed\": false,\n    \"follow\": false,\n    \"retweet\": false,\n    \"reply\": true\n  }\n}",
                             "name": ""
                         }
                     ]

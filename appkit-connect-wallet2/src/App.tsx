@@ -1,6 +1,6 @@
 import { createAppKit } from '@reown/appkit/react';
 import { WagmiProvider } from 'wagmi';
-import { base } from '@reown/appkit/networks';
+import { base, baseSepolia } from '@reown/appkit/networks';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
 import React from 'react';
@@ -20,8 +20,11 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 };
 
-// Set networks - Base only
-const networks = [base];
+// Set networks
+const networks = [
+  base,
+  baseSepolia
+];
 
 // Create Wagmi Adapter
 const wagmiAdapter = new WagmiAdapter({
