@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "75e15fdf-9200-459a-b918-c0bb8ddd1e81",
+        "_postman_id": "cd658faf-777a-47ce-bd2c-4723ea618dce",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -467,13 +467,13 @@
                             "mode": "raw",
                             "raw": "{\"twitter_username\":\"johndoe\"}"
                         },
-                        "description": "Validates and processes a user's participation in a free raffle.\nChecks if the raffle is free, if slots are available, if the user hasn't already submitted,\nand verifies that all required Twitter tasks (follow, retweet, reply) have been completed."
+                        "description": "Validates and processes a user's participation in a free raffle.\nChecks if the raffle is free, if slots are available, if the user hasn't already submitted,\nand verifies that all required Twitter tasks (follow, retweet, reply) have been completed.\nOn success, generates an EIP-712 signature that can be used by the smart contract\nto verify the participant's wallet address on-chain."
                     },
                     "response": [
                         {
                             "header": [],
                             "code": 201,
-                            "body": "{\n  \"message\": \"Success! You have been registered as a participant in the free raffle.\",\n  \"data\": {\n    \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n    \"twitter_username\": \"johndoe\",\n    \"submitted_at\": \"2024-04-23T10:00:00.000000Z\",\n    \"raffle_id\": 1\n  }\n}",
+                            "body": "{\n  \"message\": \"Success! You have been registered as a participant in the free raffle.\",\n  \"data\": {\n    \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n    \"twitter_username\": \"johndoe\",\n    \"submitted_at\": \"2024-04-23T10:00:00.000000Z\",\n    \"raffle_id\": 1,\n    \"signature\": \"0x...\"\n  }\n}",
                             "name": ""
                         },
                         {
@@ -504,6 +504,64 @@
                             "header": [],
                             "code": 422,
                             "body": "{\n  \"message\": \"Some Twitter tasks have not been completed.\",\n  \"failed_tasks\": [\"follow @useRaffled\", \"retweet the specified tweet\"],\n  \"verification\": {\n    \"all_passed\": false,\n    \"follow\": false,\n    \"retweet\": false,\n    \"reply\": true\n  }\n}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Get the authenticated user's task detail for a free raffle.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id\/task\/my",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task\/my",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the submission record for the currently authenticated wallet address,\nincluding the EIP-712 signature that can be used to verify on-chain access."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": {\n    \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n    \"twitter_username\": \"johndoe\",\n    \"submitted_at\": \"2024-04-23T10:00:00.000000Z\",\n    \"signature\": \"0x...\"\n  },\n  \"raffle_id\": 1\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 404,
+                            "body": "{\n  \"message\": \"You have not submitted a task for this raffle.\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This is not a free raffle.\"\n}",
                             "name": ""
                         }
                     ]

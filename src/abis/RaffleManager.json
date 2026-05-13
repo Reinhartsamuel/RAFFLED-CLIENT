@@ -55,6 +55,16 @@
   },
   {
     "type": "function",
+    "name": "enterFreeRaffle",
+    "inputs": [
+      { "name": "_raffleId", "type": "uint256", "internalType": "uint256" },
+      { "name": "_signature", "type": "bytes", "internalType": "bytes" }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
     "name": "enterRaffle",
     "inputs": [
       { "name": "_raffleId", "type": "uint256", "internalType": "uint256" },
@@ -352,6 +362,16 @@
       { "name": "winner", "type": "address", "indexed": true, "internalType": "address" }
     ],
     "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "AlreadyClaimed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidSigner",
+    "inputs": []
   },
   {
     "type": "error",

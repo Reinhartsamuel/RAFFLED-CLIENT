@@ -284,6 +284,51 @@ export function useEnterRaffle() {
 }
 
 /**
+ * Enter a free raffle with a backend-issued EIP-712 signature.
+ * No payment or approval needed — just the signature.
+ */
+export function useEnterFreeRaffle() {
+  const contract = useRaffleContract()
+  const { writeContractAsync, isPending } = useWriteContract()
+  const publicClient = usePublicClient()
+
+  const enterFreeRaffle = async (params: {
+    raffleId: number
+    signature: string
+  }) => {
+    const args = [BigInt(params.raffleId), params.signature as `0x${string}`]
+
+    // Estimate gas using simulateContract for mobile wallet compatibility
+    let gasLimit: bigint | undefined
+    if (publicClient) {
+      try {
+        const { request } = await simulateContract(publicClient, {
+          address: contract.address,
+          abi: contract.abi,
+          functionName: 'enterFreeRaffle',
+          args,
+        })
+        if (request.gas) {
+          gasLimit = BigInt(Math.floor(Number(request.gas) * 1.2))
+        }
+      } catch (err) {
+        console.warn('Gas estimation failed, wallet will estimate:', err)
+      }
+    }
+
+    return writeContractAsync({
+      address: contract.address,
+      abi: contract.abi,
+      functionName: 'enterFreeRaffle',
+      args,
+      gas: gasLimit,
+    })
+  }
+
+  return { enterFreeRaffle, isPending }
+}
+
+/**
  * Simulate a contract call to estimate gas and check for errors
  */
 export function useSimulateRaffleCall(

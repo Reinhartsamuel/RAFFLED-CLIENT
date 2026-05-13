@@ -5,9 +5,10 @@ import { formatUnits } from 'viem'
 import { motion } from 'framer-motion'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
+import { FreeRaffleModal } from '../components/evm/FreeRaffleModal'
 import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
-import { staggerContainer, staggerItem, fadeInUp } from '../utils/animations'
+import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
 
 interface LeaderboardEntry {
@@ -56,6 +57,7 @@ export function RaffleDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showBuyModal, setShowBuyModal] = useState(false)
+  const [showFreeRaffleModal, setShowFreeRaffleModal] = useState(false)
   const [balanceData, setBalanceData] = useState<bigint | null>(null)
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [leaderboardLoading, setLeaderboardLoading] = useState(false)
@@ -111,6 +113,31 @@ export function RaffleDetail() {
             free_raffle: raw.free_raffle,
           }
           setRaffle(normalized)
+
+          // Debug log: free_raffle boolean
+          // console.log('[RaffleDetail] free_raffle:', raw.free_raffle)
+
+          // Fetch /task/my if this is a free raffle
+          if (raw.free_raffle) {
+            console.log('[RaffleDetail] Fetching /task/my for free raffle')
+            try {
+              const taskRes = await apiFetch(`${BACKEND_URL}/raffles/${id}/task/my`, {
+                method: 'GET',
+                headers: {
+                  ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+                  'Content-Type': 'application/json',
+                  Accept: 'application/json',
+                },
+              })
+              if (taskRes.ok) {
+                const taskData = await taskRes.json()
+                console.log('[RaffleDetail] /task/my response:', taskData)
+                console.log('[RaffleDetail] free_raffle:', true)
+              }
+            } catch (taskErr) {
+              console.error('[RaffleDetail] Error fetching /task/my:', taskErr)
+            }
+          }
         } else {
           setRaffle(null)
         }
@@ -235,10 +262,6 @@ export function RaffleDetail() {
     )
   }
 
-  const ticketsSoldPercent = raffle.max_tickets > 0
-    ? ((raffle.tickets_sold || 0) / raffle.max_tickets) * 100
-    : 0
-
   const now = new Date()
   const endTime = new Date(raffle.ends_at)
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
@@ -292,22 +315,16 @@ export function RaffleDetail() {
 
   const buttonState = getButtonState()
 
+  const isFreeRaffle = raffle?.free_raffle === true
+
+  const getButtonLabel = () => {
+    if (isFreeRaffle) return 'Enter Free Raffle'
+    return 'Buy Tickets'
+  }
+
   const formatAddress = (addr: string) => {
     if (!addr) return '—'
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
-  }
-
-  const formatTimestamp = (dateStr: string) => {
-    try {
-      return new Date(dateStr).toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-      })
-    } catch {
-      return '—'
-    }
   }
 
   const formatDate = (dateStr: string) => {
@@ -492,9 +509,10 @@ export function RaffleDetail() {
                   {buttonState === 'active' && (
                     <button
                       className="w-full bg-amber-500 text-black py-4 font-mono font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_15px_rgba(255,184,0,0.4)] transition-all active:scale-[0.98]"
-                      onClick={() => setShowBuyModal(true)}
+                      // onClick={() => isFreeRaffle ? setShowFreeRaffleModal(true) : setShowBuyModal(true)}
+                      onClick={() => setShowFreeRaffleModal(true)}
                     >
-                      Buy Tickets
+                      {getButtonLabel()}
                     </button>
                   )}
 
@@ -509,7 +527,9 @@ export function RaffleDetail() {
 
                   {buttonState === 'connect' && (
                     <div className="border border-dashed border-[#2a2a2a] rounded-sm p-4 text-center">
-                      <p className="font-mono text-xs text-[#555555]">Connect your wallet to buy tickets</p>
+                      <p className="font-mono text-xs text-[#555555]">
+                        {isFreeRaffle ? 'Connect your wallet to enter free raffle' : 'Connect your wallet to buy tickets'}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -600,7 +620,7 @@ export function RaffleDetail() {
       </div>
 
       {/* Buy Tickets Modal */}
-      {showBuyModal && (
+      {showBuyModal && !isFreeRaffle && (
         <BuyTicketsModal
           raffleId={raffle.id}
           ticketPrice={raffle.ticket_price_amount}
@@ -614,6 +634,23 @@ export function RaffleDetail() {
           maxTickets={raffle.max_tickets}
           ticketsSold={raffle.tickets_sold || 0}
           onClose={() => setShowBuyModal(false)}
+          onSuccess={() => {
+            window.location.reload()
+          }}
+        />
+      )}
+
+      {/* Free Raffle Modal */}
+      {/* {showFreeRaffleModal && isFreeRaffle && ( */}
+      {showFreeRaffleModal && (
+        <FreeRaffleModal
+          raffleId={raffle.id}
+          prizeImage={raffle.image_url}
+          prizeTitle={raffle.title}
+          maxTickets={raffle.max_tickets}
+          ticketsSold={raffle.tickets_sold || 0}
+          creatorAddress={raffle.creator_address}
+          onClose={() => setShowFreeRaffleModal(false)}
           onSuccess={() => {
             window.location.reload()
           }}

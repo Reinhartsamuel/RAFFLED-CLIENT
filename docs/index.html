@@ -116,6 +116,9 @@
                                                                                 <li class="tocify-item level-2" data-unique="free-raffle-tasks-POSTapi-raffles--raffle_id--task-submit">
                                 <a href="#free-raffle-tasks-POSTapi-raffles--raffle_id--task-submit">Submit task participation for a free raffle.</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="free-raffle-tasks-GETapi-raffles--raffle_id--task-my">
+                                <a href="#free-raffle-tasks-GETapi-raffles--raffle_id--task-my">Get the authenticated user's task detail for a free raffle.</a>
+                            </li>
                                                                         </ul>
                             </ul>
                     <ul id="tocify-header-raffle-stats" class="tocify-header">
@@ -187,7 +190,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: April 23, 2026</li>
+        <li>Last updated: April 29, 2026</li>
     </ul>
 </div>
 
@@ -1559,7 +1562,9 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <p>Validates and processes a user's participation in a free raffle.
 Checks if the raffle is free, if slots are available, if the user hasn't already submitted,
-and verifies that all required Twitter tasks (follow, retweet, reply) have been completed.</p>
+and verifies that all required Twitter tasks (follow, retweet, reply) have been completed.
+On success, generates an EIP-712 signature that can be used by the smart contract
+to verify the participant's wallet address on-chain.</p>
 
 <span id="example-requests-POSTapi-raffles--raffle_id--task-submit">
 <blockquote>Example request:</blockquote>
@@ -1612,7 +1617,8 @@ fetch(url, {
         &quot;wallet_address&quot;: &quot;0x1234567890abcdef1234567890abcdef12345678&quot;,
         &quot;twitter_username&quot;: &quot;johndoe&quot;,
         &quot;submitted_at&quot;: &quot;2024-04-23T10:00:00.000000Z&quot;,
-        &quot;raffle_id&quot;: 1
+        &quot;raffle_id&quot;: 1,
+        &quot;signature&quot;: &quot;0x...&quot;
     }
 }</code>
  </pre>
@@ -1796,6 +1802,190 @@ You can check the Dev Tools console for debugging information.</code></pre>
 <p>The Twitter username of the participant (without @). Example: <code>johndoe</code></p>
         </div>
         </form>
+
+                    <h2 id="free-raffle-tasks-GETapi-raffles--raffle_id--task-my">Get the authenticated user&#039;s task detail for a free raffle.</h2>
+
+<p>
+<small class="badge badge-darkred">requires authentication</small>
+</p>
+
+<p>Returns the submission record for the currently authenticated wallet address,
+including the EIP-712 signature that can be used to verify on-chain access.</p>
+
+<span id="example-requests-GETapi-raffles--raffle_id--task-my">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://api.raffled.live/api/raffles/1/task/my" \
+    --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/raffles/1/task/my"
+);
+
+const headers = {
+    "Authorization": "Bearer {YOUR_AUTH_TOKEN}",
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-raffles--raffle_id--task-my">
+            <blockquote>
+            <p>Example response (200):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;data&quot;: {
+        &quot;wallet_address&quot;: &quot;0x1234567890abcdef1234567890abcdef12345678&quot;,
+        &quot;twitter_username&quot;: &quot;johndoe&quot;,
+        &quot;submitted_at&quot;: &quot;2024-04-23T10:00:00.000000Z&quot;,
+        &quot;signature&quot;: &quot;0x...&quot;
+    },
+    &quot;raffle_id&quot;: 1
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (404):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;You have not submitted a task for this raffle.&quot;
+}</code>
+ </pre>
+            <blockquote>
+            <p>Example response (422):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">{
+    &quot;message&quot;: &quot;This is not a free raffle.&quot;
+}</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-raffles--raffle_id--task-my" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-raffles--raffle_id--task-my"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-raffles--raffle_id--task-my"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-raffles--raffle_id--task-my" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-raffles--raffle_id--task-my">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-raffles--raffle_id--task-my" data-method="GET"
+      data-path="api/raffles/{raffle_id}/task/my"
+      data-authed="1"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-raffles--raffle_id--task-my', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-raffles--raffle_id--task-my"
+                    onclick="tryItOut('GETapi-raffles--raffle_id--task-my');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-raffles--raffle_id--task-my"
+                    onclick="cancelTryOut('GETapi-raffles--raffle_id--task-my');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-raffles--raffle_id--task-my"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/raffles/{raffle_id}/task/my</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Authorization</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Authorization" class="auth-value"               data-endpoint="GETapi-raffles--raffle_id--task-my"
+               value="Bearer {YOUR_AUTH_TOKEN}"
+               data-component="header">
+    <br>
+<p>Example: <code>Bearer {YOUR_AUTH_TOKEN}</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-raffles--raffle_id--task-my"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-raffles--raffle_id--task-my"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        <h4 class="fancy-heading-panel"><b>URL Parameters</b></h4>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle_id</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle_id"                data-endpoint="GETapi-raffles--raffle_id--task-my"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                    <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>raffle</code></b>&nbsp;&nbsp;
+<small>integer</small>&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="number" style="display: none"
+               step="any"               name="raffle"                data-endpoint="GETapi-raffles--raffle_id--task-my"
+               value="1"
+               data-component="url">
+    <br>
+<p>The ID of the raffle. Example: <code>1</code></p>
+            </div>
+                    </form>
 
                 <h1 id="raffle-stats">Raffle Stats</h1>
 
@@ -2617,7 +2807,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --form "raffle_tx_hash=0xabc123"\
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php4061.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php55CD.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2773,7 +2963,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php4061.tmp</code></p>
+<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php55CD.tmp</code></p>
         </div>
         </form>
 
@@ -2796,7 +2986,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php4072.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\php55CF.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2964,7 +3154,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php4072.tmp</code></p>
+<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php55CF.tmp</code></p>
         </div>
         </form>
 
@@ -3328,7 +3518,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
-    --form "profile_picture=@C:\laragon\tmp\php4074.tmp" </code></pre></div>
+    --form "profile_picture=@C:\laragon\tmp\php55D1.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -3473,7 +3663,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php4074.tmp</code></p>
+<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php55D1.tmp</code></p>
         </div>
         </form>
 

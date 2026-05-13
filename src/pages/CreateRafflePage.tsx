@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import { useCreateRaffleERC20, useCreateRaffleERC721 } from '../hooks/useRaffleContract'
 import { useTokenApproval, useTokenDecimals, useTokenBalance, useNFTApproval } from '../hooks/useTokenApproval'
 import { getRaffleManagerAddress, getMockUSDCAddress } from '../config/evm.config'
+import { useAccount } from 'wagmi'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { TransactionReceipt } from '../components/evm/TransactionReceipt'
 import { PrizeType } from '../types/evm.types'
@@ -76,7 +77,10 @@ type WizardStep = 'asset_details' | 'mechanics' | 'review'
 export default function CreateRafflePage() {
   const navigate = useNavigate()
   const chainId = useChainId()
+  const { address: connectedAddress } = useAccount()
   const raffleManagerAddress = getRaffleManagerAddress(chainId)
+
+  const isFreeRaffleAdmin = connectedAddress?.toLowerCase() === import.meta.env.VITE_FREE_RAFFLE_ADMIN_ADDRESS?.toLowerCase()
 
   const [wizardStep, setWizardStep] = useState<WizardStep>('asset_details')
   const [prizeType, setPrizeType] = useState<PrizeType>(PrizeType.ERC20)
@@ -125,6 +129,15 @@ export default function CreateRafflePage() {
   const [createStep, setCreateStep] = useState<CreateStep>('idle')
   const [createHash, setCreateHash] = useState<string>('')
   const [error, setError] = useState('')
+  const [isFreeRaffle, setIsFreeRaffle] = useState(false)
+  const [tweetId, setTweetId] = useState('')
+  const [maxParticipants, setMaxParticipants] = useState('')
+
+  useEffect(() => {
+    if (isFreeRaffle && maxCap && !maxParticipants) {
+      setMaxParticipants(maxCap)
+    }
+  }, [isFreeRaffle, maxCap])
 
   const needsERC20Approval = useCallback(() => {
     if (prizeType !== PrizeType.ERC20 || !prizeAmount) return false
@@ -204,6 +217,30 @@ export default function CreateRafflePage() {
     }
   }
 
+  const postRaffleTask = async (raffleId: string | number) => {
+    if (!isFreeRaffle || !tweetId || !maxParticipants) return
+    try {
+      const token = getAuthToken()
+      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task`, {
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          tweet_id: tweetId,
+          max_participants: Number(maxParticipants),
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) console.error('Failed to create raffle task:', data)
+      else console.log('Raffle task created:', data)
+    } catch (err) {
+      console.error('Failed to POST raffle task:', err)
+    }
+  }
+
   const handleCreateRaffle = async () => {
     if (!title || !ticketPrice || !maxCap || !duration) {
       setError('Fill in all required fields')
@@ -245,7 +282,10 @@ export default function CreateRafflePage() {
       }
       setCreateHash(hash)
       setCreateStep('success')
-      await postRaffleToBackend(hash)
+      const backendData = await postRaffleToBackend(hash)
+      if (isFreeRaffle && backendData?.id) {
+        await postRaffleTask(backendData.id)
+      }
     } catch (err: any) {
       console.error('Create raffle error:', err)
       setError(err.message || 'Failed to create raffle')
@@ -312,7 +352,7 @@ export default function CreateRafflePage() {
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl">
                 <div className="px-4 py-4 md:px-6 md:py-5 border-b border-[#1f1f1f]">
                   <h3 className="font-mono text-sm md:text-base font-bold text-[#FFB800] tracking-wider flex items-center gap-2">
-                    <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                    <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" /></svg>
                     ASSET_SPECIFICATION
                   </h3>
                 </div>
@@ -328,8 +368,8 @@ export default function CreateRafflePage() {
                         disabled={isLocked}
                       >
                         <svg className="w-9 h-9" viewBox="0 0 48 48" fill="none">
-                          <circle cx="24" cy="24" r="20" fill="currentColor" opacity="0.12"/>
-                          <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+                          <circle cx="24" cy="24" r="20" fill="currentColor" opacity="0.12" />
+                          <circle cx="24" cy="24" r="20" stroke="currentColor" strokeWidth="1.5" fill="none" />
                           <text x="24" y="29" textAnchor="middle" fontSize="16" fontWeight="700" fontFamily="monospace" fill="currentColor">$</text>
                         </svg>
                         <span className="font-mono text-xs font-bold uppercase tracking-wider">Coin</span>
@@ -342,10 +382,10 @@ export default function CreateRafflePage() {
                         disabled={isLocked}
                       >
                         <svg className="w-9 h-9" viewBox="0 0 48 48" fill="none">
-                          <rect x="8" y="10" width="32" height="28" rx="4" fill="currentColor" opacity="0.12"/>
-                          <rect x="8" y="10" width="32" height="28" rx="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                          <circle cx="18" cy="22" r="4" stroke="currentColor" strokeWidth="1.5" fill="none"/>
-                          <path d="M8 32l8-6 6 5 6-7 10 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <rect x="8" y="10" width="32" height="28" rx="4" fill="currentColor" opacity="0.12" />
+                          <rect x="8" y="10" width="32" height="28" rx="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                          <circle cx="18" cy="22" r="4" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                          <path d="M8 32l8-6 6 5 6-7 10 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
                         <span className="font-mono text-xs font-bold uppercase tracking-wider">NFT</span>
                         <span className="font-mono text-[9px] uppercase opacity-60">ERC-721</span>
@@ -434,7 +474,7 @@ export default function CreateRafflePage() {
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl">
                 <div className="px-4 py-4 md:px-6 md:py-5 border-b border-[#1f1f1f]">
                   <h3 className="font-mono text-sm md:text-base font-bold text-[#F5F5F5] tracking-wider flex items-center gap-2">
-                    <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93"/></svg>
+                    <svg className="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2V6M12 18V22M6 12H2M22 12H18M19.07 4.93L16.24 7.76M7.76 16.24L4.93 19.07M19.07 19.07L16.24 16.24M7.76 7.76L4.93 4.93" /></svg>
                     RAFFLE_MECHANICS
                   </h3>
                 </div>
@@ -478,23 +518,60 @@ export default function CreateRafflePage() {
                 </div>
               </div>
 
-              {/* Community Tasks */}
-              <div>
-                <h4 className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-widest mb-4">COMMUNITY_TASK_PRESETS</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {[{ icon: 'share-2', label: 'TWITTER_FOLLOW' }, { icon: 'users', label: 'DISCORD_JOIN' }, { icon: 'landmark', label: 'TOKEN_HOLDER' }, { icon: 'help-circle', label: 'CUSTOM_QUIZ' }].map(task => (
-                    <div key={task.label} className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-4 text-center hover:border-[#FFB800]/30 transition-colors cursor-pointer group">
-                      <svg className="w-5 h-5 text-[#555555] group-hover:text-[#FFB800] mx-auto mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        {task.icon === 'share-2' && <><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></>}
-                        {task.icon === 'users' && <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></>}
-                        {task.icon === 'landmark' && <><line x1="3" y1="22" x2="21" y2="22"/><line x1="6" y1="18" x2="6" y2="22"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="18" y1="18" x2="18" y2="22"/><polygon points="12,2 2,8 22,8"/></>}
-                        {task.icon === 'help-circle' && <><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></>}
-                      </svg>
-                      <span className="font-mono text-[10px] text-[#555555] group-hover:text-[#F5F5F5] uppercase tracking-wider">{task.label}</span>
+              {isFreeRaffleAdmin && (
+                <>
+                  {/* Community Tasks */}
+                  <div>
+                    <h4 className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-widest mb-4">COMMUNITY_TASK_PRESETS</h4>
+                    <div className="space-y-4">
+                      {/* Free Raffle Switch */}
+                      <div className="flex items-center justify-between bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-4">
+                        <div>
+                          <span className="font-mono text-xs font-bold text-[#F5F5F5] uppercase tracking-wider">Enable Free Raffle</span>
+                          <p className="font-mono text-[10px] text-[#333333] mt-1">Users enter by completing a Twitter task instead of paying</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsFreeRaffle(!isFreeRaffle)}
+                          className={`relative w-12 h-6 rounded-full transition-colors ${isFreeRaffle ? 'bg-[#FFB800]' : 'bg-[#1f1f1f]'}`}
+                        >
+                          <div className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${isFreeRaffle ? 'left-6' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+
+                      {/* Free Raffle Task Config */}
+                      {isFreeRaffle && (
+                        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg p-4 space-y-4">
+                          <div>
+                            <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Tweet ID *</label>
+                            <input
+                              type="text"
+                              value={tweetId}
+                              onChange={(e) => setTweetId(e.target.value)}
+                              placeholder="1234567890123456789"
+                              className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#F5F5F5] placeholder-[#333333] focus:border-[#FFB800] focus:outline-none transition-colors"
+                            />
+                            <p className="font-mono text-[10px] text-[#333333] mt-1">The Twitter tweet ID users must follow/interact with</p>
+                          </div>
+                          <div>
+                            <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Max Participants *</label>
+                            <input
+                              type="number"
+                              value={maxParticipants}
+                              onChange={(e) => setMaxParticipants(e.target.value)}
+                              placeholder={maxCap || '100'}
+                              className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#F5F5F5] placeholder-[#333333] focus:border-[#FFB800] focus:outline-none transition-colors"
+                            />
+                            <p className="font-mono text-[10px] text-[#333333] mt-1">Maximum number of participants (defaults to max tickets)</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
-                </div>
-              </div>
+                  </div>
+                </>
+
+              )}
+
             </div>
 
             {/* Right Sidebar */}
@@ -504,13 +581,13 @@ export default function CreateRafflePage() {
                   <div className="relative group">
                     <img src={URL.createObjectURL(image)} alt="Cover" className="w-full aspect-square object-cover rounded-lg border border-[#1f1f1f]" />
                     <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center cursor-pointer" onClick={() => document.getElementById('cover-upload')?.click()}>
-                      <svg className="w-8 h-8 text-[#FFB800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      <svg className="w-8 h-8 text-[#FFB800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
                     </div>
                     <button onClick={(e) => { e.stopPropagation(); setImage(null) }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                   </div>
                 ) : (
                   <div className="border-2 border-dashed border-[#1f1f1f] rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-[#FFB800]/50 hover:bg-[#FFB800]/5 transition-all group" onClick={() => document.getElementById('cover-upload')?.click()}>
-                    <svg className="w-10 h-10 text-[#333333] group-hover:text-[#FFB800] mb-2 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <svg className="w-10 h-10 text-[#333333] group-hover:text-[#FFB800] mb-2 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
                     <span className="font-mono text-[10px] font-bold text-[#555555] group-hover:text-[#FFB800] uppercase tracking-wider transition-colors">UPLOAD_ASSET_COVER</span>
                     <span className="font-mono text-[9px] text-[#333333] mt-1">PNG, JPG, MP4_MAX_100MB</span>
                   </div>
@@ -551,7 +628,7 @@ export default function CreateRafflePage() {
 
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-4">
                 <div className="flex items-start gap-3">
-                  <svg className="w-4 h-4 text-[#FFB800] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                  <svg className="w-4 h-4 text-[#FFB800] flex-shrink-0 mt-0.5" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" /></svg>
                   <div>
                     <h4 className="font-mono text-xs font-bold text-[#F5F5F5] uppercase tracking-wider mb-1">PARTNER_HINT</h4>
                     <p className="font-mono text-[10px] text-[#555555] leading-relaxed">Ensure your asset is approved for transfer. Locked or staked NFTs cannot be listed as raffle prizes until unstaked.</p>
