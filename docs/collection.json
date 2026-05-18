@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "cd658faf-777a-47ce-bd2c-4723ea618dce",
+        "_postman_id": "8e663c7e-f8e7-459a-852b-876ddbcc1500",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -236,7 +236,7 @@
                                 {
                                     "id": "feeChangeEvent_id",
                                     "key": "feeChangeEvent_id",
-                                    "value": "1",
+                                    "value": "17",
                                     "description": "The ID of the feeChangeEvent."
                                 },
                                 {
@@ -285,89 +285,6 @@
             "name": "Free Raffle Tasks",
             "description": "\nAPIs for managing and participating in free raffle tasks.",
             "item": [
-                {
-                    "name": "Get free raffle participants.",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/raffles\/:raffle_id\/task\/participants",
-                            "query": [
-                                {
-                                    "key": "per_page",
-                                    "value": "50",
-                                    "description": "The number of items per page (default: 50, max: 200).",
-                                    "disabled": false
-                                },
-                                {
-                                    "key": "page",
-                                    "value": "1",
-                                    "description": "The page number to retrieve.",
-                                    "disabled": false
-                                },
-                                {
-                                    "key": "search",
-                                    "value": "0x123",
-                                    "description": "Search by wallet address or twitter username.",
-                                    "disabled": false
-                                },
-                                {
-                                    "key": "sort_by",
-                                    "value": "",
-                                    "description": "Sort column. One of: `submitted_at`, `wallet_address`, `twitter_username`. Default: `submitted_at`.",
-                                    "disabled": true
-                                },
-                                {
-                                    "key": "sort_dir",
-                                    "value": "",
-                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
-                                    "disabled": true
-                                }
-                            ],
-                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task\/participants?per_page=50&page=1&search=0x123&sort_by=&sort_dir=",
-                            "variable": [
-                                {
-                                    "id": "raffle_id",
-                                    "key": "raffle_id",
-                                    "value": "1",
-                                    "description": "The ID of the raffle."
-                                },
-                                {
-                                    "id": "raffle",
-                                    "key": "raffle",
-                                    "value": "1",
-                                    "description": "The ID of the raffle."
-                                }
-                            ]
-                        },
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "application\/json"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": null,
-                        "description": "Get the paginated list of wallet addresses and Twitter usernames of participants who have successfully completed the task for a specific free raffle."
-                    },
-                    "response": [
-                        {
-                            "header": [],
-                            "code": 200,
-                            "body": "{\n  \"data\": [\n    {\n      \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n      \"twitter_username\": \"johndoe\",\n      \"submitted_at\": \"2024-04-23T10:00:00.000000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 50,\n  \"max_participants\": 100,\n  \"slots_remaining\": 99,\n  \"raffle_id\": 1,\n  \"tweet_id\": \"1234567890123456789\"\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 422,
-                            "body": "{\n  \"message\": \"This is not a free raffle.\"\n}",
-                            "name": ""
-                        }
-                    ]
-                },
                 {
                     "name": "Create a task for a raffle.",
                     "request": {
@@ -565,6 +482,89 @@
                             "name": ""
                         }
                     ]
+                },
+                {
+                    "name": "Get free raffle participants.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id\/task\/participants",
+                            "query": [
+                                {
+                                    "key": "per_page",
+                                    "value": "50",
+                                    "description": "The number of items per page (default: 50, max: 200).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "The page number to retrieve.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "0x123",
+                                    "description": "Search by wallet address or twitter username.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "",
+                                    "description": "Sort column. One of: `submitted_at`, `wallet_address`, `twitter_username`. Default: `submitted_at`.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort_dir",
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id\/task\/participants?per_page=50&page=1&search=0x123&sort_by=&sort_dir=",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                }
+                            ]
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Get the paginated list of wallet addresses and Twitter usernames of participants who have successfully completed the task for a specific free raffle."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"data\": [\n    {\n      \"wallet_address\": \"0x1234567890abcdef1234567890abcdef12345678\",\n      \"twitter_username\": \"johndoe\",\n      \"submitted_at\": \"2024-04-23T10:00:00.000000Z\"\n    }\n  ],\n  \"total\": 1,\n  \"current_page\": 1,\n  \"last_page\": 1,\n  \"per_page\": 50,\n  \"max_participants\": 100,\n  \"slots_remaining\": 99,\n  \"raffle_id\": 1,\n  \"tweet_id\": \"1234567890123456789\"\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\n  \"message\": \"This is not a free raffle.\"\n}",
+                            "name": ""
+                        }
+                    ]
                 }
             ]
         },
@@ -691,6 +691,189 @@
             "description": "",
             "item": [
                 {
+                    "name": "List raffles purchased by the authenticated user.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/my-tickets",
+                            "query": [
+                                {
+                                    "key": "type",
+                                    "value": "crypto",
+                                    "description": "Filter by prize type (`nft`, `crypto`).",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "status",
+                                    "value": "",
+                                    "description": "Filter by status (`open`, `completed`).",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "search",
+                                    "value": "giveaway",
+                                    "description": "Search by title or description.",
+                                    "disabled": false
+                                },
+                                {
+                                    "key": "sort_by",
+                                    "value": "",
+                                    "description": "Sort column. One of: `contract_raffle_id`, `created_at`, `expire_at`, `sold_tickets`, `max_tickets`, `prize_amount_or_token_id`. Default: `contract_raffle_id`.",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "sort_dir",
+                                    "value": "",
+                                    "description": "Sort direction (`asc`, `desc`). Default: `desc`.",
+                                    "disabled": true
+                                }
+                            ],
+                            "raw": "{{baseUrl}}\/api\/raffles\/my-tickets?type=crypto&status=&search=giveaway&sort_by=&sort_dir="
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns a paginated list of raffles in which the authenticated user\nhas bought at least one ticket, along with `tickets_bought` (total\nquantity purchased by the user for that raffle)."
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\n  \"current_page\": 1,\n  \"data\": [\n    {\n      \"id\": 1,\n      \"contract_raffle_id\": 7,\n      \"title\": \"Raffle #7\",\n      \"status\": \"open\",\n      \"tickets_bought\": 3,\n      \"image_url\": \"http:\/\/localhost\/assets\/usdc.png\"\n    }\n  ],\n  \"total\": 1\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 401,
+                            "body": "{\"message\": \"Unauthenticated.\"}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Create a raffle draft from on-chain transaction hash.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/raffles"
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "raffle_tx_hash",
+                                    "value": "0xabc123",
+                                    "type": "text",
+                                    "description": "Transaction hash that created the raffle."
+                                },
+                                {
+                                    "key": "description",
+                                    "value": "Dolores dolorum amet iste laborum eius est dolor.",
+                                    "type": "text",
+                                    "description": "Description of the raffle."
+                                },
+                                {
+                                    "key": "image",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 201,
+                            "body": "{\"raffle\":{}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
+                    "name": "Update a raffle.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/raffles\/:raffle_id",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id",
+                            "variable": [
+                                {
+                                    "id": "raffle_id",
+                                    "key": "raffle_id",
+                                    "value": "1",
+                                    "description": "The ID of the raffle."
+                                },
+                                {
+                                    "id": "raffle",
+                                    "key": "raffle",
+                                    "value": "1",
+                                    "description": "Raffle id."
+                                }
+                            ]
+                        },
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "multipart\/form-data"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "formdata",
+                            "formdata": [
+                                {
+                                    "key": "description",
+                                    "value": "Dolores dolorum amet iste laborum eius est dolor.",
+                                    "type": "text",
+                                    "description": "sometimes|required Description of the raffle."
+                                },
+                                {
+                                    "key": "image",
+                                    "src": [],
+                                    "type": "file"
+                                }
+                            ]
+                        },
+                        "description": ""
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "{\"raffle\":{}}",
+                            "name": ""
+                        }
+                    ]
+                },
+                {
                     "name": "List raffles.",
                     "request": {
                         "url": {
@@ -816,15 +999,21 @@
                             "name": ""
                         }
                     ]
-                },
+                }
+            ]
+        },
+        {
+            "name": "Users",
+            "description": "",
+            "item": [
                 {
-                    "name": "Create a raffle draft from on-chain transaction hash.",
+                    "name": "Update current user's profile.",
                     "request": {
                         "url": {
                             "host": "{{baseUrl}}",
-                            "path": "api\/raffles",
+                            "path": "api\/user",
                             "query": [],
-                            "raw": "{{baseUrl}}\/api\/raffles"
+                            "raw": "{{baseUrl}}\/api\/user"
                         },
                         "method": "POST",
                         "header": [
@@ -841,80 +1030,7 @@
                             "mode": "formdata",
                             "formdata": [
                                 {
-                                    "key": "raffle_tx_hash",
-                                    "value": "0xabc123",
-                                    "type": "text",
-                                    "description": "Transaction hash that created the raffle."
-                                },
-                                {
-                                    "key": "description",
-                                    "value": "Dolores dolorum amet iste laborum eius est dolor.",
-                                    "type": "text",
-                                    "description": "Description of the raffle."
-                                },
-                                {
-                                    "key": "image",
-                                    "src": [],
-                                    "type": "file"
-                                }
-                            ]
-                        },
-                        "description": ""
-                    },
-                    "response": [
-                        {
-                            "header": [],
-                            "code": 201,
-                            "body": "{\"raffle\":{}}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "Update a raffle.",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/raffles\/:raffle_id",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/raffles\/:raffle_id",
-                            "variable": [
-                                {
-                                    "id": "raffle_id",
-                                    "key": "raffle_id",
-                                    "value": "1",
-                                    "description": "The ID of the raffle."
-                                },
-                                {
-                                    "id": "raffle",
-                                    "key": "raffle",
-                                    "value": "1",
-                                    "description": "Raffle id."
-                                }
-                            ]
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "multipart\/form-data"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "description",
-                                    "value": "Dolores dolorum amet iste laborum eius est dolor.",
-                                    "type": "text",
-                                    "description": "sometimes|required Description of the raffle."
-                                },
-                                {
-                                    "key": "image",
+                                    "key": "profile_picture",
                                     "src": [],
                                     "type": "file"
                                 }
@@ -926,17 +1042,17 @@
                         {
                             "header": [],
                             "code": 200,
-                            "body": "{\"raffle\":{}}",
+                            "body": "{\n  \"data\": {\n    \"address\": \"0xabc123\",\n    \"profile_picture\": \"http:\/\/localhost\/storage\/users\/0xabc123\/avatar.jpg\",\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-11 09:00:00\"\n  }\n}",
+                            "name": ""
+                        },
+                        {
+                            "header": [],
+                            "code": 422,
+                            "body": "{\"message\": \"The profile picture field must be an image.\", \"errors\": {}}",
                             "name": ""
                         }
                     ]
-                }
-            ]
-        },
-        {
-            "name": "Users",
-            "description": "",
-            "item": [
+                },
                 {
                     "name": "List users.",
                     "request": {
@@ -1003,7 +1119,7 @@
                                 {
                                     "id": "user_address",
                                     "key": "user_address",
-                                    "value": "0x280ed4fbbbe9ccb25b9de910638efd7920023998",
+                                    "value": "0x506888a16695c670579d06a0314cafdd549329fa",
                                     "description": ""
                                 },
                                 {
@@ -1042,53 +1158,6 @@
                             "header": [],
                             "code": 404,
                             "body": "{\"message\": \"Not Found\"}",
-                            "name": ""
-                        }
-                    ]
-                },
-                {
-                    "name": "Update current user's profile.",
-                    "request": {
-                        "url": {
-                            "host": "{{baseUrl}}",
-                            "path": "api\/user",
-                            "query": [],
-                            "raw": "{{baseUrl}}\/api\/user"
-                        },
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Content-Type",
-                                "value": "multipart\/form-data"
-                            },
-                            {
-                                "key": "Accept",
-                                "value": "application\/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "formdata",
-                            "formdata": [
-                                {
-                                    "key": "profile_picture",
-                                    "src": [],
-                                    "type": "file"
-                                }
-                            ]
-                        },
-                        "description": ""
-                    },
-                    "response": [
-                        {
-                            "header": [],
-                            "code": 200,
-                            "body": "{\n  \"data\": {\n    \"address\": \"0xabc123\",\n    \"profile_picture\": \"http:\/\/localhost\/storage\/users\/0xabc123\/avatar.jpg\",\n    \"created_at\": \"2026-04-01 00:00:00\",\n    \"updated_at\": \"2026-04-11 09:00:00\"\n  }\n}",
-                            "name": ""
-                        },
-                        {
-                            "header": [],
-                            "code": 422,
-                            "body": "{\"message\": \"The profile picture field must be an image.\", \"errors\": {}}",
                             "name": ""
                         }
                     ]

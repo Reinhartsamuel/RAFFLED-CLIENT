@@ -17,6 +17,7 @@ import Activity from './pages/Activity'
 import RaffleAdminPage, { AdminRaffleDetailPage } from './pages/RaffleAdminPage'
 import { EventToastContainer } from './components/evm/EventToast'
 import CreateRafflePage from './pages/CreateRafflePage'
+import MyTickets from './pages/MyTickets'
 
 const RAFFLE_CACHE_TTL = 30_000 // 30 seconds
 
@@ -175,6 +176,7 @@ export default function Home() {
         <Route path="/create-raffle" element={<CreateRafflePage />} />
         <Route path="/faucet" element={<Faucet />} />
         <Route path="/activity" element={<Activity />} />
+        <Route path="/mytickets" element={<MyTickets />} />
         <Route path="/veryyyy-secure-admin-pageee" element={<RaffleAdminPage />} />
         <Route path="/veryyyy-secure-admin-pageee/raffles/:id" element={<AdminRaffleDetailPage />} />
       </Routes>

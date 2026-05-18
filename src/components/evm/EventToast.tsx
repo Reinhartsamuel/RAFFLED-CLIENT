@@ -92,18 +92,18 @@ function formatMessage(event: ActivityEvent): { title: string; subtitle: string;
         title: `Raffle #${d.raffle_id} expired`,
         subtitle: 'No winner drawn',
       }
-    case 'UnderfilledPrizeReturned':
-      return {
-        label: 'RETURNED',
-        title: `Prize returned to host`,
-        subtitle: `Raffle #${d.raffle_id}`,
-      }
-    case 'PlatformFeeCollected':
-      return {
-        label: 'FEE',
-        title: `Platform fee collected`,
-        subtitle: `Raffle #${d.raffle_id}`,
-      }
+    // case 'UnderfilledPrizeReturned':
+    //   return {
+    //     label: 'RETURNED',
+    //     title: `Prize returned to host`,
+    //     subtitle: `Raffle #${d.raffle_id}`,
+    //   }
+    // case 'PlatformFeeCollected':
+    //   return {
+    //     label: 'FEE',
+    //     title: `Platform fee collected`,
+    //     subtitle: `Raffle #${d.raffle_id}`,
+    //   }
     default:
       return { label: 'EVENT', title: String(event.event_type), subtitle: '' }
   }

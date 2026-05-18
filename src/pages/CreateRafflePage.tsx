@@ -48,7 +48,7 @@ const PRESET_COINS: PresetCoin[] = [
     symbol: 'SOL',
     name: 'Solana',
     address: '0x311935Cd80B76769bF2ecC9D8Ab7635b2139cf82',
-    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%239945FF"/><path d="M9.5 20.5h13.3l-2.3 2.5H7.2l2.3-2.5zm0-5.5h13.3l-2.3 2.5H7.2L9.5 15zm11-5.5H7.2l2.3-2.5h13.3l-2.3 2.5z" fill="%2300FFA3"/></svg>',
+    icon: '/solana.svg',
   },
   {
     symbol: 'ETH',
@@ -283,8 +283,13 @@ export default function CreateRafflePage() {
       setCreateHash(hash)
       setCreateStep('success')
       const backendData = await postRaffleToBackend(hash)
-      if (isFreeRaffle && backendData?.id) {
-        await postRaffleTask(backendData.id)
+      console.log('============logging backend data....============');
+      console.log({ backendData });
+      console.log('============logging backend data done ============');
+      console.log(`is this a free raflle? ${isFreeRaffle}`)
+      if (isFreeRaffle && backendData?.raffle?.id) {
+        console.log(`Raffle created with ID ${backendData.id}, creating task...`)
+        await postRaffleTask(backendData.raffle.id)
       }
     } catch (err: any) {
       console.error('Create raffle error:', err)
@@ -463,10 +468,12 @@ export default function CreateRafflePage() {
                   </div>
 
                   {/* Image */}
-                  <div>
-                    <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Image</label>
-                    <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#555555] focus:border-[#FFB800] focus:outline-none transition-colors file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#1f1f1f] file:text-[#F5F5F5] file:font-mono file:text-xs file:uppercase file:tracking-wider file:cursor-pointer hover:file:bg-[#2a2a2a]" />
-                  </div>
+                  {(!image && prizeType === PrizeType.ERC721) &&
+                    <div>
+                      <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Image</label>
+                      <input type="file" accept="image/*" onChange={(e) => setImage(e.target.files?.[0] || null)} className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#555555] focus:border-[#FFB800] focus:outline-none transition-colors file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-[#1f1f1f] file:text-[#F5F5F5] file:font-mono file:text-xs file:uppercase file:tracking-wider file:cursor-pointer hover:file:bg-[#2a2a2a]" />
+                    </div>
+                  }
                 </div>
               </div>
 
@@ -576,24 +583,26 @@ export default function CreateRafflePage() {
 
             {/* Right Sidebar */}
             <div className="lg:col-span-4 space-y-4 md:space-y-5">
-              <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-4">
-                {image ? (
-                  <div className="relative group">
-                    <img src={URL.createObjectURL(image)} alt="Cover" className="w-full aspect-square object-cover rounded-lg border border-[#1f1f1f]" />
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center cursor-pointer" onClick={() => document.getElementById('cover-upload')?.click()}>
-                      <svg className="w-8 h-8 text-[#FFB800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
+              {prizeType === PrizeType.ERC721 &&
+                <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-4">
+                  {image ? (
+                    <div className="relative group">
+                      <img src={URL.createObjectURL(image)} alt="Cover" className="w-full aspect-square object-cover rounded-lg border border-[#1f1f1f]" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center cursor-pointer" onClick={() => document.getElementById('cover-upload')?.click()}>
+                        <svg className="w-8 h-8 text-[#FFB800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z" /><circle cx="12" cy="13" r="4" /></svg>
+                      </div>
+                      <button onClick={(e) => { e.stopPropagation(); setImage(null) }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
                     </div>
-                    <button onClick={(e) => { e.stopPropagation(); setImage(null) }} className="absolute top-2 right-2 w-7 h-7 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">✕</button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-[#1f1f1f] rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-[#FFB800]/50 hover:bg-[#FFB800]/5 transition-all group" onClick={() => document.getElementById('cover-upload')?.click()}>
-                    <svg className="w-10 h-10 text-[#333333] group-hover:text-[#FFB800] mb-2 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                    <span className="font-mono text-[10px] font-bold text-[#555555] group-hover:text-[#FFB800] uppercase tracking-wider transition-colors">UPLOAD_ASSET_COVER</span>
-                    <span className="font-mono text-[9px] text-[#333333] mt-1">PNG, JPG, MP4_MAX_100MB</span>
-                  </div>
-                )}
-                <input id="cover-upload" type="file" accept="image/*,video/*" className="hidden" onChange={(e) => setImage(e.target.files?.[0] || null)} />
-              </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-[#1f1f1f] rounded-lg aspect-square flex flex-col items-center justify-center cursor-pointer hover:border-[#FFB800]/50 hover:bg-[#FFB800]/5 transition-all group" onClick={() => document.getElementById('cover-upload')?.click()}>
+                      <svg className="w-10 h-10 text-[#333333] group-hover:text-[#FFB800] mb-2 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                      <span className="font-mono text-[10px] font-bold text-[#555555] group-hover:text-[#FFB800] uppercase tracking-wider transition-colors">UPLOAD_ASSET_COVER</span>
+                      <span className="font-mono text-[9px] text-[#333333] mt-1">PNG, JPG, MP4_MAX_100MB</span>
+                    </div>
+                  )}
+                  <input id="cover-upload" type="file" accept="image/*,video/*" className="hidden" onChange={(e) => setImage(e.target.files?.[0] || null)} />
+                </div>
+              }
 
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-4 md:p-5">
                 <h4 className="font-mono text-xs font-bold text-[#FFB800] uppercase tracking-wider mb-4 pb-3 border-b border-[#1f1f1f]">LAUNCH_SUMMARY</h4>

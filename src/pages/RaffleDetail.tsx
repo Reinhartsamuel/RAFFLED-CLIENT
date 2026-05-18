@@ -509,8 +509,7 @@ export function RaffleDetail() {
                   {buttonState === 'active' && (
                     <button
                       className="w-full bg-amber-500 text-black py-4 font-mono font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_15px_rgba(255,184,0,0.4)] transition-all active:scale-[0.98]"
-                      // onClick={() => isFreeRaffle ? setShowFreeRaffleModal(true) : setShowBuyModal(true)}
-                      onClick={() => setShowFreeRaffleModal(true)}
+                      onClick={() => isFreeRaffle ? setShowFreeRaffleModal(true) : setShowBuyModal(true)}
                     >
                       {getButtonLabel()}
                     </button>

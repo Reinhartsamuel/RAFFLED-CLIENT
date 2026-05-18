@@ -1,5 +1,5 @@
 import { ReactNode, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Navbar } from './Navbar'
 import { pageVariants } from '../../utils/animations'
@@ -106,6 +106,19 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
   onFilterChange: (filter: string) => void
 }) {
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const deriveActiveFilter = (): string => {
+    const path = location.pathname
+    if (path === '/app/create-raffle') return 'create'
+    if (path === '/app/faucet') return 'faucet'
+    if (path === '/app/activity') return 'activity'
+    if (path === '/app/mytickets') return 'mytickets'
+    return activeFilter
+  }
+
+  const currentActive = deriveActiveFilter()
+
   const filters = [
     { id: 'home', label: 'Home', icon: '⌂' },
     { id: 'official', label: 'Official', icon: '★' },
@@ -127,7 +140,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
           <button
             key={f.id}
             className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm
-              ${activeFilter === f.id
+              ${currentActive === f.id
                 ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
                 : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
               }`}
@@ -144,18 +157,18 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
       <div className="flex flex-col gap-0.5 px-2">
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
-            activeFilter === 'create'
+            currentActive === 'create'
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
           onClick={() => navigate('/app/create-raffle')}
         >
           <span className="w-4 text-center">+</span>
-          <span>Create Raffle</span>
+          <span>Host a Raffle</span>
         </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
-            activeFilter === 'discover'
+            currentActive === 'discover'
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
@@ -166,7 +179,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
         </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
-            activeFilter === 'faucet'
+            currentActive === 'faucet'
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
@@ -177,7 +190,7 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
         </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
-            activeFilter === 'activity'
+            currentActive === 'activity'
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
@@ -188,11 +201,11 @@ export function DashboardSidebar({ activeFilter, onFilterChange }: {
         </button>
         <button
           className={`flex items-center gap-2.5 px-3 py-2 rounded-md text-left transition-all duration-150 font-mono text-sm ${
-            activeFilter === 'mytickets'
+            currentActive === 'mytickets'
               ? 'bg-[#FFB800]/10 text-[#FFB800] border-l-2 border-[#FFB800]'
               : 'text-[#555555] hover:text-[#F5F5F5] hover:bg-[#111111]'
           }`}
-          onClick={() => {}}
+          onClick={() => navigate('/app/mytickets')}
         >
           <span className="w-4 text-center">☰</span>
           <span>My Tickets</span>

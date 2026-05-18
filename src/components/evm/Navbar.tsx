@@ -31,14 +31,23 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   useEffect(() => {
     // Auto-trigger sign-in when wallet connects and no token exists
+    // console.log(`authStatus : ${authStatus}`, address, getAuthToken());
     if (address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
       handleSignIn()
     }
+    // console.log(address,' address changeeeeeeeeeeee');
+    if (!address) {
+      // console.log(address,' address changed, removing token');
+      // console.log('setting auth status idle')
+      localStorage.removeItem('access_token')
+      setAuthStatus('idle')
+    } 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address])
 
   const handleSignIn = async () => {
     // If already authenticated, skip
+    // console.log('handleSignIn', address, getAuthToken())
     if (getAuthToken()) {
       setAuthStatus('ok')
       return
