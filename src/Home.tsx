@@ -190,7 +190,7 @@ export default function Home() {
 function buildRafflesUrl(filter: string): string {
   const url = new URL(`${BACKEND_URL}/raffles`)
   if (filter === 'official') {
-    url.searchParams.set('owner_address', '0x753dfc03b4d37b3a316d0fe5ab9f677c0d3c20f8')
+    url.searchParams.set('owner_address', '0xE13d4F4676A146564aB75bFd86E06ec38B9a7201')
   } else if (filter === 'recent') {
     url.searchParams.set('sort_by', 'created_at')
     url.searchParams.set('sort_dir', 'desc')
@@ -204,9 +204,3 @@ function buildRafflesUrl(filter: string): string {
   return url.toString()
 }
 
-const onboardingSteps = [
-  { icon: '✌', title: 'Welcome aboard', desc: 'Connect your wallet.', done: true },
-  { icon: '⬡', title: 'Authenticated', desc: 'Sign in with Base.', done: true },
-  { icon: '◈', title: 'First raffle', desc: 'Create your first raffle.', done: false },
-  { icon: '◎', title: 'First winner', desc: 'Draw your first winner.', done: false },
-]

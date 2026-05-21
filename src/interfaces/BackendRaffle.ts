@@ -31,4 +31,6 @@ export interface BackendRaffle {
   payment_asset?: string            // USDC token address (paymentToken on the contract)
   payment_asset_symbol?: string
   payment_asset_decimals?: number
+  official_raffle:boolean
+  free_raffle:boolean
 }

@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import { useCreateRaffleERC20, useCreateRaffleERC721 } from '../hooks/useRaffleContract'
 import { useTokenApproval, useTokenDecimals, useTokenBalance, useNFTApproval } from '../hooks/useTokenApproval'
 import { getRaffleManagerAddress, getMockUSDCAddress } from '../config/evm.config'
+import { useAppKitAccount } from '@reown/appkit/react'
+import { WalletConnect } from '../components/evm/WalletConnect'
 import { useAccount } from 'wagmi'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { TransactionReceipt } from '../components/evm/TransactionReceipt'
@@ -78,6 +80,7 @@ export default function CreateRafflePage() {
   const navigate = useNavigate()
   const chainId = useChainId()
   const { address: connectedAddress } = useAccount()
+  const { isConnected } = useAppKitAccount()
   const raffleManagerAddress = getRaffleManagerAddress(chainId)
 
   const isFreeRaffleAdmin = connectedAddress?.toLowerCase() === import.meta.env.VITE_FREE_RAFFLE_ADMIN_ADDRESS?.toLowerCase()
@@ -313,7 +316,28 @@ export default function CreateRafflePage() {
 
   return (
     <>
-      {createStep === 'success' ? (
+      {!isConnected ? (
+        <div className="min-h-[60vh] flex items-center justify-center p-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="max-w-md w-full text-center border border-[#1f1f1f] bg-[#0a0a0a] rounded-2xl p-10"
+          >
+            <div className="w-16 h-16 rounded-2xl bg-[#FFB800]/10 border border-[#FFB800]/20 flex items-center justify-center text-2xl mx-auto mb-6">
+              <svg className="w-8 h-8 text-[#FFB800]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
+              </svg>
+            </div>
+            <h2 className="font-sans font-bold text-2xl text-[#F5F5F5] mb-3">Connect Your Wallet</h2>
+            <p className="font-mono text-sm text-[#555555] mb-8">
+              Connect your wallet to create a raffle
+            </p>
+            <WalletConnect />
+          </motion.div>
+        </div>
+      ) : createStep === 'success' ? (
         <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-xl mx-auto p-4 md:p-8">
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-8 text-center">
             <div className="w-16 h-16 rounded-full bg-[#22C55E]/10 border-2 border-[#22C55E] flex items-center justify-center mx-auto mb-5">

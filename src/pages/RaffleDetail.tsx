@@ -268,10 +268,14 @@ export function RaffleDetail() {
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
 
-  const prizeAmountFormatted = formatUnits(BigInt(raffle.prize_amount || 0), raffle.prize_asset_decimals || 6)
-  const prizeAmountDisplay = prizeAmountFormatted.includes('.')
-    ? prizeAmountFormatted.replace(/\.?0+$/, '').replace(/^(\d+)(\d{3})$/, '$1,$2')
-    : Number(prizeAmountFormatted).toLocaleString()
+  const prizeAmountDisplay = raffle.prize_type === 'erc721'
+    ? `#${raffle.prize_amount}`
+    : (() => {
+      const formatted = formatUnits(BigInt(raffle.prize_amount || 0), raffle.prize_asset_decimals || 6)
+      return formatted.includes('.')
+        ? formatted.replace(/\.?0+$/, '').replace(/^(\d+)(\d{3})$/, '$1,$2')
+        : Number(formatted).toLocaleString()
+    })()
 
   const ticketPrice = raffle.ticket_price_usd && Number(raffle.ticket_price_usd) > 0
     ? Number(raffle.ticket_price_usd).toFixed(2)
