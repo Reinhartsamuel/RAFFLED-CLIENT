@@ -28,12 +28,9 @@ if (!projectId) {
   throw new Error('Project ID is not defined')
 }
 
-// Set networks - Base mainnet first (like working example)
-export const networks = [baseSepolia]
-
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
-  networks,
+  networks:[baseSepolia],
   ssr: false,
 })
 
@@ -50,7 +47,7 @@ export const wagmiConfig = wagmiAdapter.wagmiConfig
 // Create AppKit instance - Base mainnet first (like working example)
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [base, baseSepolia],
+  networks: [baseSepolia],
   projectId,
   metadata,
   features: {
