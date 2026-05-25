@@ -30,8 +30,8 @@ const PRESET_COINS: PresetCoin[] = [
   {
     // Wormhole-bridged BNB on Base — verified via basescan.org search
     symbol: 'BNB',
-    name: 'BNB',
-    address: '0xeCDFa7Ba60Bd2D0e7B2278E4B17F27df9Fe2D7a0',
+    name: 'BNB Wormhole',
+    address: '0x418D75f65a02b3D53B2418FB8E1fe493759c7605',
     icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23F3BA2F"/><path d="M12.116 13.515L16 9.63l3.886 3.886 2.26-2.26L16 5.11l-6.144 6.144 2.26 2.26zM5.11 16l2.26-2.26 2.26 2.26-2.26 2.26L5.11 16zm7.006.884L16 20.769l3.884-3.885 2.261 2.259L16 25.285l-6.144-6.142-.003-.003 2.263-2.256zm9.513-.884l2.26-2.26 2.26 2.26-2.26 2.26-2.26-2.26zM18.292 16l-2.29-2.291L14 15.706l-.239.238-.488.488-.003.003.003.003L16 18.729l2.292-2.291.001-.438z" fill="%23fff"/></svg>',
   },
   {
