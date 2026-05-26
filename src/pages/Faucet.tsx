@@ -5,7 +5,7 @@ import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { WalletConnect } from '../components/evm/WalletConnect'
 import mockUsdcAbi from '../abis/MockUSDC.json'
 
-const MOCK_USDC_ADDRESS = '0x49f49cfe89050a8f8e48d3a31e33a8e26bc80d1d'
+const MOCK_USDC_ADDRESS = import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA as `0x${string}`;
 const MINT_AMOUNT = '1000000000' // 1000 USDC (6 decimals)
 
 export function FaucetPage() {
