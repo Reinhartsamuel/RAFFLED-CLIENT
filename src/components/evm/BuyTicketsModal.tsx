@@ -54,6 +54,7 @@ export function BuyTicketsModal({
   const raffleManagerAddress = getRaffleManagerAddress(chainId)
 
   const [ticketCount, setTicketCount] = useState(1)
+  const [inputValue, setInputValue] = useState('1')
   const [isPurchasing, setIsPurchasing] = useState(false)
   const [currentStep, setCurrentStep] = useState<'idle' | 'approving' | 'purchasing'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -101,6 +102,14 @@ export function BuyTicketsModal({
   const handlePurchase = async () => {
     if (!address || !publicClient) return
 
+    // Sync inputValue to ticketCount before purchase
+    const pendingVal = parseInt(inputValue, 10)
+    if (!isNaN(pendingVal) && pendingVal >= 1 && pendingVal <= remainingTickets) {
+      setValidatedTicketCount(pendingVal)
+    } else {
+      setInputValue(String(ticketCount))
+    }
+
     if (isRaffleCreator) {
       setError("You're the host — hosts can't enter their own raffle.")
       return
@@ -143,12 +152,29 @@ export function BuyTicketsModal({
     }
   }
 
+  const setValidatedTicketCount = (val: number) => {
+    const clamped = Math.max(1, Math.min(val, remainingTickets))
+    setTicketCount(clamped)
+    setInputValue(String(clamped))
+  }
+
   const increment = () => {
-    if (ticketCount < remainingTickets) setTicketCount(ticketCount + 1)
+    if (ticketCount < remainingTickets) setValidatedTicketCount(ticketCount + 1)
   }
 
   const decrement = () => {
-    if (ticketCount > 1) setTicketCount(ticketCount - 1)
+    if (ticketCount > 1) setValidatedTicketCount(ticketCount - 1)
+  }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value)
+  }
+
+  const handleInputBlur = () => {
+    const val = parseInt(inputValue, 10)
+    if (isNaN(val) || val < 1) setValidatedTicketCount(1)
+    else if (val > remainingTickets) setValidatedTicketCount(remainingTickets)
+    else setValidatedTicketCount(val)
   }
 
   const getButtonLabel = () => {
@@ -236,19 +262,16 @@ export function BuyTicketsModal({
               <div className="flex flex-col items-center gap-1 flex-1">
                 <input
                   type="number"
-                  min={1}
-                  max={remainingTickets}
-                  value={ticketCount}
+                  value={inputValue}
                   disabled={isRaffleCreator}
-                  onChange={(e) => {
-                    const val = parseInt(e.target.value, 10)
-                    if (isNaN(val) || val < 1) setTicketCount(1)
-                    else if (val > remainingTickets) setTicketCount(remainingTickets)
-                    else setTicketCount(val)
+                  onChange={handleInputChange}
+                  onBlur={handleInputBlur}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleInputBlur()
                   }}
                   className="w-full text-center font-mono font-bold text-[#F5F5F5] text-lg bg-[#111111] border border-[#2a2a2a] rounded-lg py-2.5 focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 />
-                <span className="font-mono text-[9px] uppercase tracking-widest text-[#555555]">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-[#999999]">
                   TICKET{ticketCount !== 1 ? 'S' : ''} · max {remainingTickets}
                 </span>
               </div>

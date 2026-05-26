@@ -6,10 +6,11 @@ import { motion } from 'framer-motion'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { FreeRaffleModal } from '../components/evm/FreeRaffleModal'
-import { useConfig } from 'wagmi'
+import { useConfig, useChainId } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
+// import { usePaymentToken } from '../hooks/useRaffleContract'
 
 interface LeaderboardEntry {
   user_address: string
@@ -52,6 +53,9 @@ export function RaffleDetail() {
   const navigate = useNavigate()
   const { isConnected, address } = useAppKitAccount()
   const config = useConfig()
+  // const chainId = useChainId()
+  // const { data: contractPaymentToken } = usePaymentToken()
+  const contractPaymentToken = import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA;
 
   const [raffle, setRaffle] = useState<RaffleDetailData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,7 +86,41 @@ export function RaffleDetail() {
 
         const data = await res.json()
         const raw = data.raffle
+
+        let paymentAssetAddr = ''
+        let paymentSymbol = 'USDC'
+        let paymentDecimals = 6
+
         if (raw) {
+          const backendPaymentAsset = raw.payment_asset as string | undefined
+          const fallbackPaymentAsset = (contractPaymentToken as `0x${string}` | undefined)?.toLowerCase() || ''
+
+          paymentAssetAddr = backendPaymentAsset || fallbackPaymentAsset
+
+          paymentSymbol = raw.payment_asset_symbol ?? 'USDC'
+          paymentDecimals = Number(raw.payment_asset_decimals ?? 6)
+
+          if (!backendPaymentAsset && contractPaymentToken) {
+            try {
+              const tokenAddr = contractPaymentToken as `0x${string}`
+              const results = await Promise.allSettled([
+                readContract(config, {
+                  address: tokenAddr,
+                  abi: [{ name: 'symbol', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] }],
+                  functionName: 'symbol',
+                }),
+                readContract(config, {
+                  address: tokenAddr,
+                  abi: [{ name: 'decimals', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] }],
+                  functionName: 'decimals',
+                }),
+              ])
+              if (results[0].status === 'fulfilled') paymentSymbol = results[0].value as string
+              if (results[1].status === 'fulfilled') paymentDecimals = Number(results[1].value)
+            } catch {
+            }
+          }
+
           const normalized: RaffleDetailData = {
             id: raw.id,
             title: raw.title,
@@ -102,9 +140,9 @@ export function RaffleDetail() {
             contract_address: raw.contract_address,
             creator_address: raw.owner_address ?? raw.creator_address,
             created_at: raw.created_at,
-            payment_asset: raw.payment_asset ?? raw.prize_asset ?? '',
-            payment_asset_symbol: raw.payment_asset_symbol ?? raw.prize_asset_symbol ?? 'USDC',
-            payment_asset_decimals: Number(raw.payment_asset_decimals ?? raw.prize_asset_decimals ?? 6),
+            payment_asset: paymentAssetAddr,
+            payment_asset_symbol: paymentSymbol,
+            payment_asset_decimals: paymentDecimals,
             type: raw.type,
             underfilled: raw.underfilled,
             winner_address: raw.winner_address,
@@ -142,11 +180,10 @@ export function RaffleDetail() {
           setRaffle(null)
         }
 
-        if (address && (raw?.prize_asset || raw?.payment_asset) && config) {
+        if (address && paymentAssetAddr && config) {
           try {
-            const paymentAssetAddr = (raw.payment_asset ?? raw.prize_asset) as `0x${string}`
             const balance = await readContract(config, {
-              address: paymentAssetAddr,
+              address: paymentAssetAddr as `0x${string}`,
               abi: [
                 {
                   name: 'balanceOf',
@@ -173,7 +210,7 @@ export function RaffleDetail() {
     }
 
     if (id) fetchRaffleDetail()
-  }, [id, address, config])
+  }, [id, address, config, contractPaymentToken])
 
   useEffect(() => {
     if (!id) return
