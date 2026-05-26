@@ -77,7 +77,7 @@ export function HomePage({ activeFilter, onFilterChange }: {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+                className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4"
               >
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="w-full bg-[#0a0a0a] rounded-xl overflow-hidden border border-[#1f1f1f]">
