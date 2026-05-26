@@ -263,7 +263,9 @@ export function RaffleDetail() {
   }
 
   const now = new Date()
-  const endTime = new Date(raffle.ends_at)
+  const endTime = raffle.ends_at.includes('T')
+    ? new Date(raffle.ends_at)
+    : new Date(`${raffle.ends_at.replace(' ', 'T')}Z`)
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired

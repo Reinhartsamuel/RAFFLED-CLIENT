@@ -31,8 +31,10 @@ function useCountdown(endsAt: string) {
 
     useEffect(() => {
         function calc() {
-            // Parse the date string properly (handle both formats)
-            const endDate = new Date(endsAt.replace(' ', 'T'))
+            // Parse the date string as UTC (handle both formats)
+            const endDate = endsAt.includes('T') && endsAt.endsWith('Z')
+                ? new Date(endsAt)
+                : new Date(endsAt.replace(' ', 'T') + 'Z')
             const diff = endDate.getTime() - Date.now()
             
             if (diff <= 0 || isNaN(diff)) {

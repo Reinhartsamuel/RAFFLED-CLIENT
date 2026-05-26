@@ -61,15 +61,15 @@ const PRESET_COINS: PresetCoin[] = [
   {
     symbol: 'USDC',
     name: 'USD Coin',
-    address: '',
+    address: import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA,
     icon: '/USDC.svg',
   },
-  {
-    symbol: 'Custom',
-    name: 'Custom Token',
-    address: '',
-    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%231f1f1f" stroke="%23444" stroke-width="1"/><text x="50%25" y="55%25" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="18" fill="%23888">?</text></svg>',
-  },
+  // {
+  //   symbol: 'Custom',
+  //   name: 'Custom Token',
+  //   address: '',
+  //   icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%231f1f1f" stroke="%23444" stroke-width="1"/><text x="50%25" y="55%25" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="18" fill="%23888">?</text></svg>',
+  // },
 ]
 
 type ApprovalStep = 'not_started' | 'approving' | 'approved' | 'failed'
@@ -445,21 +445,24 @@ export default function CreateRafflePage() {
                   )}
 
                   {/* Custom Token Address */}
-                  {prizeType === PrizeType.ERC20 && selectedCoin === 'Custom' && (
+                  {/* {prizeType === PrizeType.ERC20 && selectedCoin === 'Custom' && (
                     <div>
                       <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Token Address *</label>
                       <input type="text" value={prizeAsset} onChange={(e) => setPrizeAsset(e.target.value as Address)} placeholder="0x..." className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#F5F5F5] placeholder-[#333333] focus:border-[#FFB800] focus:outline-none transition-colors" />
                     </div>
-                  )}
+                  )} */}
 
                   {/* Prize Amount (ERC20) */}
                   {prizeType === PrizeType.ERC20 && (
                     <div>
                       <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Prize Amount *</label>
                       <input type="number" step="0.01" value={prizeAmount} onChange={(e) => setPrizeAmount(e.target.value)} placeholder="100" className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#F5F5F5] placeholder-[#333333] focus:border-[#FFB800] focus:outline-none transition-colors" />
-                      {prizeBalance !== undefined && prizeBalance !== BigInt(0) && (
-                        <p className="font-mono text-[10px] text-[#333333] mt-1">Balance: {(Number(prizeBalance) / 10 ** (typeof prizeDecimals === 'number' ? prizeDecimals : 18)).toFixed(4)}</p>
+                      {prizeBalance !== undefined  && (
+                        <p className="font-mono text-[12px] text-[#777777] mt-1">Balance: {(Number(prizeBalance) / 10 ** (typeof prizeDecimals === 'number' ? prizeDecimals : 18)).toFixed(4)}</p>
                       )}
+                      {prizeBalance === BigInt(0) && 
+                       <p className="font-mono text-[12px] text-[#777777] mt-1">You don't have any {selectedCoin} tokens</p>
+                      }
                     </div>
                   )}
 
