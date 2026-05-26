@@ -88,7 +88,6 @@ export default function CreateRafflePage() {
   const [wizardStep, setWizardStep] = useState<WizardStep>('asset_details')
   const [prizeType, setPrizeType] = useState<PrizeType>(PrizeType.ERC20)
   const [selectedCoin, setSelectedCoin] = useState<string>('WBTC')
-  const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -245,7 +244,7 @@ export default function CreateRafflePage() {
   }
 
   const handleCreateRaffle = async () => {
-    if (!title || !ticketPrice || !maxCap || !duration) {
+    if (!ticketPrice || !maxCap || !duration) {
       setError('Fill in all required fields')
       return
     }
@@ -303,7 +302,7 @@ export default function CreateRafflePage() {
 
   const isApprovalPending = approvalStep === 'approving' || erc20Approval.isPending || nftApproval.isPending
   const isApproved = approvalStep === 'approved'
-  const canCreateRaffle = title && ticketPrice && maxCap && duration && (prizeType === PrizeType.ERC20 ? prizeAsset && prizeAmount : nftAsset && tokenId) && (!needsApproval || isApproved)
+  const canCreateRaffle = ticketPrice && maxCap && duration && (prizeType === PrizeType.ERC20 ? prizeAsset && prizeAmount : nftAsset && tokenId) && (!needsApproval || isApproved)
   const isLocked = isApprovalPending || isCreating
 
   const stepConfig = [
@@ -482,12 +481,6 @@ export default function CreateRafflePage() {
                     </div>
                   )}
 
-                  {/* Prize Name */}
-                  <div>
-                    <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Title *</label>
-                    <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="My Awesome Raffle" className="w-full bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg px-3 py-2.5 md:px-4 md:py-3 font-mono text-xs md:text-sm text-[#F5F5F5] placeholder-[#333333] focus:border-[#FFB800] focus:outline-none transition-colors" />
-                  </div>
-
                   {/* Description */}
                   <div>
                     <label className="font-mono text-[10px] md:text-xs font-bold text-[#555555] uppercase tracking-wider block mb-1.5">Description</label>
@@ -634,10 +627,6 @@ export default function CreateRafflePage() {
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl p-4 md:p-5">
                 <h4 className="font-mono text-xs font-bold text-[#FFB800] uppercase tracking-wider mb-4 pb-3 border-b border-[#1f1f1f]">LAUNCH_SUMMARY</h4>
                 <div className="space-y-2.5">
-                  <div className="flex justify-between items-center">
-                    <span className="font-mono text-[10px] text-[#555555]">Title</span>
-                    <span className="font-mono text-[10px] text-[#F5F5F5] text-right truncate max-w-[60%]">{title || '—'}</span>
-                  </div>
                   <div className="flex justify-between items-center">
                     <span className="font-mono text-[10px] text-[#555555]">Entry Price</span>
                     <span className="font-mono text-[10px] text-[#F5F5F5]">{ticketPrice ? `${ticketPrice} USDC` : '—'}</span>
