@@ -260,8 +260,7 @@ export default function CreateRafflePage() {
     try {
       setError('')
       setCreateStep('pending')
-      // const durationSeconds = Number(duration) * 86400
-      const durationSeconds = 10 * 60 // for testing, 10 minutes
+      const durationSeconds = Number(duration) * 86400
       let hash: string
       if (prizeType === PrizeType.ERC20) {
         const prizeDecimalsNum = typeof prizeDecimals === 'number' ? prizeDecimals : 18

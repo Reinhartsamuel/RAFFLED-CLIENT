@@ -58,7 +58,7 @@ export function HomePage({ activeFilter, onFilterChange }: {
 
   return (
     <>
-      <div className="bg-red-600 p-6 lg:p-8 space-y-8">
+      <div className="p-6 lg:p-8 space-y-8">
         {/* ---- Active Raffles ---- */}
         <section>
           <div className="flex items-center justify-between pb-4 border-b border-[#1f1f1f] mb-6">
