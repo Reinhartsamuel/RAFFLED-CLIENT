@@ -10,6 +10,7 @@ import { useConfig, useChainId } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
+import { EXPLORER_URL } from '../utils/constants'
 // import { usePaymentToken } from '../hooks/useRaffleContract'
 
 interface LeaderboardEntry {
@@ -320,7 +321,18 @@ export function RaffleDetail() {
     ? Number(raffle.ticket_price_usd).toFixed(2)
     : formatUnits(safeBigInt(raffle.ticket_price_amount), raffle.payment_asset_decimals || 6)
 
+  const isResolved = !!raffle.winner_picked_tx_hash
+
   const getStatusInfo = () => {
+    if (isResolved) {
+      return {
+        label: 'RESOLVED',
+        color: 'text-green-500',
+        bgColor: 'bg-green-500/10',
+        borderColor: 'border-green-500/30',
+        dotColor: 'bg-green-500',
+      }
+    }
     if (raffle.status === 'completed' || isExpired) {
       return {
         label: 'COMPLETED',
@@ -508,9 +520,9 @@ export function RaffleDetail() {
                   {raffle.prize_tx_hash && (
                     <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
                       <p className="font-mono text-[10px] text-[#555555] mb-1">RAFFLE_TRANSACTION</p>
-                      <p className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors" title={raffle.prize_tx_hash}>
+                      <a href={`${EXPLORER_URL}/tx/${raffle.prize_tx_hash}`} target="_blank" className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors" title={raffle.prize_tx_hash}>
                         {raffle.prize_tx_hash}
-                      </p>
+                      </a>
                     </div>
                   )}
 
@@ -532,16 +544,47 @@ export function RaffleDetail() {
                     </p>
                   </div>
                 </div>
+                
 
-                {/* Info Banner */}
+                {/* Info Banner / Resolved UI */}
                 <div className="mt-auto space-y-4">
-                  {!isActive && (
+                  {isResolved && (
+                    <div className="bg-green-500/[0.05] border border-green-500/20 p-5 rounded-sm">
+                      <div className="flex items-center gap-2 mb-4">
+                        <span className="text-green-500 text-lg">✓</span>
+                        <h4 className="font-mono text-[10px] uppercase tracking-widest text-green-500 font-bold">Raffle Resolved</h4>
+                      </div>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="font-mono text-[10px] text-[#555555] mb-1">WINNER</p>
+                          <p className="font-mono text-sm text-[#F5F5F5] break-all">
+                            {raffle.winner_address ? formatAddress(raffle.winner_address) : 'Pending'}
+                          </p>
+                        </div>
+                        {raffle.winner_picked_tx_hash && (
+                          <div>
+                            <p className="font-mono text-[10px] text-[#555555] mb-1">DRAW TRANSACTION</p>
+                            <a
+                              href={`${EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="font-mono text-[11px] text-green-500 hover:text-green-400 transition-colors underline underline-offset-2 break-all"
+                            >
+                              {raffle.winner_picked_tx_hash}
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {!isResolved && !isActive && (
                     <div className="bg-[#0a0a0a]/30 border border-[#1f1f1f] p-4 rounded-sm">
-                      <div className="flex items-start gap-3 text-[#555555]">
+                      <div className="flex items-start gap-3 text-[#999999]">
                         <span className="text-sm mt-0.5">ℹ</span>
-                        <p className="font-mono text-[10px] uppercase leading-relaxed">
+                        <p className="font-mono text-[11px] uppercase leading-relaxed">
                           {raffle.status === 'completed'
-                            ? 'This raffle has reached its final state. Winner: ' + (raffle.winner_address ? formatAddress(raffle.winner_address) : 'Pending')
+                            ? 'This raffle has reached its final state. Winner: ' + (raffle.winner_address ? raffle.winner_address : 'Pending')
                             : 'This raffle is no longer accepting entries.'}
                         </p>
                       </div>
