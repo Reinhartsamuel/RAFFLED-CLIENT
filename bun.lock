@@ -11,7 +11,7 @@
         "@react-three/fiber": "^9.6.0",
         "@reown/appkit": "1.8.19",
         "@reown/appkit-adapter-solana": "1.8.19",
-        "@reown/appkit-adapter-wagmi": "1.8.19",
+        "@reown/appkit-adapter-wagmi": "1.8.16",
         "@shadergradient/react": "^2.4.20",
         "@solana/web3.js": "^1.95.8",
         "@tailwindcss/vite": "^4.1.18",
@@ -28,7 +28,7 @@
         "three": "^0.183.2",
         "three-stdlib": "^2.36.1",
         "viem": "^2.37.9",
-        "wagmi": "^2.17.5",
+        "wagmi": "^2.14.16",
       },
       "devDependencies": {
         "@eslint/js": "^9.9.0",
@@ -45,10 +45,6 @@
         "vite": "^7.3.1",
       },
     },
-  },
-  "overrides": {
-    "@wagmi/connectors": "6.2.0",
-    "@wagmi/core": "2.22.1",
   },
   "packages": {
     "@adraffy/ens-normalize": ["@adraffy/ens-normalize@1.11.1", "", {}, "sha512-nhCBV3quEgesuf7c7KYfperqSS14T8bYuvJ8PcLJp6znkZpFc0AuW4qBtr8eKVyPPe/8RSr7sglCWPU5eaxwKQ=="],
@@ -261,7 +257,7 @@
 
     "@reown/appkit-adapter-solana": ["@reown/appkit-adapter-solana@1.8.19", "", { "dependencies": { "@reown/appkit": "1.8.19", "@reown/appkit-common": "1.8.19", "@reown/appkit-controllers": "1.8.19", "@reown/appkit-polyfills": "1.8.19", "@reown/appkit-utils": "1.8.19", "@reown/appkit-wallet": "1.8.19", "@solana/spl-token": "0.4.14", "@solana/wallet-adapter-base": "0.9.27", "@solana/wallet-standard-features": "1.3.0", "@solana/wallet-standard-util": "1.1.2", "@solana/web3.js": "1.98.4", "@wallet-standard/app": "1.1.0", "@wallet-standard/base": "1.1.0", "@wallet-standard/features": "1.1.0", "@walletconnect/types": "2.23.7", "@walletconnect/universal-provider": "2.23.7", "valtio": "2.1.7" }, "optionalDependencies": { "borsh": "0.7.0", "bs58": "6.0.0" } }, "sha512-qpmn+B+gwhrrbxPKTLlV+0UhZ/XO0wvlHU/f6SAboWQYfZ70mpyq9DpM47BLRiQG+GPn3JB1duc3dbiA0ibBug=="],
 
-    "@reown/appkit-adapter-wagmi": ["@reown/appkit-adapter-wagmi@1.8.19", "", { "dependencies": { "@reown/appkit": "1.8.19", "@reown/appkit-common": "1.8.19", "@reown/appkit-controllers": "1.8.19", "@reown/appkit-polyfills": "1.8.19", "@reown/appkit-scaffold-ui": "1.8.19", "@reown/appkit-utils": "1.8.19", "@reown/appkit-wallet": "1.8.19", "@walletconnect/universal-provider": "2.23.7", "valtio": "2.1.7" }, "optionalDependencies": { "@wagmi/connectors": ">=5.9.9" }, "peerDependencies": { "@wagmi/core": ">=2.21.2", "viem": ">=2.45.0", "wagmi": ">=2.19.5" } }, "sha512-KY2sbIXJDLlUVBAKdHBQ8KT8aQY67rWwW9aIz4XthRIt8WCjZQBEf4JGy/kd0LwRS78XSSpZcxDxEBarMPLpaA=="],
+    "@reown/appkit-adapter-wagmi": ["@reown/appkit-adapter-wagmi@1.8.16", "", { "dependencies": { "@reown/appkit": "1.8.16", "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-polyfills": "1.8.16", "@reown/appkit-scaffold-ui": "1.8.16", "@reown/appkit-utils": "1.8.16", "@reown/appkit-wallet": "1.8.16", "@walletconnect/universal-provider": "2.23.1", "valtio": "2.1.7" }, "optionalDependencies": { "@wagmi/connectors": ">=5.9.9" }, "peerDependencies": { "@wagmi/core": ">=2.21.2", "viem": ">=2.37.9", "wagmi": ">=2.17.5" } }, "sha512-9dMjmhpaTZU2xiM4Lq+K6s8AxMoaHT2iOh6P0A8g8p3ed2optK5qXwoVbibRa3kMwVvI5V5ERvJjeZLgwqqOHQ=="],
 
     "@reown/appkit-common": ["@reown/appkit-common@1.8.19", "", { "dependencies": { "big.js": "6.2.2", "dayjs": "1.11.13", "viem": ">=2.45.0" } }, "sha512-z5wDrYjUGY7YbM4b14NHVo54WKZ5++PQtGkcsXhiOP39yAVijubBQD8BfHs/Pu2fSFqnqLIFoCVvIEfNWWccRw=="],
 
@@ -1401,6 +1397,22 @@
 
     "@metamask/utils/uuid": ["uuid@9.0.1", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="],
 
+    "@reown/appkit-adapter-wagmi/@reown/appkit": ["@reown/appkit@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-pay": "1.8.16", "@reown/appkit-polyfills": "1.8.16", "@reown/appkit-scaffold-ui": "1.8.16", "@reown/appkit-ui": "1.8.16", "@reown/appkit-utils": "1.8.16", "@reown/appkit-wallet": "1.8.16", "@walletconnect/universal-provider": "2.23.1", "bs58": "6.0.0", "semver": "7.7.2", "valtio": "2.1.7", "viem": ">=2.37.9" }, "optionalDependencies": { "@lit/react": "1.0.8" } }, "sha512-EleChIVOXa8qylNCcllByP+AYIoktDmPGfavi3Fn4eWWXoc4wlfL58NEiETbCyi1ZgUtaZUfIUiMvwgjJ4+mwQ=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-common": ["@reown/appkit-common@1.8.16", "", { "dependencies": { "big.js": "6.2.2", "dayjs": "1.11.13", "viem": ">=2.37.9" } }, "sha512-og7EkTEI+mxTEEK3cRoX2PJqgij/5t9CJeN/2dnOef8mEiNh0vAPmdzZPXw9v4oVeBsu14jb8n/Y7vIbTOwl6Q=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-controllers": ["@reown/appkit-controllers@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-wallet": "1.8.16", "@walletconnect/universal-provider": "2.23.1", "valtio": "2.1.7", "viem": ">=2.37.9" } }, "sha512-GzhC+/AAYoyLYs/jJd7/D/tv7WCoB4wfv6VkpYcS+3NjL1orGqYnPIXiieiDEGwbfM8h08lmlCsEwOrEoIrchA=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-polyfills": ["@reown/appkit-polyfills@1.8.16", "", { "dependencies": { "buffer": "6.0.3" } }, "sha512-6ArFDoIbI/DHHCdOCSnh7THP4OvhG5XKKgXbCKSNOuj3/RPl3OmmoFJwwf+LvZJ4ggaz7I6qoXFHf8fEEx1FcQ=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-scaffold-ui": ["@reown/appkit-scaffold-ui@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-pay": "1.8.16", "@reown/appkit-ui": "1.8.16", "@reown/appkit-utils": "1.8.16", "@reown/appkit-wallet": "1.8.16", "lit": "3.3.0" } }, "sha512-OzTtxwLkE2RcJh4ai87DpXz1zM7twZOpFA6OKWVXPCe2BASLzXWtKmpW8XA6gpA54oEmG4PtoBW9ogv/Qd2e8Q=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-utils": ["@reown/appkit-utils@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-polyfills": "1.8.16", "@reown/appkit-wallet": "1.8.16", "@wallet-standard/wallet": "1.1.0", "@walletconnect/logger": "3.0.1", "@walletconnect/universal-provider": "2.23.1", "valtio": "2.1.7", "viem": ">=2.37.9" }, "optionalDependencies": { "@base-org/account": "2.4.0", "@safe-global/safe-apps-provider": "0.18.6", "@safe-global/safe-apps-sdk": "9.1.0" } }, "sha512-tCi2ZEOoOIGiddRAy9lJ1jnYj0zMnqEojIk095sWvnMdlNfn/lZdsLt62AGqk5khnlsyg2Zo0vszPBcXLH8/ww=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-wallet": ["@reown/appkit-wallet@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-polyfills": "1.8.16", "@walletconnect/logger": "3.0.1", "zod": "3.22.4" } }, "sha512-UARNgRtzTVojDv2wgILy7RKiYAXpFX9UE7qkficV4oB+IQX7yCPpa0eXN2mDXZBVSz2hSu4rLTa7WNXzZPal/A=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider": ["@walletconnect/universal-provider@2.23.1", "", { "dependencies": { "@walletconnect/events": "1.0.1", "@walletconnect/jsonrpc-http-connection": "1.0.8", "@walletconnect/jsonrpc-provider": "1.0.14", "@walletconnect/jsonrpc-types": "1.0.4", "@walletconnect/jsonrpc-utils": "1.0.8", "@walletconnect/keyvaluestorage": "1.1.1", "@walletconnect/logger": "3.0.1", "@walletconnect/sign-client": "2.23.1", "@walletconnect/types": "2.23.1", "@walletconnect/utils": "2.23.1", "es-toolkit": "1.39.3", "events": "3.3.0" } }, "sha512-XlvG1clsL7Ds+g28Oz5dXsPA+5ERtQGYvd+L8cskMaTvtphGhipVGgX8WNAhp7p1gfNcDg4tCiTHlj131jctwA=="],
+
     "@solana/accounts/@solana/codecs-core": ["@solana/codecs-core@5.5.1", "", { "dependencies": { "@solana/errors": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-TgBt//bbKBct0t6/MpA8ElaOA3sa8eYVvR7LGslCZ84WiAwwjCY0lW/lOYsFHJQzwREMdUyuEyy5YWBKtdh8Rw=="],
 
     "@solana/accounts/@solana/codecs-strings": ["@solana/codecs-strings@5.5.1", "", { "dependencies": { "@solana/codecs-core": "5.5.1", "@solana/codecs-numbers": "5.5.1", "@solana/errors": "5.5.1" }, "peerDependencies": { "fastestsmallesttextencoderdecoder": "^1.0.22", "typescript": "^5.0.0" }, "optionalPeers": ["fastestsmallesttextencoderdecoder", "typescript"] }, "sha512-7klX4AhfHYA+uKKC/nxRGP2MntbYQCR3N6+v7bk1W/rSxYuhNmt+FN8aoThSZtWIKwN6BEyR1167ka8Co1+E7A=="],
@@ -1679,6 +1691,28 @@
 
     "@metamask/sdk/debug/ms": ["ms@2.1.2", "", {}, "sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w=="],
 
+    "@reown/appkit-adapter-wagmi/@reown/appkit/@reown/appkit-pay": ["@reown/appkit-pay@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-ui": "1.8.16", "@reown/appkit-utils": "1.8.16", "lit": "3.3.0", "valtio": "2.1.7" } }, "sha512-V5M9SZnV00ogMeuQDwd0xY6Fa4+yU9NhmWISt0iiAGpNNtKdF+NWybWFbi2GkGjg4IvlJJBBgBlIZtmlZRq8SQ=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit/@reown/appkit-ui": ["@reown/appkit-ui@1.8.16", "", { "dependencies": { "@phosphor-icons/webcomponents": "2.1.5", "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-wallet": "1.8.16", "lit": "3.3.0", "qrcode": "1.5.3" } }, "sha512-yd9BtyRUk6zAVQcc8W2t5qqXVHJUweiZ7y/tIeuaGDuG8zRWlWQTX6Q2ivBeLI2fZNix7Or90IpnlcdaOCo2Lw=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-scaffold-ui/@reown/appkit-pay": ["@reown/appkit-pay@1.8.16", "", { "dependencies": { "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-ui": "1.8.16", "@reown/appkit-utils": "1.8.16", "lit": "3.3.0", "valtio": "2.1.7" } }, "sha512-V5M9SZnV00ogMeuQDwd0xY6Fa4+yU9NhmWISt0iiAGpNNtKdF+NWybWFbi2GkGjg4IvlJJBBgBlIZtmlZRq8SQ=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-scaffold-ui/@reown/appkit-ui": ["@reown/appkit-ui@1.8.16", "", { "dependencies": { "@phosphor-icons/webcomponents": "2.1.5", "@reown/appkit-common": "1.8.16", "@reown/appkit-controllers": "1.8.16", "@reown/appkit-wallet": "1.8.16", "lit": "3.3.0", "qrcode": "1.5.3" } }, "sha512-yd9BtyRUk6zAVQcc8W2t5qqXVHJUweiZ7y/tIeuaGDuG8zRWlWQTX6Q2ivBeLI2fZNix7Or90IpnlcdaOCo2Lw=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-utils/@walletconnect/logger": ["@walletconnect/logger@3.0.1", "", { "dependencies": { "@walletconnect/safe-json": "^1.0.2", "pino": "10.0.0" } }, "sha512-O8lXGMZO1+e5NtHhBSjsAih/I9KC+1BxNhGNGD+SIWTqWd0zsbT5wJtNnJ+LnSXTRE7XZRxFUlvZgkER3vlhFA=="],
+
+    "@reown/appkit-adapter-wagmi/@reown/appkit-wallet/@walletconnect/logger": ["@walletconnect/logger@3.0.1", "", { "dependencies": { "@walletconnect/safe-json": "^1.0.2", "pino": "10.0.0" } }, "sha512-O8lXGMZO1+e5NtHhBSjsAih/I9KC+1BxNhGNGD+SIWTqWd0zsbT5wJtNnJ+LnSXTRE7XZRxFUlvZgkER3vlhFA=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/logger": ["@walletconnect/logger@3.0.1", "", { "dependencies": { "@walletconnect/safe-json": "^1.0.2", "pino": "10.0.0" } }, "sha512-O8lXGMZO1+e5NtHhBSjsAih/I9KC+1BxNhGNGD+SIWTqWd0zsbT5wJtNnJ+LnSXTRE7XZRxFUlvZgkER3vlhFA=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/sign-client": ["@walletconnect/sign-client@2.23.1", "", { "dependencies": { "@walletconnect/core": "2.23.1", "@walletconnect/events": "1.0.1", "@walletconnect/heartbeat": "1.2.2", "@walletconnect/jsonrpc-utils": "1.0.8", "@walletconnect/logger": "3.0.1", "@walletconnect/time": "1.0.2", "@walletconnect/types": "2.23.1", "@walletconnect/utils": "2.23.1", "events": "3.3.0" } }, "sha512-x0sG8ZuuaOi3G/gYWLppf7nmNItWlV8Yga9Bltb46/Ve6G20nCBis6gcTVVeJOpnmqQ85FISwExqOYPmJ0FQlw=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/types": ["@walletconnect/types@2.23.1", "", { "dependencies": { "@walletconnect/events": "1.0.1", "@walletconnect/heartbeat": "1.2.2", "@walletconnect/jsonrpc-types": "1.0.4", "@walletconnect/keyvaluestorage": "1.1.1", "@walletconnect/logger": "3.0.1", "events": "3.3.0" } }, "sha512-sbWOM9oCuzSbz/187rKWnSB3sy7FCFcbTQYeIJMc9+HTMTG2TUPftPCn8NnkfvmXbIeyLw00Y0KNvXoCV/eIeQ=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils": ["@walletconnect/utils@2.23.1", "", { "dependencies": { "@msgpack/msgpack": "3.1.2", "@noble/ciphers": "1.3.0", "@noble/curves": "1.9.7", "@noble/hashes": "1.8.0", "@scure/base": "1.2.6", "@walletconnect/jsonrpc-utils": "1.0.8", "@walletconnect/keyvaluestorage": "1.1.1", "@walletconnect/logger": "3.0.1", "@walletconnect/relay-api": "1.0.11", "@walletconnect/relay-auth": "1.1.0", "@walletconnect/safe-json": "1.0.2", "@walletconnect/time": "1.0.2", "@walletconnect/types": "2.23.1", "@walletconnect/window-getters": "1.0.1", "@walletconnect/window-metadata": "1.0.1", "blakejs": "1.2.1", "bs58": "6.0.0", "detect-browser": "5.3.0", "ox": "0.9.3", "uint8arrays": "3.1.1" } }, "sha512-J12DadZHIL0KvsUoQuK0rag9jDUy8qu1zwz47xEHl03LrMcgrotQiXvdTQ3uHwAVA4yKLTQB/LEI2JiTIt7X8Q=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/es-toolkit": ["es-toolkit@1.39.3", "", {}, "sha512-Qb/TCFCldgOy8lZ5uC7nLGdqJwSabkQiYQShmw4jyiPk1pZzaYWTwaYKYP7EgLccWYgZocMrtItrwh683voaww=="],
+
     "@solana/accounts/@solana/codecs-strings/@solana/codecs-numbers": ["@solana/codecs-numbers@5.5.1", "", { "dependencies": { "@solana/codecs-core": "5.5.1", "@solana/errors": "5.5.1" }, "peerDependencies": { "typescript": "^5.0.0" }, "optionalPeers": ["typescript"] }, "sha512-rllMIZAHqmtvC0HO/dc/21wDuWaD0B8Ryv8o+YtsICQBuiL/0U4AGwH7Pi5GNFySYk0/crSuwfIqQFtmxNSPFw=="],
 
     "@solana/accounts/@solana/errors/chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
@@ -1913,6 +1947,12 @@
 
     "@metamask/providers/@metamask/rpc-errors/@metamask/utils/uuid": ["uuid@9.0.1", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="],
 
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/sign-client/@walletconnect/core": ["@walletconnect/core@2.23.1", "", { "dependencies": { "@walletconnect/heartbeat": "1.2.2", "@walletconnect/jsonrpc-provider": "1.0.14", "@walletconnect/jsonrpc-types": "1.0.4", "@walletconnect/jsonrpc-utils": "1.0.8", "@walletconnect/jsonrpc-ws-connection": "1.0.16", "@walletconnect/keyvaluestorage": "1.1.1", "@walletconnect/logger": "3.0.1", "@walletconnect/relay-api": "1.0.11", "@walletconnect/relay-auth": "1.1.0", "@walletconnect/safe-json": "1.0.2", "@walletconnect/time": "1.0.2", "@walletconnect/types": "2.23.1", "@walletconnect/utils": "2.23.1", "@walletconnect/window-getters": "1.0.1", "es-toolkit": "1.39.3", "events": "3.3.0", "uint8arrays": "3.1.1" } }, "sha512-fW48PIw41Q/LJW+q0msFogD/OcelkrrDONQMcpGw4C4Y6w+IvFKGEg+7dxGLKWx1g8QuHk/p6C9VEIV/tDsm5A=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils/@msgpack/msgpack": ["@msgpack/msgpack@3.1.2", "", {}, "sha512-JEW4DEtBzfe8HvUYecLU9e6+XJnKDlUAIve8FvPzF3Kzs6Xo/KuZkZJsDH0wJXl/qEZbeeE7edxDNY3kMs39hQ=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils/ox": ["ox@0.9.3", "", { "dependencies": { "@adraffy/ens-normalize": "^1.11.0", "@noble/ciphers": "^1.3.0", "@noble/curves": "1.9.1", "@noble/hashes": "^1.8.0", "@scure/bip32": "^1.7.0", "@scure/bip39": "^1.6.0", "abitype": "^1.0.9", "eventemitter3": "5.0.1" }, "peerDependencies": { "typescript": ">=5.4.0" }, "optionalPeers": ["typescript"] }, "sha512-KzyJP+fPV4uhuuqrTZyok4DC7vFzi7HLUFiUNEmpbyh59htKWkOC98IONC1zgXJPbHAhQgqs6B0Z6StCGhmQvg=="],
+
     "@solana/codecs/@solana/codecs-core/@solana/errors/chalk": ["chalk@5.6.2", "", {}, "sha512-7NzBL0rN6fMUW+f7A6Io4h40qQlG+xGmtMxfbnH/K7TAtt8JQWVQK+6g0UXKMeVJoyV5EkkNsErQ8pVD3bLHbA=="],
 
     "@solana/codecs/@solana/codecs-core/@solana/errors/commander": ["commander@12.1.0", "", {}, "sha512-Vw8qHK3bZM9y/P10u3Vib8o/DdkvA2OtPtZvD871QKjy74Wj1WSKFILMPRPSdUSx5RFK1arlJzEtA4PkFgnbuA=="],
@@ -1968,6 +2008,12 @@
     "@metamask/eth-json-rpc-provider/@metamask/json-rpc-engine/@metamask/rpc-errors/@metamask/utils/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
 
     "@metamask/eth-json-rpc-provider/@metamask/json-rpc-engine/@metamask/rpc-errors/@metamask/utils/uuid": ["uuid@9.0.1", "", { "bin": { "uuid": "dist/bin/uuid" } }, "sha512-b+1eJOlsR9K8HJpow9Ok3fiWOWSIcIzXodvv0rQjVoOVNpWMpxf1wZNpt4y9h10odCNrqnYp1OBzRktckBe3sA=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils/ox/@noble/curves": ["@noble/curves@1.9.1", "", { "dependencies": { "@noble/hashes": "1.8.0" } }, "sha512-k11yZxZg+t+gWvBbIswW0yoJlu8cHOC7dhunwOzoWH/mXGBiYyR4YY6hAEK/3EUs4UpB8la1RfdRpeGsFHkWsA=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils/ox/abitype": ["abitype@1.2.4", "", { "peerDependencies": { "typescript": ">=5.0.4", "zod": "^3.22.0 || ^4.0.0" }, "optionalPeers": ["typescript", "zod"] }, "sha512-dpKH+N27vRjarMVTFFkeY445VTKftzGWpL0FiT7xmVmzQRKazZexzC5uHG0f6XKsVLAuUlndnbGau6lRejClxg=="],
+
+    "@reown/appkit-adapter-wagmi/@walletconnect/universal-provider/@walletconnect/utils/ox/eventemitter3": ["eventemitter3@5.0.1", "", {}, "sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA=="],
 
     "@walletconnect/ethereum-provider/@reown/appkit/@reown/appkit-utils/@walletconnect/logger/pino": ["pino@7.11.0", "", { "dependencies": { "atomic-sleep": "^1.0.0", "fast-redact": "^3.0.0", "on-exit-leak-free": "^0.2.0", "pino-abstract-transport": "v0.5.0", "pino-std-serializers": "^4.0.0", "process-warning": "^1.0.0", "quick-format-unescaped": "^4.0.3", "real-require": "^0.1.0", "safe-stable-stringify": "^2.1.0", "sonic-boom": "^2.2.1", "thread-stream": "^0.15.1" }, "bin": { "pino": "bin.js" } }, "sha512-dMACeu63HtRLmCG8VKdy4cShCPKaYDR4youZqoSWLxl5Gu99HUw8bw75thbPv9Nip+H+QYX8o3ZJbTdVZZ2TVg=="],
 

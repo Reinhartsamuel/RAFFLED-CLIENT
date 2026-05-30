@@ -1,16 +1,26 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useSignMessage, useDisconnect } from 'wagmi'
-import { useAppKitAccount } from '@reown/appkit/react'
+import { useDisconnect } from 'wagmi'
+import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
+import { wagmiConfig } from '../../config/evm.config'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
-  const { address } = useAppKitAccount()
-  const { signMessageAsync } = useSignMessage()
+  const { address: appKitAddress, caipAddress, isConnected: isAppKitConnected } = useAppKitAccount({ namespace: 'eip155' })
+  const appKit = useAppKit()
+  const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
+  const addressRef = useRef<string>(address ?? '')
+
+  // Persist address in a ref since useAppKitAccount loses it during re-renders
+  useEffect(() => {
+    if (address) {
+      addressRef.current = address
+    }
+  }, [address])
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
@@ -83,25 +93,59 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   const handleProceedWithSignature = async () => {
     if (!pendingSignature || !termsAccepted) return
+    if (!addressRef.current) {
+      setSignatureError('No wallet address found. Please reconnect your wallet.')
+      setAuthStatus('error')
+      return
+    }
+
+    const activeConnector = wagmiConfig.connectors.find(c => c.id === 'injected' || c.id === 'io.metamask') ?? wagmiConfig.connectors[0]
+
+    if (!activeConnector) {
+      setSignatureError('No wallet connector available. Please reconnect your wallet.')
+      setAuthStatus('error')
+      return
+    }
 
     setAuthStatus('loading')
     setShowTermsModal(false)
     setSignatureError(null)
 
     try {
-      // Sign using wagmi directly - same as working example
-      const signature = await signMessageAsync({
-        message: pendingSignature.message,
+      const provider = await activeConnector.getProvider()
+
+      // Step 1: Ask MetaMask which account it actually has authorized
+      let accounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
+        method: 'eth_accounts',
       })
 
-      // Verify with backend - use wagmi address
+      if (!accounts || accounts.length === 0) {
+        // No authorized account — need to request one
+        const requestedAccounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
+          method: 'eth_requestAccounts',
+        })
+        if (!requestedAccounts || requestedAccounts.length === 0) {
+          throw new Error('No accounts authorized by wallet')
+        }
+        accounts.push(...requestedAccounts)
+      }
+
+      const authorizedAddress = accounts[0]
+
+      // Step 2: Sign using the account MetaMask actually recognizes
+      const signature = await (provider as { request: (args: { method: string; params: unknown[] }) => Promise<string> }).request({
+        method: 'personal_sign',
+        params: [pendingSignature.message, authorizedAddress],
+      })
+
+      // Verify with backend using the authorized address
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({ 
           message: pendingSignature.message, 
           signature, 
-          address, 
+          address: authorizedAddress,
           chain: 'base',
           nonce: pendingSignature.nonce 
         }),
@@ -343,32 +387,42 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         )}
       </AnimatePresence>
 
-      {/* Signature Error Popup */}
+       {/* Signature Error Popup */}
       <AnimatePresence>
         {signatureError && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-30 max-w-md w-full px-4 pointer-events-none"
+            className="fixed top-4 left-1/2 -translate-x-1/2 z-[200] max-w-md w-full px-4 pointer-events-none"
           >
-            <div className="pointer-events-auto bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 flex items-center gap-4 shadow-2xl">
-              <div className="w-8 h-8 rounded-full bg-[#EF4444]/20 flex items-center justify-center flex-shrink-0">
-                <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+            <div className="pointer-events-auto bg-[#EF4444]/10 border border-[#EF4444]/30 backdrop-blur-xl rounded-lg px-5 py-4 shadow-2xl">
+              <div className="flex items-start gap-4">
+                <div className="w-8 h-8 rounded-full bg-[#EF4444]/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-[#EF4444]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[#EF4444] font-medium text-sm">{signatureError}</p>
+                  {signatureError.includes('not connected') && (
+                    <button
+                      onClick={() => { setSignatureError(null); appKit.open() }}
+                      className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#FFB800] hover:text-[#FFCC33] transition-colors"
+                    >
+                      → Connect Wallet
+                    </button>
+                  )}
+                </div>
+                <button
+                  onClick={() => setSignatureError(null)}
+                  className="opacity-60 hover:opacity-100 transition-opacity text-[#EF4444] flex-shrink-0"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
               </div>
-              <div className="flex-1">
-                <p className="text-[#EF4444] font-medium text-sm">{signatureError}</p>
-              </div>
-              <button
-                onClick={() => setSignatureError(null)}
-                className="opacity-60 hover:opacity-100 transition-opacity text-[#EF4444]"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
             </div>
           </motion.div>
         )}

@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
-import { usePublicClient, useAccount, useChainId } from 'wagmi'
+import { usePublicClient, useAccount,  } from 'wagmi'
 import { useWaitForTransactionReceipt } from 'wagmi'
 import { ContractFunctionRevertedError } from 'viem'
 import { motion, AnimatePresence } from 'framer-motion'
 import { overlayVariants, modalVariants } from '../../utils/animations'
-import { getRaffleManagerAddress } from '../../config/evm.config'
 import { useEnterFreeRaffle } from '../../hooks/useRaffleContract'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../../config/index'
 
@@ -46,19 +45,18 @@ export function FreeRaffleModal({
   onClose,
   onSuccess,
 }: FreeRaffleModalProps) {
-  const { address, isConnected, status } = useAccount()
+  const { address, isConnected } = useAccount()
   const publicClient = usePublicClient()
-  const chainId = useChainId()
-  const raffleManagerAddress = getRaffleManagerAddress(chainId)
 
   const [twitterUsername, setTwitterUsername] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [currentStep, setCurrentStep] = useState<'idle' | 'submitting-task' | 'entering-raffle'>('idle')
+  const [currentStep, setCurrentStep] = useState<'idle' | 'checking-eligibility' | 'eligible' | 'not-eligible' | 'entering-raffle'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [isRaffleCreator, setIsRaffleCreator] = useState(false)
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
   const [taskData, setTaskData] = useState<TaskMyResponse | null>(null)
   const [taskLoading, setTaskLoading] = useState(true)
+  const [signature, setSignature] = useState<string | null>(null)
 
   const remainingTickets = maxTickets - ticketsSold
 
@@ -113,17 +111,7 @@ export function FreeRaffleModal({
     }
   }, [isSuccess, enterRaffleHash, onSuccess])
 
-  const handleEnterRaffle = async () => {
-    if (!address || !isConnected || !publicClient) {
-      setError('Wallet not connected. Please connect your wallet and try again.')
-      return
-    }
-
-    if (isRaffleCreator) {
-      setError("You're the host — hosts can't enter their own raffle.")
-      return
-    }
-
+  const checkEligibility = async () => {
     if (!twitterUsername.trim()) {
       setError('Please enter your X (Twitter) username.')
       return
@@ -133,11 +121,10 @@ export function FreeRaffleModal({
 
     try {
       setIsSubmitting(true)
+      setCurrentStep('checking-eligibility')
 
-      // Step 1: Submit task to backend with Twitter username
-      setCurrentStep('submitting-task')
       const authToken = getAuthToken()
-      const taskSubmitRes = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task-submit`, {
+      const taskSubmitRes = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
         method: 'POST',
         headers: {
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -151,23 +138,60 @@ export function FreeRaffleModal({
 
       if (!taskSubmitRes.ok) {
         const errorData = await taskSubmitRes.json().catch(() => null)
-        throw new Error(errorData?.message || 'Failed to submit task. Please check your X username.')
+        const errorMsg = errorData?.message || 'Not eligible. Please check your X username.'
+        throw new Error(errorMsg)
       }
 
       const taskSubmitData = await taskSubmitRes.json()
-      const signature = taskSubmitData.signature
+      const sig = taskSubmitData.signature
 
-      if (!signature) {
+      if (!sig) {
         throw new Error('No signature received from backend.')
       }
 
-      // Re-check wallet connection before sending transaction (connector may have disconnected during API call)
+      setSignature(sig)
+      setTaskData(taskSubmitData.data || taskSubmitData)
+      setCurrentStep('eligible')
+    } catch (err) {
+      console.error('Eligibility check failed:', err)
+      let msg = 'Eligibility check failed.'
+      if (err instanceof Error) {
+        msg = err.message
+      }
+      setError(msg)
+      setCurrentStep('not-eligible')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleEnterRaffle = async () => {
+    if (!address || !isConnected || !publicClient) {
+      setError('Wallet not connected. Please connect your wallet and try again.')
+      return
+    }
+
+    if (isRaffleCreator) {
+      setError("You're the host — hosts can't enter their own raffle.")
+      return
+    }
+
+    if (currentStep !== 'eligible' || !signature) {
+      setError('Please check your eligibility first.')
+      return
+    }
+
+    setError(null)
+
+    try {
+      setIsSubmitting(true)
+      setCurrentStep('entering-raffle')
+
+      // Re-check wallet connection before sending transaction
       if (!isConnected) {
         throw new Error('Wallet disconnected. Please reconnect and try again.')
       }
 
-      // Step 2: Call enterFreeRaffle on-chain
-      setCurrentStep('entering-raffle')
       const hash = await enterFreeRaffle({ raffleId, signature })
       setEnterRaffleHash(hash as `0x${string}`)
     } catch (err) {
@@ -178,7 +202,6 @@ export function FreeRaffleModal({
         msg = CONTRACT_ERROR_MESSAGES[errorName ?? ''] ?? `Contract error: ${errorName ?? 'unknown'}`
       } else if (err instanceof Error) {
         const viem = err as Error & { shortMessage?: string }
-        // Handle connector-specific errors
         if (err.message.includes('Connector not connected') || err.message.includes('signature denied')) {
           msg = 'Wallet connection lost. Please reconnect your wallet and try again.'
         } else {
@@ -187,21 +210,23 @@ export function FreeRaffleModal({
       }
       setError(msg)
       setIsSubmitting(false)
-      setCurrentStep('idle')
+      setCurrentStep('eligible')
     }
   }
 
   const getButtonLabel = () => {
     if (isRaffleCreator) return 'Your Raffle'
-    if (currentStep === 'submitting-task') return 'Validating X Account...'
+    if (currentStep === 'checking-eligibility') return 'Checking Eligibility...'
+    if (currentStep === 'not-eligible') return 'Not Eligible'
     if (currentStep === 'entering-raffle' || isEnterPending) return 'Entering Raffle...'
     if (isConfirming) return 'Confirming...'
     if (isSuccess) return 'Success!'
-    return 'Enter Free Raffle'
+    if (currentStep === 'eligible') return 'Enter Free Raffle'
+    return 'Check Eligibility'
   }
 
   const isBusy = isSubmitting || isEnterPending || isConfirming
-  const isDisabled = isBusy || isSuccess || isRaffleCreator
+  const isDisabled = isBusy || isSuccess || isRaffleCreator || currentStep === 'not-eligible'
 
   return (
     <AnimatePresence>
@@ -283,7 +308,13 @@ export function FreeRaffleModal({
                 <input
                   type="text"
                   value={twitterUsername.replace(/^@/, '')}
-                  onChange={(e) => setTwitterUsername(e.target.value.replace(/^@/, ''))}
+                  onChange={(e) => {
+                    setTwitterUsername(e.target.value.replace(/^@/, ''))
+                    if (currentStep === 'eligible' || currentStep === 'not-eligible') {
+                      setCurrentStep('idle')
+                      setSignature(null)
+                    }
+                  }}
                   disabled={isRaffleCreator || taskLoading}
                   placeholder="username"
                   className="w-full bg-[#111111] border border-[#2a2a2a] rounded-lg py-3 pl-8 pr-4 font-mono text-sm text-[#F5F5F5] focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 disabled:cursor-not-allowed placeholder:text-[#333333]"
@@ -309,11 +340,15 @@ export function FreeRaffleModal({
               className={`w-full flex items-center justify-between px-5 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${
                 isSuccess
                   ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 cursor-not-allowed'
+                  : currentStep === 'not-eligible'
+                  ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30 cursor-not-allowed'
                   : isDisabled
                   ? 'bg-[#111111] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
-                  : 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)]'
+                  : currentStep === 'eligible'
+                  ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)]'
+                  : 'bg-[#555555] text-[#F5F5F5] hover:bg-[#666666]'
               }`}
-              onClick={handleEnterRaffle}
+              onClick={currentStep === 'eligible' ? handleEnterRaffle : checkEligibility}
               disabled={isDisabled}
             >
               <span>{getButtonLabel()}</span>
@@ -321,9 +356,17 @@ export function FreeRaffleModal({
                 <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
                   <span className="text-xs font-bold">Change Wallet</span>
                 </div>
-              ) : (
+              ) : currentStep === 'eligible' ? (
                 <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
                   <span className="text-xs font-bold">FREE</span>
+                </div>
+              ) : currentStep === 'not-eligible' ? (
+                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
+                  <span className="text-xs font-bold">✕</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
+                  <span className="text-xs font-bold">CHECK</span>
                 </div>
               )}
             </button>
@@ -340,6 +383,24 @@ export function FreeRaffleModal({
               <div className="py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center">
                 <span className="font-mono text-xs text-[#22C55E]">
                   ✓ Successfully entered the raffle!
+                </span>
+              </div>
+            )}
+
+            {/* Eligible info */}
+            {currentStep === 'eligible' && !isSuccess && (
+              <div className="py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center">
+                <span className="font-mono text-xs text-[#22C55E]">
+                  ✓ You're eligible! Click the button above to enter the raffle.
+                </span>
+              </div>
+            )}
+
+            {/* Not eligible info */}
+            {currentStep === 'not-eligible' && (
+              <div className="py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center">
+                <span className="font-mono text-xs text-[#EF4444]">
+                  ✕ Not eligible. Try a different X username.
                 </span>
               </div>
             )}
