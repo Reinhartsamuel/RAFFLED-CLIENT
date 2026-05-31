@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect } from 'wagmi'
+import { useDisconnect, useAccount } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
@@ -10,6 +10,7 @@ import { WalletConnect } from './WalletConnect'
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
+  const { connector: activeConnector } = useAccount()
   const { address: appKitAddress, caipAddress, isConnected: isAppKitConnected } = useAppKitAccount({ namespace: 'eip155' })
   const appKit = useAppKit()
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
@@ -98,8 +99,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setAuthStatus('error')
       return
     }
-
-    const activeConnector = wagmiConfig.connectors.find(c => c.id === 'injected' || c.id === 'io.metamask') ?? wagmiConfig.connectors[0]
 
     if (!activeConnector) {
       setSignatureError('No wallet connector available. Please reconnect your wallet.')
