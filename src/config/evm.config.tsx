@@ -23,6 +23,9 @@ export const CONTRACTS = {
 // ──────────────────────────────────────────────────────────────────────
 
 const projectId = import.meta.env.VITE_PROJECT_ID || 'b56e18d47c72ab683b10814fe9495694'
+const baseSepoliaRpcUrl = import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
+const baseMainnetRpcUrl = import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org'
+
 
 if (!projectId) {
   throw new Error('Project ID is not defined')
@@ -64,6 +67,18 @@ createAppKit({
     '--w3m-font-family': "'JetBrains Mono', monospace",
   },
   themeMode: 'dark',
+    customRpcUrls: {
+    'eip155:84532': [
+      {
+        url: baseSepoliaRpcUrl
+      }
+    ],
+    'eip155:8453': [
+      {
+        url: baseMainnetRpcUrl
+      }
+    ]
+  }
 })
 
 // ──────────────────────────────────────────────────────────────────────
