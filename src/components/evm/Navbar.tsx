@@ -13,6 +13,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const { connector: activeConnector } = useAccount()
   const { address: appKitAddress, caipAddress, isConnected: isAppKitConnected } = useAppKitAccount({ namespace: 'eip155' })
   const appKit = useAppKit()
+  const {open} = useAppKit()
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
   const addressRef = useRef<string>(address ?? '')
 
@@ -20,10 +21,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   useEffect(() => {
     if (address) {
       addressRef.current = address
-    } else {
-      // programmatically connect wallet
-      appKit.open()
     }
+
+    if (!address && pendingSignature) appKit.open() // Prompt connect if we lost the address during auth
   }, [address])
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
@@ -117,9 +117,10 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       const provider = await activeConnector.getProvider()
 
       // Step 1: Ask MetaMask which account it actually has authorized
-      let accounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
+      const accounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
         method: 'eth_accounts',
       })
+      console.log('Accounts from provider:', accounts)
 
       if (!accounts || accounts.length === 0) {
         // No authorized account — need to request one
