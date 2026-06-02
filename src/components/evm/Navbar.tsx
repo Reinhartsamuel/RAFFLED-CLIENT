@@ -20,6 +20,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   useEffect(() => {
     if (address) {
       addressRef.current = address
+    } else {
+      // programmatically connect wallet
+      appKit.open()
     }
   }, [address])
 
