@@ -75,7 +75,7 @@ export function FreeRaffleModal({
 }: FreeRaffleModalProps) {
   const { address, isConnected } = useAccount()
   const publicClient = usePublicClient()
-  const DEFAULT_TASKS= [
+  const DEFAULT_TASKS: DefaultTask[] = [
   {
     id: 1,
     type: 'follow',
@@ -116,7 +116,7 @@ export function FreeRaffleModal({
   const [isRaffleCreator, setIsRaffleCreator] = useState(false)
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
   const [taskLoading, setTaskLoading] = useState(true)
-  const [tasks, setTasks] = useState(DEFAULT_TASKS)
+  const [tasks, setTasks] = useState<DefaultTask[]>(DEFAULT_TASKS)
   const [tasksCompleted, setTasksCompleted] = useState(0)
   const [tasksTotal, setTasksTotal] = useState(4)
   const [twitterUsername, setTwitterUsername] = useState('')
