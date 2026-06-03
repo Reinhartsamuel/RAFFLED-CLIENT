@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { usePublicClient, useAccount,  } from 'wagmi'
+import { usePublicClient, useAccount } from 'wagmi'
 import { useWaitForTransactionReceipt } from 'wagmi'
 import { ContractFunctionRevertedError } from 'viem'
 import { motion, AnimatePresence } from 'framer-motion'
-import { overlayVariants, modalVariants } from '../../utils/animations'
+import { overlayVariants, modalVariants, fadeInUp, staggerContainer, staggerItem } from '../../utils/animations'
 import { useEnterFreeRaffle } from '../../hooks/useRaffleContract'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../../config/index'
+import { TaskItem } from '../../interfaces/TaskItem'
 
 const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
   HostCannotEnter: "You're the raffle host — you can't enter your own raffle.",
-  MaxCapReached: 'This raffle is sold out.',
+  MaxCapReached: 'This raffle is Sold out.',
   RaffleNotOpen: 'This raffle is no longer open.',
   InvalidParams: 'Invalid parameters sent to the contract.',
   ReentrancyGuardReentrantCall: 'Reentrant call detected — please try again.',
@@ -21,42 +22,107 @@ interface FreeRaffleModalProps {
   raffleId: number
   prizeImage?: string
   prizeTitle: string
+  prizeAmount?: string
+  prizeSymbol?: string
   maxTickets: number
   ticketsSold: number
   creatorAddress?: string
+  task?: TaskItem
   onClose: () => void
   onSuccess?: () => void
+}
+
+interface DefaultTask {
+  id: number
+  type: 'follow' | 'repost' | 'share' | 'reply'
+  label: string
+  description: string
+  url: string
+  verified: boolean
 }
 
 interface TaskMyResponse {
   task_id?: number
   twitter_username?: string | null
   already_entered?: boolean
+  tasks?: Array<{
+    task_type?: string
+    verified?: boolean
+    url?: string
+    task_id?: number
+  }>
+  tasks_completed?: number
+  tasks_total?: number
+  signature?: string
+  data?: Record<string, unknown>
   [key: string]: unknown
 }
+
+
 
 export function FreeRaffleModal({
   raffleId,
   prizeImage,
   prizeTitle,
+  prizeAmount,
+  prizeSymbol,
   maxTickets,
   ticketsSold,
   creatorAddress,
+  task,
   onClose,
   onSuccess,
 }: FreeRaffleModalProps) {
   const { address, isConnected } = useAccount()
   const publicClient = usePublicClient()
+  const DEFAULT_TASKS= [
+  {
+    id: 1,
+    type: 'follow',
+    label: 'FOLLOW @RAFFLED',
+    description: 'Link your X account and follow',
+    url: 'https://x.com/intent/follow?screen_name=useRaffled',
+    verified: false,
+  },
+  {
+    id: 2,
+    type: 'repost',
+    label: 'REPOST RAFFLE',
+    description: 'Share the raffle to your timeline',
+    url: `https://x.com/intent/retweet?tweet_id=${task?.tweet_id || ''}`,
+    verified: false,
+  },
+  {
+    id: 3,
+    type: 'share',
+    label: 'SHARE WITH FRIENDS',
+    description: 'Send the link to 3 Discord servers',
+    url: 'https://x.com/intent/tweet?text=Check%20out%20this%20raffle%20on%20Raffled!%20%23Raffled',
+    verified: false,
+  },
+  {
+    id: 4,
+    type: 'reply',
+    label: 'REPLY TO THREAD',
+    description: 'Comment with your Wallet Address',
+    url: `https://x.com/intent/tweet?in_reply_to=${task?.tweet_id || ''}&text=I'm joining%20the%20raffle!%20My%20wallet%20address%20is%20${address || ''}%20%23Raffled`,
+    verified: false,
+  },
+]
 
-  const [twitterUsername, setTwitterUsername] = useState('')
+
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [currentStep, setCurrentStep] = useState<'idle' | 'checking-eligibility' | 'eligible' | 'not-eligible' | 'entering-raffle'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [isRaffleCreator, setIsRaffleCreator] = useState(false)
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
-  const [taskData, setTaskData] = useState<TaskMyResponse | null>(null)
   const [taskLoading, setTaskLoading] = useState(true)
+  const [tasks, setTasks] = useState(DEFAULT_TASKS)
+  const [tasksCompleted, setTasksCompleted] = useState(0)
+  const [tasksTotal, setTasksTotal] = useState(4)
+  const [twitterUsername, setTwitterUsername] = useState('')
   const [signature, setSignature] = useState<string | null>(null)
+  const [allVerified, setAllVerified] = useState(false)
+  const [verifyingTaskId, setVerifyingTaskId] = useState<number | null>(null)
 
   const remainingTickets = maxTickets - ticketsSold
 
@@ -86,13 +152,46 @@ export function FreeRaffleModal({
           },
         })
         if (res.ok) {
-          const data = await res.json()
+          const data: TaskMyResponse = await res.json()
           console.log('[FreeRaffle] /task/my response:', data)
           console.log('[FreeRaffle] free_raffle:', true)
-          setTaskData(data)
+
           if (data.twitter_username) {
             setTwitterUsername(data.twitter_username)
           }
+
+          if (data.tasks && Array.isArray(data.tasks)) {
+            const mappedTasks: DefaultTask[] = data.tasks.map((t, idx) => ({
+              id: idx + 1,
+              type: (t.task_type || 'share') as DefaultTask['type'],
+              label: getTaskLabel(t.task_type || ''),
+              description: getTaskDescription(t.task_type || ''),
+              url: getTaskUrl(t.task_type || '', raffleId, data.twitter_username || ''),
+              verified: t.verified || false,
+            }))
+            setTasks(mappedTasks)
+            setTasksTotal(mappedTasks.length)
+          }
+
+          if (typeof data.tasks_completed === 'number') {
+            setTasksCompleted(data.tasks_completed)
+          } else {
+            const verifiedCount = tasks.filter((t) => t.verified).length
+            setTasksCompleted(verifiedCount)
+          }
+
+          if (data.tasks_total) {
+            setTasksTotal(data.tasks_total)
+          }
+
+          if (data.signature) {
+            setSignature(data.signature)
+          }
+
+          const finalTasks = data.tasks
+            ? data.tasks.map((t) => t.verified)
+            : tasks.map((t) => t.verified)
+          setAllVerified(finalTasks.length > 0 && finalTasks.every(Boolean))
         }
       } catch (err) {
         console.error('Error fetching task/my:', err)
@@ -104,27 +203,47 @@ export function FreeRaffleModal({
   }, [raffleId])
 
   useEffect(() => {
+    const verifiedCount = tasks.filter((t) => t.verified).length
+    setTasksCompleted(verifiedCount)
+    setAllVerified(verifiedCount === tasksTotal && tasksTotal > 0)
+  }, [tasks, tasksTotal])
+
+  useEffect(() => {
     if (isSuccess && enterRaffleHash) {
       setIsSubmitting(false)
-      setCurrentStep('idle')
       onSuccess?.()
     }
   }, [isSuccess, enterRaffleHash, onSuccess])
 
-  const checkEligibility = async () => {
+  const handleVerifyTask = async (task: DefaultTask) => {
+    if (task.verified) return
+
+    setVerifyingTaskId(task.id)
+    setError(null)
+
+    const cleanUrl = task.url.replace(/^https?:\/\/x\.com/, 'https://x.com')
+    window.open(cleanUrl, '_blank', 'noopener,noreferrer')
+
     if (!twitterUsername.trim()) {
-      setError('Please enter your X (Twitter) username.')
+      setError('Please enter your X (Twitter) username first.')
+      setVerifyingTaskId(null)
       return
     }
 
-    setError(null)
+    // Optimistically mark task as done after 3 seconds
+    const timer = setTimeout(() => {
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === task.id ? { ...t, verified: true } : t
+        )
+      )
+      setVerifyingTaskId(null)
+    }, 3000)
 
+    // Try backend verification in background (non-blocking)
     try {
-      setIsSubmitting(true)
-      setCurrentStep('checking-eligibility')
-
       const authToken = getAuthToken()
-      const taskSubmitRes = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
+      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
         method: 'POST',
         headers: {
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -133,36 +252,22 @@ export function FreeRaffleModal({
         },
         body: JSON.stringify({
           twitter_username: twitterUsername.trim(),
+          task_type: task.type,
         }),
       })
 
-      if (!taskSubmitRes.ok) {
-        const errorData = await taskSubmitRes.json().catch(() => null)
-        const errorMsg = errorData?.message || 'Not eligible. Please check your X username.'
-        throw new Error(errorMsg)
+      if (res.ok) {
+        const data = await res.json()
+        console.log('[FreeRaffle] task/submit response:', data)
+        if (data.signature) {
+          setSignature(data.signature)
+        }
       }
-
-      const taskSubmitData = await taskSubmitRes.json()
-      const sig = taskSubmitData.signature
-
-      if (!sig) {
-        throw new Error('No signature received from backend.')
-      }
-
-      setSignature(sig)
-      setTaskData(taskSubmitData.data || taskSubmitData)
-      setCurrentStep('eligible')
     } catch (err) {
-      console.error('Eligibility check failed:', err)
-      let msg = 'Eligibility check failed.'
-      if (err instanceof Error) {
-        msg = err.message
-      }
-      setError(msg)
-      setCurrentStep('not-eligible')
-    } finally {
-      setIsSubmitting(false)
+      console.error('Task verification failed:', err)
     }
+
+    return () => clearTimeout(timer)
   }
 
   const handleEnterRaffle = async () => {
@@ -176,8 +281,8 @@ export function FreeRaffleModal({
       return
     }
 
-    if (currentStep !== 'eligible' || !signature) {
-      setError('Please check your eligibility first.')
+    if (!allVerified) {
+      setError('Please complete all tasks to enter the raffle.')
       return
     }
 
@@ -185,14 +290,12 @@ export function FreeRaffleModal({
 
     try {
       setIsSubmitting(true)
-      setCurrentStep('entering-raffle')
 
-      // Re-check wallet connection before sending transaction
       if (!isConnected) {
-        throw new Error('Wallet disconnected. Please reconnect and try again.')
+        throw new Error('Wallet disconnected. Please reconnect your wallet and try again.')
       }
 
-      const hash = await enterFreeRaffle({ raffleId, signature })
+      const hash = await enterFreeRaffle({ raffleId, signature: signature || '' })
       setEnterRaffleHash(hash as `0x${string}`)
     } catch (err) {
       console.error('Free raffle entry failed:', err)
@@ -210,28 +313,14 @@ export function FreeRaffleModal({
       }
       setError(msg)
       setIsSubmitting(false)
-      setCurrentStep('eligible')
     }
   }
 
-  const getButtonLabel = () => {
-    if (isRaffleCreator) return 'Your Raffle'
-    if (currentStep === 'checking-eligibility') return 'Checking Eligibility...'
-    if (currentStep === 'not-eligible') return 'Not Eligible'
-    if (currentStep === 'entering-raffle' || isEnterPending) return 'Entering Raffle...'
-    if (isConfirming) return 'Confirming...'
-    if (isSuccess) return 'Success!'
-    if (currentStep === 'eligible') return 'Enter Free Raffle'
-    return 'Check Eligibility'
-  }
-
-  const isBusy = isSubmitting || isEnterPending || isConfirming
-  const isDisabled = isBusy || isSuccess || isRaffleCreator || currentStep === 'not-eligible'
 
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4"
         variants={overlayVariants}
         initial="initial"
         animate="animate"
@@ -239,67 +328,139 @@ export function FreeRaffleModal({
         onClick={onClose}
       >
         <motion.div
-          className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl max-w-md w-full overflow-hidden shadow-[0_25px_50px_rgba(0,0,0,0.8)]"
+          className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto lg:overflow-hidden shadow-[0_25px_50px_rgba(0,0,0,0.8)] flex flex-col lg:flex-row"
           variants={modalVariants}
           initial="initial"
           animate="animate"
           exit="exit"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-[#1f1f1f]">
-            <h2 className="font-mono font-bold text-sm uppercase tracking-wider text-[#F5F5F5]">
-              Free Raffle Entry
-            </h2>
-            <button
-              className="w-8 h-8 flex items-center justify-center rounded-md text-[#555555] hover:text-[#F5F5F5] hover:bg-[#1a1a1a] transition-all text-lg"
-              onClick={onClose}
-            >
-              ✕
-            </button>
-          </div>
+          {/* Left Panel */}
+          <div className="lg:w-5/12 w-full bg-gradient-to-b from-[#0a0a0a] to-[#050505] border-b lg:border-b-0 lg:border-r border-[#1f1f1f] p-4 lg:p-8 flex flex-col relative shrink-0">
+            {/* Golden glow behind image */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 lg:w-64 lg:h-64 bg-[#FFB800]/8 rounded-full blur-[60px] lg:blur-[80px] pointer-events-none" />
 
-          <div className="p-6 space-y-4">
-            {/* Prize Image */}
-            <div className="w-full aspect-square rounded-xl border border-[#1f1f1f] overflow-hidden bg-[#111111]">
-              {prizeImage ? (
-                <img src={prizeImage} alt={prizeTitle} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="font-mono text-xs text-[#333333]">No Image</span>
-                </div>
-              )}
-            </div>
+            {/* Live Protocol Access Pill */}
+            <div className="relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#FFB800]/10 border border-[#FFB800]/25 mb-4 lg:mb-6">
+                <span className="w-2 h-2 rounded-full bg-[#FFB800] animate-pulse" />
+                <span className="font-mono text-[8px] lg:text-[9px] font-bold uppercase tracking-widest text-[#FFB800]">
+                  LIVE PROTOCOL ACCESS
+                </span>
+              </div>
 
-            {/* Prize Title */}
-            <div className="text-center">
-              <h3 className="font-sans font-semibold text-base text-[#F5F5F5]">{prizeTitle}</h3>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#333333] mt-0.5">
-                Campaign Prize
+              {/* Header */}
+              <h2 className="font-sans font-bold text-2xl lg:text-4xl text-[#F5F5F5] mb-1 lg:mb-2 tracking-tight">
+                FREE ENTRY
+              </h2>
+              <p className="font-mono text-[8px] lg:text-[10px] uppercase tracking-widest text-[#555555]">
+                AUTHORIZATION LEVEL:{' '}
+                <span className="text-[#FFB800]">ZERO COST</span>
               </p>
             </div>
 
-            {/* Info Banner */}
-            <div className="py-2.5 px-4 rounded-lg bg-[#FFB800]/08 border border-[#FFB800]/25">
-              <span className="font-mono text-xs text-[#FFB800]">
-                Complete the task below to enter this free raffle — no payment required!
-              </span>
+            {/* Prize Image with Glow */}
+            <div className="relative z-10 flex items-center justify-center my-4 lg:my-8 lg:flex-1">
+              <div className="relative w-full max-w-[180px] lg:max-w-[280px] mx-auto">
+                {/* Outer glow ring */}
+                <div className="absolute inset-0 rounded-xl bg-[#FFB800]/5 blur-xl" />
+
+                {/* Image container */}
+                <div className="relative w-full aspect-square rounded-xl border border-[#1f1f1f] overflow-hidden bg-[#111111]">
+                  {prizeImage ? (
+                    <img
+                      src={prizeImage}
+                      alt={prizeTitle}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <span className="font-mono text-xs text-[#333333]">No Image</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Prize Value Badge */}
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 bg-[#0a0a0a] border border-[#FFB800]/30 rounded-lg px-3 lg:px-4 py-2 lg:py-2.5 text-center">
+                  <p className="font-mono font-bold text-base lg:text-lg text-[#FFB800] leading-none">
+                    {prizeAmount || '1,000'}
+                  </p>
+                  <p className="font-mono text-[10px] lg:text-xs text-[#FFB800]/70 uppercase mt-0.5">
+                    {prizeSymbol || 'USDC'}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            {/* Creator notice */}
-            {isRaffleCreator && (
-              <div className="py-2.5 px-4 rounded-lg bg-[#FFB800]/08 border border-[#FFB800]/25 flex items-center gap-2">
-                <span className="text-[#FFB800] text-sm">🎪</span>
-                <span className="font-mono text-xs text-[#FFB800]">
-                  You created this raffle — Raffle hosts cannot enter their own raffle.
-                </span>
+            {/* Availability Status */}
+            <div className="relative z-10 space-y-2 lg:space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-mono text-[8px] lg:text-[9px] uppercase tracking-widest text-[#555555]">
+                    AVAILABILITY STATUS
+                  </p>
+                  <p className="font-mono text-base lg:text-lg font-bold text-[#F5F5F5] mt-0.5 lg:mt-1">
+                    {remainingTickets}{' '}
+                    <span className="text-[#555555]">/ {maxTickets}</span>
+                  </p>
+                </div>
+                <div className="text-right">
+                  {remainingTickets <= maxTickets * 0.25 && (
+                    <p className="font-mono text-[8px] lg:text-[9px] uppercase tracking-widest text-[#EF4444]">
+                      CLOSING SOON
+                    </p>
+                  )}
+                  <p className="font-mono text-[9px] lg:text-[10px] text-[#555555] mt-0.5 lg:mt-1">
+                    LIMIT: 1 PER WALLET
+                  </p>
+                </div>
               </div>
-            )}
+
+              {/* Progress Bar */}
+              <div className="w-full h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#FFB800] to-[#FFCC33] rounded-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${((maxTickets - remainingTickets) / maxTickets) * 100}%` }}
+                  transition={{ duration: 0.8, ease: 'easeOut' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Panel */}
+          <div className="w-full lg:w-7/12 flex flex-col">
+            <div className="p-4 lg:p-8 flex flex-col min-h-full">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="font-sans font-bold text-xl text-[#F5F5F5] tracking-tight">
+                    ENTRY SEQUENCE
+                  </h3>
+                  <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-1">
+                    COMPLETE ALL PROTOCOLS TO VERIFY ELIGIBILITY
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  {/* Step Counter */}
+                  <div className="font-mono text-2xl font-bold">
+                    <span className="text-[#FFB800]">{String(tasksCompleted).padStart(2, '0')}</span>
+                    <span className="text-[#333333]">/</span>
+                    <span className="text-[#555555]">{String(tasksTotal).padStart(2, '0')}</span>
+                  </div>
+                  <button
+                    className="w-8 h-8 flex items-center justify-center rounded-md text-[#555555] hover:text-[#F5F5F5] hover:bg-[#1a1a1a] transition-all text-lg"
+                    onClick={onClose}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
 
             {/* Twitter Username Input */}
-            <div className="space-y-2">
-              <label className="font-mono text-[10px] uppercase tracking-widest text-[#555555]">
-                X (Twitter) Username
+            <div className="mb-6 space-y-2">
+              <label className="font-mono text-[9px] uppercase tracking-widest text-[#555555]">
+                X (Twitter) Username — Required for verification
               </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555555] font-mono text-sm">
@@ -310,105 +471,240 @@ export function FreeRaffleModal({
                   value={twitterUsername.replace(/^@/, '')}
                   onChange={(e) => {
                     setTwitterUsername(e.target.value.replace(/^@/, ''))
-                    if (currentStep === 'eligible' || currentStep === 'not-eligible') {
-                      setCurrentStep('idle')
-                      setSignature(null)
-                    }
                   }}
                   disabled={isRaffleCreator || taskLoading}
                   placeholder="username"
-                  className="w-full bg-[#111111] border border-[#2a2a2a] rounded-lg py-3 pl-8 pr-4 font-mono text-sm text-[#F5F5F5] focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 disabled:cursor-not-allowed placeholder:text-[#333333]"
+                  className="w-full bg-[#111111] border border-[#2a2a2a] rounded-lg py-2.5 pl-8 pr-4 font-mono text-sm text-[#F5F5F5] focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 disabled:cursor-not-allowed placeholder:text-[#333333]"
                 />
               </div>
-              <p className="font-mono text-[9px] text-[#333333]">
-                Enter your X username to validate your entry
-              </p>
             </div>
 
-            {/* Available Entries */}
-            <div className="flex items-center justify-between px-4 py-3 rounded-lg bg-[#111111] border border-[#1f1f1f]">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#555555]">
-                Available Spots
-              </span>
-              <span className="font-mono text-sm font-semibold text-[#F5F5F5]">
-                {remainingTickets} <span className="text-[#555555]">/ {maxTickets}</span>
-              </span>
-            </div>
+            {/* Task List */}
+            <motion.div
+              className="space-y-3 flex-1 mb-6"
+              variants={staggerContainer}
+            >
+              {tasks.map((task) => {
+                const isVerifying = verifyingTaskId === task.id
+                const isDone = task.verified
 
-            {/* Entry Button */}
+                return (
+                  <motion.div
+                    key={task.id}
+                    variants={fadeInUp}
+                    className={`relative flex items-center justify-between px-4 py-3.5 rounded-lg border transition-all duration-500 overflow-hidden ${
+                      isDone
+                        ? 'bg-[#22C55E]/05 border-[#22C55E]/20'
+                        : isVerifying
+                        ? 'bg-[#FFB800]/05 border-[#FFB800]/20'
+                        : 'bg-[#111111]/50 border-[#1f1f1f] hover:border-[#2a2a2a]'
+                    }`}
+                  >
+                    {/* Blur overlay during verification */}
+                    {isVerifying && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10"
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-[#FFB800] border-t-transparent rounded-full animate-spin" />
+                          <span className="font-mono text-[10px] text-[#FFB800] font-bold uppercase tracking-wider">
+                            Verifying...
+                          </span>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* Checkmark animation overlay */}
+                    {isDone && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
+                      >
+                        <div className="w-6 h-6 bg-[#22C55E] rounded-full flex items-center justify-center">
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ delay: 0.1, type: 'spring', stiffness: 400 }}
+                            className="text-black text-xs font-bold"
+                          >
+                            ✓
+                          </motion.span>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    <div className={`flex items-center gap-4 transition-all duration-300 ${isVerifying ? 'opacity-30 blur-[2px]' : ''}`}>
+                      {/* Task Number */}
+                      <span
+                        className={`font-mono text-sm font-bold ${
+                          isDone ? 'text-[#22C55E]' : 'text-[#333333]'
+                        }`}
+                      >
+                        {String(task.id).padStart(2, '0')}
+                      </span>
+
+                      {/* Task Info */}
+                      <div>
+                        <p
+                          className={`font-mono text-xs font-bold uppercase tracking-wider ${
+                            isDone ? 'text-[#22C55E]' : 'text-[#F5F5F5]'
+                          }`}
+                        >
+                          {task.label}
+                        </p>
+                        <p className="font-mono text-[10px] text-[#555555] mt-0.5">
+                          {task.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Verify Button */}
+                    {!isDone && (
+                      <button
+                        className={`font-mono text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-all relative z-20 ${
+                          isVerifying
+                            ? 'bg-[#FFB800]/10 text-[#FFB800]/50 cursor-wait'
+                            : twitterUsername.trim()
+                            ? 'bg-[#FFB800]/10 text-[#FFB800] hover:bg-[#FFB800]/20 border border-[#FFB800]/25'
+                            : 'bg-[#1a1a1a] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
+                        }`}
+                        onClick={() => handleVerifyTask(task)}
+                        disabled={
+                          isVerifying ||
+                          !twitterUsername.trim() ||
+                          isRaffleCreator
+                        }
+                      >
+                        {isVerifying ? 'VERIFYING' : 'VERIFY'}
+                      </button>
+                    )}
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+
+            {/* Enter Button */}
             <button
-              className={`w-full flex items-center justify-between px-5 py-3.5 font-mono font-bold text-sm uppercase tracking-wider rounded-lg transition-all duration-200 ${
+              className={`w-full py-4 font-mono font-bold text-sm uppercase tracking-widest rounded-lg transition-all duration-200 ${
                 isSuccess
                   ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 cursor-not-allowed'
-                  : currentStep === 'not-eligible'
-                  ? 'bg-[#EF4444]/10 text-[#EF4444] border border-[#EF4444]/30 cursor-not-allowed'
-                  : isDisabled
-                  ? 'bg-[#111111] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
-                  : currentStep === 'eligible'
-                  ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)]'
-                  : 'bg-[#555555] text-[#F5F5F5] hover:bg-[#666666]'
+                  : isRaffleCreator
+                  ? 'bg-[#111111] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
+                  : allVerified && !isEnterPending && !isConfirming
+                  ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.3)]'
+                  : 'bg-[#1a1a1a] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
               }`}
-              onClick={currentStep === 'eligible' ? handleEnterRaffle : checkEligibility}
-              disabled={isDisabled}
+              onClick={handleEnterRaffle}
+              disabled={
+                !allVerified ||
+                isEnterPending ||
+                isConfirming ||
+                isSubmitting ||
+                isRaffleCreator ||
+                isSuccess
+              }
             >
-              <span>{getButtonLabel()}</span>
-              {isRaffleCreator ? (
-                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
-                  <span className="text-xs font-bold">Change Wallet</span>
-                </div>
-              ) : currentStep === 'eligible' ? (
-                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
-                  <span className="text-xs font-bold">FREE</span>
-                </div>
-              ) : currentStep === 'not-eligible' ? (
-                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
-                  <span className="text-xs font-bold">✕</span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1.5 bg-[#050505]/15 rounded-md px-3 py-1">
-                  <span className="text-xs font-bold">CHECK</span>
-                </div>
-              )}
+              {isConfirming
+                ? 'Confirming...'
+                : isEnterPending
+                ? 'Entering Raffle...'
+                : isSuccess
+                ? 'Successfully Entered!'
+                : isRaffleCreator
+                ? 'Your Raffle'
+                : 'ENTER FREE RAFFLE'}
             </button>
+
+            {/* Chainlink Footer */}
+            <p className="font-mono text-[9px] uppercase tracking-widest text-[#333333] text-center mt-4">
+              VALIDATED BY CHAINLINK VRF DECENTRALIZED ORACLE NETWORK
+            </p>
 
             {/* Error */}
             {error && (
-              <div className="py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center"
+              >
                 <span className="font-mono text-xs text-[#EF4444]">{error}</span>
-              </div>
+              </motion.div>
             )}
 
             {/* Success */}
             {isSuccess && enterRaffleHash && (
-              <div className="py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-3 py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center"
+              >
                 <span className="font-mono text-xs text-[#22C55E]">
                   ✓ Successfully entered the raffle!
                 </span>
-              </div>
+              </motion.div>
             )}
-
-            {/* Eligible info */}
-            {currentStep === 'eligible' && !isSuccess && (
-              <div className="py-2.5 px-4 rounded-lg bg-[#22C55E]/06 border border-[#22C55E]/20 text-center">
-                <span className="font-mono text-xs text-[#22C55E]">
-                  ✓ You're eligible! Click the button above to enter the raffle.
-                </span>
-              </div>
-            )}
-
-            {/* Not eligible info */}
-            {currentStep === 'not-eligible' && (
-              <div className="py-2.5 px-4 rounded-lg bg-[#EF4444]/06 border border-[#EF4444]/20 text-center">
-                <span className="font-mono text-xs text-[#EF4444]">
-                  ✕ Not eligible. Try a different X username.
-                </span>
-              </div>
-            )}
+            </div>
           </div>
         </motion.div>
       </motion.div>
     </AnimatePresence>
   )
+}
+
+function getTaskLabel(type: string): string {
+  switch (type.toLowerCase()) {
+    case 'follow':
+      return 'FOLLOW @RAFFLED'
+    case 'repost':
+    case 'retweet':
+      return 'REPOST RAFFLE'
+    case 'share':
+      return 'SHARE WITH FRIENDS'
+    case 'reply':
+    case 'comment':
+      return 'REPLY TO THREAD'
+    default:
+      return 'COMPLETE TASK'
+  }
+}
+
+function getTaskDescription(type: string): string {
+  switch (type.toLowerCase()) {
+    case 'follow':
+      return 'Link your X account and follow'
+    case 'repost':
+    case 'retweet':
+      return 'Share the raffle to your timeline'
+    case 'share':
+      return 'Send the link to 3 Discord servers'
+    case 'reply':
+    case 'comment':
+      return 'Comment with your lucky number'
+    default:
+      return 'Complete the required action'
+  }
+}
+
+function getTaskUrl(type: string, raffleId: number, twitterUsername: string): string {
+  switch (type.toLowerCase()) {
+    case 'follow':
+      return `https://x.com/useRaffled`
+    case 'repost':
+    case 'retweet':
+      return `https://x.com/useRaffled/status/${raffleId}`
+    case 'share':
+      return `https://discord.com/channels/@me`
+    case 'reply':
+    case 'comment':
+      return `https://x.com/useRaffled/status/${raffleId}`
+    default:
+      return `https://x.com/useRaffled`
+  }
 }
 
 export default FreeRaffleModal

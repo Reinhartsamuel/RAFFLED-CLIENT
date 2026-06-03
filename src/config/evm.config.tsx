@@ -73,11 +73,11 @@ createAppKit({
         url: baseSepoliaRpcUrl
       }
     ],
-    'eip155:8453': [
-      {
-        url: baseMainnetRpcUrl
-      }
-    ]
+    // 'eip155:8453': [
+    //   {
+    //     url: baseMainnetRpcUrl
+    //   }
+    // ]
   }
 })
 

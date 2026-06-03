@@ -1,36 +1,32 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useAccount } from 'wagmi'
+import { useDisconnect, useSignMessage } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
-import { wagmiConfig } from '../../config/evm.config'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
-  const { connector: activeConnector } = useAccount()
-  const { address: appKitAddress, caipAddress, isConnected: isAppKitConnected } = useAppKitAccount({ namespace: 'eip155' })
-  const appKit = useAppKit()
-  const {open} = useAppKit()
+  const { signMessageAsync } = useSignMessage()
+  const { open } = useAppKit()
+  const { address: appKitAddress, caipAddress } = useAppKitAccount({ namespace: 'eip155' })
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
   const addressRef = useRef<string>(address ?? '')
+  const signingInRef = useRef(false)
 
-  // Persist address in a ref since useAppKitAccount loses it during re-renders
   useEffect(() => {
     if (address) {
       addressRef.current = address
     }
-
-    if (!address && pendingSignature) appKit.open() // Prompt connect if we lost the address during auth
+    if (!address && pendingSignature) open()
   }, [address])
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')
   const [authMessage, setAuthMessage] = useState<string | null>(null)
   const [, setNonce] = useState<string | null>(null)
-  
-  // Terms of Service modal state
+
   const [showTermsModal, setShowTermsModal] = useState(false)
   const [termsAccepted, setTermsAccepted] = useState(false)
   const [pendingSignature, setPendingSignature] = useState<{ message: string; nonce: string } | null>(null)
@@ -44,30 +40,23 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [authMessage])
 
   useEffect(() => {
-    // Auto-trigger sign-in when wallet connects and no token exists
-    // console.log(`authStatus : ${authStatus}`, address, getAuthToken());
-    if (address && !getAuthToken() && authStatus !== 'loading' && authStatus !== 'ok') {
-      handleSignIn()
+    if (address && !getAuthToken() && !signingInRef.current) {
+      signingInRef.current = true
+      handleSignIn().finally(() => { signingInRef.current = false })
     }
-    // console.log(address,' address changeeeeeeeeeeee');
     if (!address) {
-      // console.log(address,' address changed, removing token');
-      // console.log('setting auth status idle')
       localStorage.removeItem('access_token')
       setAuthStatus('idle')
-    } 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+      signingInRef.current = false
+    }
   }, [address])
 
   const handleSignIn = async () => {
-    // If already authenticated, skip
-    // console.log('handleSignIn', address, getAuthToken())
     if (getAuthToken()) {
       setAuthStatus('ok')
       return
     }
 
-    // Fetch nonce and show terms modal
     try {
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
@@ -75,13 +64,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       const { nonce: fetchedNonce } = await nonceRes.json()
       setNonce(fetchedNonce)
 
-      // Compose message - same format as working example
       const message = [
         'Welcome to Raffled!',
         '',
         'Click to sign in and accept the Raffled Terms of Service and Privacy Policy. This request will not cost any gas fees.',
         '',
-        `Wallet address: ${address || 'connected'}`,
+        `Wallet address: ${addressRef.current || 'connected'}`,
         `Nonce: ${fetchedNonce}`,
       ].join('\n')
 
@@ -103,54 +91,22 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       return
     }
 
-    if (!activeConnector) {
-      setSignatureError('No wallet connector available. Please reconnect your wallet.')
-      setAuthStatus('error')
-      return
-    }
-
     setAuthStatus('loading')
     setShowTermsModal(false)
     setSignatureError(null)
 
     try {
-      const provider = await activeConnector.getProvider()
+      const signature = await signMessageAsync({ message: pendingSignature.message })
 
-      // Step 1: Ask MetaMask which account it actually has authorized
-      const accounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
-        method: 'eth_accounts',
-      })
-      console.log('Accounts from provider:', accounts)
-
-      if (!accounts || accounts.length === 0) {
-        // No authorized account — need to request one
-        const requestedAccounts = await (provider as { request: (args: { method: string; params?: unknown[] }) => Promise<string[]> }).request({
-          method: 'eth_requestAccounts',
-        })
-        if (!requestedAccounts || requestedAccounts.length === 0) {
-          throw new Error('No accounts authorized by wallet')
-        }
-        accounts.push(...requestedAccounts)
-      }
-
-      const authorizedAddress = accounts[0]
-
-      // Step 2: Sign using the account MetaMask actually recognizes
-      const signature = await (provider as { request: (args: { method: string; params: unknown[] }) => Promise<string> }).request({
-        method: 'personal_sign',
-        params: [pendingSignature.message, authorizedAddress],
-      })
-
-      // Verify with backend using the authorized address
       const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify({ 
-          message: pendingSignature.message, 
-          signature, 
-          address: authorizedAddress,
+        body: JSON.stringify({
+          message: pendingSignature.message,
+          signature,
+          address: addressRef.current,
           chain: 'base',
-          nonce: pendingSignature.nonce 
+          nonce: pendingSignature.nonce,
         }),
       })
 
@@ -170,13 +126,11 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setPendingSignature(null)
       setNonce(null)
       setTermsAccepted(false)
-      try { disconnect() } catch { /* ignore */ }
       setAuthStatus('error')
       setAuthMessage('Login failed.')
     }
   }
 
-  // Disconnect + clear state when any API call returns 401
   useEffect(() => {
     const handleUnauthorized = () => {
       localStorage.removeItem('access_token')
@@ -189,7 +143,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
   }, [disconnect])
 
-  // Auto sign-in when wallet connects
   useEffect(() => {
     if (!autoAuthRan && authStatus !== 'loading') {
       const existingToken = getAuthToken()
@@ -199,17 +152,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         setAuthMessage('Authenticated with existing session.')
       }
     }
-    if (!existingTokenIsSet()) {
+    if (!getAuthToken()) {
       setAutoAuthRan(false)
       setAuthStatus('idle')
       localStorage.removeItem('access_token')
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authStatus, autoAuthRan])
-
-  function existingTokenIsSet() {
-    return !!getAuthToken()
-  }
 
   return (
     <>
@@ -410,7 +358,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                   <p className="text-[#EF4444] font-medium text-sm">{signatureError}</p>
                   {signatureError.includes('not connected') && (
                     <button
-                      onClick={() => { setSignatureError(null); appKit.open() }}
+                      onClick={() => { setSignatureError(null); open() }}
                       className="mt-2 text-xs font-semibold uppercase tracking-wider text-[#FFB800] hover:text-[#FFCC33] transition-colors"
                     >
                       → Connect Wallet

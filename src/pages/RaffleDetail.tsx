@@ -11,6 +11,7 @@ import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
 import { EXPLORER_URL } from '../utils/constants'
+import { TaskItem } from '../interfaces/TaskItem'
 // import { usePaymentToken } from '../hooks/useRaffleContract'
 
 interface LeaderboardEntry {
@@ -47,6 +48,7 @@ interface RaffleDetailData {
   winner_picked_tx_hash?: string | null
   official_raffle?: boolean
   free_raffle?: boolean
+  task?: TaskItem
 }
 
 export function RaffleDetail() {
@@ -732,10 +734,13 @@ export function RaffleDetail() {
           raffleId={raffle.id}
           prizeImage={raffle.image_url}
           prizeTitle={raffle.title}
+          prizeAmount={prizeAmountDisplay}
+          prizeSymbol={raffle.prize_asset_symbol}
           maxTickets={raffle.max_tickets}
           ticketsSold={raffle.tickets_sold || 0}
           creatorAddress={raffle.creator_address}
           onClose={() => setShowFreeRaffleModal(false)}
+          task={raffle?.task}
           onSuccess={() => {
             window.location.reload()
           }}
