@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useSignMessage, useAccount } from 'wagmi'
+import { useDisconnect, useSignMessage } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
@@ -15,13 +15,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
   const addressRef = useRef<string>(address ?? '')
   const signingInRef = useRef(false)
-
-  // DEBUG: Log AppKit state
-  useEffect(() => {
-    console.log('[DEBUG] AppKit address:', appKitAddress)
-    console.log('[DEBUG] caipAddress:', caipAddress)
-    console.log('[DEBUG] Computed address:', address)
-  }, [appKitAddress, caipAddress, address])
+  const termsModalShownRef = useRef(false)
 
   useEffect(() => {
     if (address) {
@@ -45,16 +39,14 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
-  // DEBUG: Log when address changes
   useEffect(() => {
-    console.log('[DEBUG] Address effect fired. address=', address, 'hasToken=', !!getAuthToken(), 'signingInRef=', signingInRef.current)
     if (address && !getAuthToken() && !signingInRef.current) {
-      console.log('[DEBUG] Auto-triggering handleSignIn')
       signingInRef.current = true
       handleSignIn().finally(() => { signingInRef.current = false })
     }
-    if (!address) {
-      console.log('[DEBUG] Address cleared, resetting auth state')
+    // Don't reset auth state if terms modal was already shown (sign-in in progress)
+    // or if we have a valid token
+    if (!address && !termsModalShownRef.current && !getAuthToken()) {
       localStorage.removeItem('access_token')
       setAuthStatus('idle')
       signingInRef.current = false
@@ -62,18 +54,15 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [address])
 
   const handleSignIn = async () => {
-    console.log('[DEBUG] handleSignIn called. address=', addressRef.current)
     if (getAuthToken()) {
       setAuthStatus('ok')
       return
     }
 
     try {
-      console.log('[DEBUG] Fetching nonce from', `${BACKEND_URL}/auth/nonce`)
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
-      console.log('[DEBUG] Nonce response status:', nonceRes.status)
       const { nonce: fetchedNonce } = await nonceRes.json()
       setNonce(fetchedNonce)
 
@@ -89,11 +78,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setPendingSignature({ message, nonce: fetchedNonce })
       setShowTermsModal(true)
       setTermsAccepted(false)
-      console.log('[DEBUG] Terms modal shown')
+      termsModalShownRef.current = true
     } catch (err) {
-      console.error('[DEBUG] Error fetching nonce:', err)
+      console.error('Error fetching nonce:', err)
       setAuthStatus('error')
       setAuthMessage('Failed to initialize sign-in.')
+      termsModalShownRef.current = false
     }
   }
 
@@ -132,6 +122,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setAuthMessage('Signed in successfully.')
       setPendingSignature(null)
       setNonce(null)
+      termsModalShownRef.current = false
     } catch (err) {
       console.error('Sign-in error:', err)
       const errorMessage = (err as Error).message
@@ -142,16 +133,17 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setTermsAccepted(false)
       setAuthStatus('error')
       setAuthMessage('Login failed.')
+      termsModalShownRef.current = false
     }
   }
 
   useEffect(() => {
     const handleUnauthorized = () => {
-      console.log('[DEBUG] auth:unauthorized event received')
       localStorage.removeItem('access_token')
       setAutoAuthRan(false)
       setAuthStatus('idle')
       setAuthMessage(null)
+      termsModalShownRef.current = false
       try { disconnect() } catch { /* ignore */ }
     }
     window.addEventListener('auth:unauthorized', handleUnauthorized)
@@ -291,7 +283,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     <span className="text-[#888888] text-xs font-mono uppercase">Wallet Address</span>
                   </div>
                   <p className="text-[#F5F5F5] font-mono text-sm truncate">
-                    {address || 'Connected'}
+                    {addressRef.current || 'Connected'}
                   </p>
                   <div className="pt-2 border-t border-[#222222]">
                     <span className="text-[#888888] text-xs font-mono uppercase">Nonce</span>
@@ -335,6 +327,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
                     setPendingSignature(null)
                     setNonce(null)
                     setTermsAccepted(false)
+                    termsModalShownRef.current = false
                   }}
                   className="font-sans font-medium text-sm text-[#888888] hover:text-[#AAAAAA] transition-colors px-4 py-2"
                 >
