@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useSignMessage } from 'wagmi'
+import { useDisconnect, useSignMessage, useAccount } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken } from '../../config/index'
@@ -15,6 +15,13 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
   const addressRef = useRef<string>(address ?? '')
   const signingInRef = useRef(false)
+
+  // DEBUG: Log AppKit state
+  useEffect(() => {
+    console.log('[DEBUG] AppKit address:', appKitAddress)
+    console.log('[DEBUG] caipAddress:', caipAddress)
+    console.log('[DEBUG] Computed address:', address)
+  }, [appKitAddress, caipAddress, address])
 
   useEffect(() => {
     if (address) {
@@ -39,12 +46,16 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     return () => clearTimeout(timer)
   }, [authMessage])
 
+  // DEBUG: Log when address changes
   useEffect(() => {
+    console.log('[DEBUG] Address effect fired. address=', address, 'hasToken=', !!getAuthToken(), 'signingInRef=', signingInRef.current)
     if (address && !getAuthToken() && !signingInRef.current) {
+      console.log('[DEBUG] Auto-triggering handleSignIn')
       signingInRef.current = true
       handleSignIn().finally(() => { signingInRef.current = false })
     }
     if (!address) {
+      console.log('[DEBUG] Address cleared, resetting auth state')
       localStorage.removeItem('access_token')
       setAuthStatus('idle')
       signingInRef.current = false
@@ -52,15 +63,18 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [address])
 
   const handleSignIn = async () => {
+    console.log('[DEBUG] handleSignIn called. address=', addressRef.current)
     if (getAuthToken()) {
       setAuthStatus('ok')
       return
     }
 
     try {
+      console.log('[DEBUG] Fetching nonce from', `${BACKEND_URL}/auth/nonce`)
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
+      console.log('[DEBUG] Nonce response status:', nonceRes.status)
       const { nonce: fetchedNonce } = await nonceRes.json()
       setNonce(fetchedNonce)
 
@@ -76,8 +90,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setPendingSignature({ message, nonce: fetchedNonce })
       setShowTermsModal(true)
       setTermsAccepted(false)
+      console.log('[DEBUG] Terms modal shown')
     } catch (err) {
-      console.error('Error fetching nonce:', err)
+      console.error('[DEBUG] Error fetching nonce:', err)
       setAuthStatus('error')
       setAuthMessage('Failed to initialize sign-in.')
     }
@@ -133,6 +148,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
 
   useEffect(() => {
     const handleUnauthorized = () => {
+      console.log('[DEBUG] auth:unauthorized event received')
       localStorage.removeItem('access_token')
       setAutoAuthRan(false)
       setAuthStatus('idle')
