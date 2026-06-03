@@ -1,14 +1,8 @@
 import { motion, useInView, type Variants } from 'framer-motion';
 import { useRef } from 'react';
-// import solanaLogo from '../../assets/solanaLogoMark.png';
 import baseLogo from '../../assets/base-logo.webp';
 
 const features = [
-  {
-    title: 'DUAL-CHAIN',
-    description: 'Deploy raffles on Base (EVM). Solana integration coming soon.',
-    icon: '⚡',
-  },
   {
     title: 'VRF SECURED',
     description: 'Chainlink VRF on Base for provably fair, tamper-proof randomness.',

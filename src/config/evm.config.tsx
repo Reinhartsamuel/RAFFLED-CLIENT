@@ -67,7 +67,11 @@ createAppKit({
     '--w3m-font-family': "'JetBrains Mono', monospace",
   },
   themeMode: 'dark',
-    customRpcUrls: {
+  // Enable EIP-6963 multi-wallet discovery (avoids window.ethereum conflicts)
+  enableEIP6963: true,
+  // Disable injected wallet detection (uses EIP-6963 instead of window.ethereum)
+  enableInjected: false,
+  customRpcUrls: {
     'eip155:84532': [
       {
         url: baseSepoliaRpcUrl

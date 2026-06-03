@@ -15,7 +15,6 @@
     "@gsap/react": "^2.1.2",
     "@react-three/fiber": "^9.6.0",
     "@reown/appkit": "1.8.19",
-    "@reown/appkit-adapter-solana": "^1.8.20",
     "@reown/appkit-adapter-wagmi": "1.8.19",
     "@shadergradient/react": "^2.4.20",
     "@tailwindcss/vite": "^4.1.18",
