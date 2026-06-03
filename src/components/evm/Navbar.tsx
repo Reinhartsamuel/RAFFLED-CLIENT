@@ -27,7 +27,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     if (address) {
       addressRef.current = address
     }
-    if (!address && pendingSignature) open()
   }, [address])
 
   const [authStatus, setAuthStatus] = useState<'idle' | 'loading' | 'ok' | 'error'>('idle')

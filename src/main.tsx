@@ -6,9 +6,9 @@ import './styles/globals.css'
 
 // Match working example exactly - providers inside App.tsx
 ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
+  <>
     <BrowserRouter>
       <App />
     </BrowserRouter>
-  </React.StrictMode>,
+  </>,
 )

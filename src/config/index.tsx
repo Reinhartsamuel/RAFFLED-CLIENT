@@ -40,6 +40,7 @@ export const clearAuthToken = () => {
  * DOM event so the Navbar can disconnect the wallet.
  */
 export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  console.log(`[API FETCH] ${input}, init: ${JSON.stringify(init, null, 2)}`)
   const response = await fetch(input, init)
   if (response.status === 401) {
     clearAuthToken()
