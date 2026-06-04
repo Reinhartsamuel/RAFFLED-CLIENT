@@ -159,7 +159,7 @@ export function RaffleDetail() {
           // console.log('[RaffleDetail] free_raffle:', raw.free_raffle)
 
           // Fetch /task/my if this is a free raffle
-          if (raw.free_raffle) {
+          if (raw.free_raffle && authToken) {
             console.log('[RaffleDetail] Fetching /task/my for free raffle')
             try {
               const taskRes = await apiFetch(`${BACKEND_URL}/raffles/${id}/task/my`, {
