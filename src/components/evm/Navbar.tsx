@@ -33,6 +33,28 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const [signatureError, setSignatureError] = useState<string | null>(null)
   const [autoAuthRan, setAutoAuthRan] = useState(false)
 
+  const prevAddressRef = useRef<string | undefined>(address)
+
+  useEffect(() => {
+    const hadAddress = !!prevAddressRef.current
+    const nowEmpty = !address
+
+    if (hadAddress && nowEmpty) {
+      localStorage.removeItem('access_token')
+      setAuthStatus('idle')
+      setAuthMessage(null)
+      setAutoAuthRan(false)
+      signingInRef.current = false
+      termsModalShownRef.current = false
+      setShowTermsModal(false)
+      setPendingSignature(null)
+      setNonce(null)
+      setTermsAccepted(false)
+    }
+
+    prevAddressRef.current = address
+  }, [address])
+
   useEffect(() => {
     if (!authMessage) return
     const timer = setTimeout(() => setAuthMessage(null), 10000)
@@ -43,13 +65,6 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     if (address && !getAuthToken() && !signingInRef.current) {
       signingInRef.current = true
       handleSignIn().finally(() => { signingInRef.current = false })
-    }
-    // Don't reset auth state if terms modal was already shown (sign-in in progress)
-    // or if we have a valid token
-    if (!address && !termsModalShownRef.current && !getAuthToken()) {
-      localStorage.removeItem('access_token')
-      setAuthStatus('idle')
-      signingInRef.current = false
     }
   }, [address])
 
