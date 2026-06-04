@@ -1,8 +1,8 @@
 import { useState, useCallback, useEffect } from 'react'
-import { BACKEND_URL, apiFetch } from '../config'
+import { BACKEND_URL, apiFetch, getAuthToken } from '../config'
 
 // ─── Toggle mock vs real API ───────────────────────────────────────────────
-const USE_MOCK_DATA = true
+const USE_MOCK_DATA = false
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 export type EventType =
@@ -330,11 +330,18 @@ export function useActivityEvents(filter: ActivityFilter) {
         const url = new URL(`${BACKEND_URL}/events`)
         url.searchParams.set('per_page', '20')
         url.searchParams.set('page', String(pageNum))
+        url.searchParams.set('sort_by', 'created_at')
+        url.searchParams.set('sort_dir', 'desc')
         if (currentFilter !== 'all') {
           url.searchParams.set('event_type', currentFilter)
         }
+        const token = getAuthToken()
         const res = await apiFetch(url.toString(), {
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
         })
         const data: ActivityPage = await res.json()
         setAllEvents((prev) =>

@@ -309,6 +309,7 @@ export function RaffleDetail() {
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
+  const isFree = raffle.free_raffle === true
 
   const prizeAmountDisplay = raffle.prize_type === 'erc721'
     ? `#${raffle.prize_amount}`
@@ -515,7 +516,12 @@ export function RaffleDetail() {
                   {/* Ticket Price */}
                   <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
                     <p className="font-mono text-[10px] text-[#555555] mb-1">TICKET PRICE</p>
-                    <p className="font-mono text-xl font-bold text-[#F5F5F5]">${ticketPrice}</p>
+
+                    {isFree ?
+                      <p className="text-[#22C55E] text-sm sm:text-lg font-mono font-semibold">FREE</p>
+                      :
+                      <p className="font-mono text-xl font-bold text-[#F5F5F5]">${ticketPrice}</p>
+                    }
                   </div>
 
                   {/* Raffle Transaction */}
@@ -546,7 +552,7 @@ export function RaffleDetail() {
                     </p>
                   </div>
                 </div>
-                
+
 
                 {/* Info Banner / Resolved UI */}
                 <div className="mt-auto space-y-4">
