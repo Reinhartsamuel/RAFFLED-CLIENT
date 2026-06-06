@@ -87,6 +87,9 @@
                                                                                 <li class="tocify-item level-2" data-unique="events-GETapi-events-stream">
                                 <a href="#events-GETapi-events-stream">Stream on-chain events (SSE).</a>
                             </li>
+                                                                                <li class="tocify-item level-2" data-unique="events-GETapi-events-summary">
+                                <a href="#events-GETapi-events-summary">Event type summary.</a>
+                            </li>
                                                                         </ul>
                             </ul>
                     <ul id="tocify-header-fee-change-events" class="tocify-header">
@@ -193,7 +196,7 @@
     </ul>
 
     <ul class="toc-footer" id="last-updated">
-        <li>Last updated: May 18, 2026</li>
+        <li>Last updated: June 5, 2026</li>
     </ul>
 </div>
 
@@ -738,6 +741,155 @@ You can check the Dev Tools console for debugging information.</code></pre>
             </div>
                 </form>
 
+                    <h2 id="events-GETapi-events-summary">Event type summary.</h2>
+
+<p>
+</p>
+
+<p>Returns the total count of processed on-chain events grouped by event type,
+ordered alphabetically. Unknown/unresolved event types are excluded.</p>
+<p>Useful for dashboards or analytics that need a quick breakdown of
+activity per event category without fetching individual records.</p>
+
+<span id="example-requests-GETapi-events-summary">
+<blockquote>Example request:</blockquote>
+
+
+<div class="bash-example">
+    <pre><code class="language-bash">curl --request GET \
+    --get "https://api.raffled.live/api/events/summary" \
+    --header "Content-Type: application/json" \
+    --header "Accept: application/json"</code></pre></div>
+
+
+<div class="javascript-example">
+    <pre><code class="language-javascript">const url = new URL(
+    "https://api.raffled.live/api/events/summary"
+);
+
+const headers = {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+};
+
+fetch(url, {
+    method: "GET",
+    headers,
+}).then(response =&gt; response.json());</code></pre></div>
+
+</span>
+
+<span id="example-responses-GETapi-events-summary">
+            <blockquote>
+            <p>Example response (200, Success):</p>
+        </blockquote>
+                <pre>
+
+<code class="language-json" style="max-height: 300px;">[
+    {
+        &quot;event_type&quot;: &quot;FeeChangeProposed&quot;,
+        &quot;count&quot;: 2
+    },
+    {
+        &quot;event_type&quot;: &quot;PlatformFeeCollected&quot;,
+        &quot;count&quot;: 15
+    },
+    {
+        &quot;event_type&quot;: &quot;RaffleCreated&quot;,
+        &quot;count&quot;: 10
+    },
+    {
+        &quot;event_type&quot;: &quot;RaffleExpired&quot;,
+        &quot;count&quot;: 3
+    },
+    {
+        &quot;event_type&quot;: &quot;TicketPurchased&quot;,
+        &quot;count&quot;: 87
+    },
+    {
+        &quot;event_type&quot;: &quot;UnderfilledPrizeReturned&quot;,
+        &quot;count&quot;: 1
+    },
+    {
+        &quot;event_type&quot;: &quot;WinnerPicked&quot;,
+        &quot;count&quot;: 5
+    }
+]</code>
+ </pre>
+    </span>
+<span id="execution-results-GETapi-events-summary" hidden>
+    <blockquote>Received response<span
+                id="execution-response-status-GETapi-events-summary"></span>:
+    </blockquote>
+    <pre class="json"><code id="execution-response-content-GETapi-events-summary"
+      data-empty-response-text="<Empty response>" style="max-height: 400px;"></code></pre>
+</span>
+<span id="execution-error-GETapi-events-summary" hidden>
+    <blockquote>Request failed with error:</blockquote>
+    <pre><code id="execution-error-message-GETapi-events-summary">
+
+Tip: Check that you&#039;re properly connected to the network.
+If you&#039;re a maintainer of ths API, verify that your API is running and you&#039;ve enabled CORS.
+You can check the Dev Tools console for debugging information.</code></pre>
+</span>
+<form id="form-GETapi-events-summary" data-method="GET"
+      data-path="api/events/summary"
+      data-authed="0"
+      data-hasfiles="0"
+      data-isarraybody="0"
+      autocomplete="off"
+      onsubmit="event.preventDefault(); executeTryOut('GETapi-events-summary', this);">
+    <h3>
+        Request&nbsp;&nbsp;&nbsp;
+                    <button type="button"
+                    style="background-color: #8fbcd4; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-tryout-GETapi-events-summary"
+                    onclick="tryItOut('GETapi-events-summary');">Try it out ⚡
+            </button>
+            <button type="button"
+                    style="background-color: #c97a7e; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-canceltryout-GETapi-events-summary"
+                    onclick="cancelTryOut('GETapi-events-summary');" hidden>Cancel 🛑
+            </button>&nbsp;&nbsp;
+            <button type="submit"
+                    style="background-color: #6ac174; padding: 5px 10px; border-radius: 5px; border-width: thin;"
+                    id="btn-executetryout-GETapi-events-summary"
+                    data-initial-text="Send Request 💥"
+                    data-loading-text="⏱ Sending..."
+                    hidden>Send Request 💥
+            </button>
+            </h3>
+            <p>
+            <small class="badge badge-green">GET</small>
+            <b><code>api/events/summary</code></b>
+        </p>
+                <h4 class="fancy-heading-panel"><b>Headers</b></h4>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Content-Type</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Content-Type"                data-endpoint="GETapi-events-summary"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                                <div style="padding-left: 28px; clear: unset;">
+                <b style="line-height: 2;"><code>Accept</code></b>&nbsp;&nbsp;
+&nbsp;
+ &nbsp;
+ &nbsp;
+                <input type="text" style="display: none"
+                              name="Accept"                data-endpoint="GETapi-events-summary"
+               value="application/json"
+               data-component="header">
+    <br>
+<p>Example: <code>application/json</code></p>
+            </div>
+                        </form>
+
                 <h1 id="fee-change-events">Fee Change Events</h1>
 
     
@@ -937,14 +1089,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://api.raffled.live/api/fee-change-events/17" \
+    --get "https://api.raffled.live/api/fee-change-events/1" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://api.raffled.live/api/fee-change-events/17"
+    "https://api.raffled.live/api/fee-change-events/1"
 );
 
 const headers = {
@@ -1063,10 +1215,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="number" style="display: none"
                step="any"               name="feeChangeEvent_id"                data-endpoint="GETapi-fee-change-events--feeChangeEvent_id-"
-               value="17"
+               value="1"
                data-component="url">
     <br>
-<p>The ID of the feeChangeEvent. Example: <code>17</code></p>
+<p>The ID of the feeChangeEvent. Example: <code>1</code></p>
             </div>
                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>feeChangeEvent</code></b>&nbsp;&nbsp;
@@ -2609,7 +2761,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Accept: application/json" \
     --form "raffle_tx_hash=0xabc123"\
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php124A.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\phpA59A.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2765,7 +2917,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\php124A.tmp</code></p>
+<p>sometimes NFT image (max 5MB). Use multipart/form-data. Example: <code>C:\laragon\tmp\phpA59A.tmp</code></p>
         </div>
         </form>
 
@@ -2788,7 +2940,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
     --form "description=Dolores dolorum amet iste laborum eius est dolor."\
-    --form "image=@C:\laragon\tmp\php128A.tmp" </code></pre></div>
+    --form "image=@C:\laragon\tmp\phpA5DA.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -2956,7 +3108,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\php128A.tmp</code></p>
+<p>sometimes NFT image (max 5MB) when type is nft. Use multipart/form-data. Example: <code>C:\laragon\tmp\phpA5DA.tmp</code></p>
         </div>
         </form>
 
@@ -3407,7 +3559,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
     --header "Authorization: Bearer {YOUR_AUTH_TOKEN}" \
     --header "Content-Type: multipart/form-data" \
     --header "Accept: application/json" \
-    --form "profile_picture=@C:\laragon\tmp\php128C.tmp" </code></pre></div>
+    --form "profile_picture=@C:\laragon\tmp\phpA5DC.tmp" </code></pre></div>
 
 
 <div class="javascript-example">
@@ -3552,7 +3704,7 @@ You can check the Dev Tools console for debugging information.</code></pre>
                value=""
                data-component="body">
     <br>
-<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\php128C.tmp</code></p>
+<p>nullable Profile picture image (max 2 MB). Use <code>multipart/form-data</code>. Example: <code>C:\laragon\tmp\phpA5DC.tmp</code></p>
         </div>
         </form>
 
@@ -3749,14 +3901,14 @@ You can check the Dev Tools console for debugging information.</code></pre>
 
 <div class="bash-example">
     <pre><code class="language-bash">curl --request GET \
-    --get "https://api.raffled.live/api/users/0x506888a16695c670579d06a0314cafdd549329fa" \
+    --get "https://api.raffled.live/api/users/0x1b903cd556117b1dd8871db9eb5afda222dccd90" \
     --header "Content-Type: application/json" \
     --header "Accept: application/json"</code></pre></div>
 
 
 <div class="javascript-example">
     <pre><code class="language-javascript">const url = new URL(
-    "https://api.raffled.live/api/users/0x506888a16695c670579d06a0314cafdd549329fa"
+    "https://api.raffled.live/api/users/0x1b903cd556117b1dd8871db9eb5afda222dccd90"
 );
 
 const headers = {
@@ -3875,10 +4027,10 @@ You can check the Dev Tools console for debugging information.</code></pre>
  &nbsp;
                 <input type="text" style="display: none"
                               name="user_address"                data-endpoint="GETapi-users--user_address-"
-               value="0x506888a16695c670579d06a0314cafdd549329fa"
+               value="0x1b903cd556117b1dd8871db9eb5afda222dccd90"
                data-component="url">
     <br>
-<p>Example: <code>0x506888a16695c670579d06a0314cafdd549329fa</code></p>
+<p>Example: <code>0x1b903cd556117b1dd8871db9eb5afda222dccd90</code></p>
             </div>
                     <div style="padding-left: 28px; clear: unset;">
                 <b style="line-height: 2;"><code>user</code></b>&nbsp;&nbsp;

@@ -39,6 +39,11 @@ interface AdminEvent {
   created_at: string
 }
 
+interface EventSummary {
+  event_type: string
+  count: string
+}
+
 interface RaffleTransaction {
   id: number
   raffle_id: number
@@ -134,28 +139,26 @@ function WalletGuard({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-function StatsCards({ raffles, events, totalRaffles }: { raffles: BackendRaffle[]; events: AdminEvent[]; totalRaffles: number }) {
-  const stats = useMemo(() => {
-    const openRaffles = raffles.filter((raffle) => raffle.status === 'open').length
-    const completedRaffles = raffles.filter((raffle) => raffle.status !== 'open').length
-    const purchases = events.filter((event) => event.event_type === 'TicketPurchased').length
-
-    return [
-      { label: 'Raffles', value: totalRaffles, accent: '#FFB800' },
-      { label: 'Open', value: openRaffles, accent: '#22C55E' },
-      { label: 'Completed', value: completedRaffles, accent: '#3B82F6' },
-      { label: 'Ticket Purchases', value: purchases, accent: '#F97316' },
-    ]
-  }, [events, raffles])
+function StatsCards({ eventSummary }: { eventSummary: EventSummary[] }) {
+  const accentMap: Record<string, string> = {
+    RaffleCreated: '#FFB800',
+    TicketPurchased: '#22C55E',
+    WinnerPicked: '#3B82F6',
+    RaffleExpired: '#F97316',
+    UnderfilledPrizeReturned: '#EF4444',
+    FeeChangeProposed: '#A855F7',
+  }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#1f1f1f] rounded-xl overflow-hidden border border-[#1f1f1f]">
-      {stats.map((item) => (
-        <div key={item.label} className="bg-[#0a0a0a] px-4 py-4 flex flex-col gap-1">
-          <span className="font-sans font-bold text-2xl" style={{ color: item.accent }}>
-            {item.value}
+    <div className="grid grid-cols-2 lg:grid-cols-3 gap-px bg-[#1f1f1f] rounded-xl overflow-hidden border border-[#1f1f1f]">
+      {eventSummary.map((item) => (
+        <div key={item.event_type} className="bg-[#0a0a0a] px-4 py-4 flex flex-col gap-1">
+          <span className="font-sans font-bold text-2xl" style={{ color: accentMap[item.event_type] || '#999999' }}>
+            {item.count}
           </span>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-[#666666]">{item.label}</span>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-[#666666]">
+            {item.event_type.replace(/([A-Z])/g, ' $1').trim()}
+          </span>
         </div>
       ))}
     </div>
@@ -169,6 +172,7 @@ export default function RaffleAdminPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [rafflesData, setRafflesData] = useState<PaginatedResponse<BackendRaffle> | null>(null)
   const [eventsData, setEventsData] = useState<PaginatedResponse<AdminEvent> | null>(null)
+  const [eventSummary, setEventSummary] = useState<EventSummary[]>([])
   const [rafflesPage, setRafflesPage] = useState(1)
   const [eventsPage, setEventsPage] = useState(1)
   const [loadingRaffles, setLoadingRaffles] = useState(false)
@@ -176,6 +180,20 @@ export default function RaffleAdminPage() {
   const [error, setError] = useState<string | null>(null)
 
   const token = getAuthToken()
+
+  useEffect(() => {
+    const fetchEventSummary = async () => {
+      try {
+        const res = await apiFetch(`${BACKEND_URL}/events/summary`, { method: 'GET' })
+        if (!res.ok) return
+        const body = await res.json()
+        setEventSummary(Array.isArray(body) ? body : [])
+      } catch {
+        /* silent */
+      }
+    }
+    fetchEventSummary()
+  }, [])
 
   useEffect(() => {
     const fetchRaffles = async () => {
@@ -279,11 +297,7 @@ export default function RaffleAdminPage() {
             {isConnected && !token ? <p className="font-mono text-sm text-[#EF4444]">Authenticate wallet signature to load admin data.</p> : null}
             {error ? <p className="font-mono text-sm text-[#EF4444]">{error}</p> : null}
 
-            <StatsCards
-              raffles={rafflesData?.data || []}
-              events={eventsData?.data || []}
-              totalRaffles={rafflesData?.total || 0}
-            />
+            <StatsCards eventSummary={eventSummary} />
           </motion.div>
 
           <section className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#0a0a0a]">

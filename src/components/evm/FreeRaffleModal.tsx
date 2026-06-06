@@ -41,21 +41,22 @@ interface DefaultTask {
   verified: boolean
 }
 
-interface TaskMyResponse {
-  task_id?: number
-  twitter_username?: string | null
-  already_entered?: boolean
-  tasks?: Array<{
-    task_type?: string
-    verified?: boolean
-    url?: string
-    task_id?: number
-  }>
-  tasks_completed?: number
-  tasks_total?: number
-  signature?: string
-  data?: Record<string, unknown>
-  [key: string]: unknown
+interface TaskSubmitResponse {
+  message?: string
+  data?: {
+    wallet_address?: string
+    twitter_username?: string
+    submitted_at?: string
+    raffle_id?: number
+    signature?: string
+  }
+  failed_tasks?: string[]
+  verification?: {
+    all_passed?: boolean
+    [key: string]: unknown
+  }
+  max_participants?: number
+  current_participants?: number
 }
 
 
@@ -115,7 +116,6 @@ export function FreeRaffleModal({
   const [error, setError] = useState<string | null>(null)
   const [isRaffleCreator, setIsRaffleCreator] = useState(false)
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
-  const [taskLoading, setTaskLoading] = useState(true)
   const [tasks, setTasks] = useState<DefaultTask[]>(DEFAULT_TASKS)
   const [tasksCompleted, setTasksCompleted] = useState(0)
   const [tasksTotal, setTasksTotal] = useState(4)
@@ -123,6 +123,7 @@ export function FreeRaffleModal({
   const [signature, setSignature] = useState<string | null>(null)
   const [allVerified, setAllVerified] = useState(false)
   const [verifyingTaskId, setVerifyingTaskId] = useState<number | null>(null)
+  const [submittingEntry, setSubmittingEntry] = useState(false)
 
   const remainingTickets = maxTickets - ticketsSold
 
@@ -139,68 +140,7 @@ export function FreeRaffleModal({
     }
   }, [address, creatorAddress])
 
-  useEffect(() => {
-    const fetchTaskMy = async () => {
-      try {
-        const authToken = getAuthToken()
-        const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/my`, {
-          method: 'GET',
-          headers: {
-            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        })
-        if (res.ok) {
-          const data: TaskMyResponse = await res.json()
-          console.log('[FreeRaffle] /task/my response:', data)
-          console.log('[FreeRaffle] free_raffle:', true)
 
-          if (data.twitter_username) {
-            setTwitterUsername(data.twitter_username)
-          }
-
-          if (data.tasks && Array.isArray(data.tasks)) {
-            const mappedTasks: DefaultTask[] = data.tasks.map((t, idx) => ({
-              id: idx + 1,
-              type: (t.task_type || 'share') as DefaultTask['type'],
-              label: getTaskLabel(t.task_type || ''),
-              description: getTaskDescription(t.task_type || ''),
-              url: getTaskUrl(t.task_type || '', raffleId, data.twitter_username || ''),
-              verified: t.verified || false,
-            }))
-            setTasks(mappedTasks)
-            setTasksTotal(mappedTasks.length)
-          }
-
-          if (typeof data.tasks_completed === 'number') {
-            setTasksCompleted(data.tasks_completed)
-          } else {
-            const verifiedCount = tasks.filter((t) => t.verified).length
-            setTasksCompleted(verifiedCount)
-          }
-
-          if (data.tasks_total) {
-            setTasksTotal(data.tasks_total)
-          }
-
-          if (data.signature) {
-            setSignature(data.signature)
-          }
-
-          const finalTasks = data.tasks
-            ? data.tasks.map((t) => t.verified)
-            : tasks.map((t) => t.verified)
-          setAllVerified(finalTasks.length > 0 && finalTasks.every(Boolean))
-        }
-      } catch (err) {
-        console.error('Error fetching task/my:', err)
-      } finally {
-        setTaskLoading(false)
-      }
-    }
-    fetchTaskMy()
-  }, [raffleId])
 
   useEffect(() => {
     const verifiedCount = tasks.filter((t) => t.verified).length
@@ -218,20 +158,18 @@ export function FreeRaffleModal({
   const handleVerifyTask = async (task: DefaultTask) => {
     if (task.verified) return
 
+    if (!twitterUsername.trim()) {
+      setError('Please enter your X (Twitter) username first.')
+      return
+    }
+
     setVerifyingTaskId(task.id)
     setError(null)
 
     const cleanUrl = task.url.replace(/^https?:\/\/x\.com/, 'https://x.com')
     window.open(cleanUrl, '_blank', 'noopener,noreferrer')
 
-    if (!twitterUsername.trim()) {
-      setError('Please enter your X (Twitter) username first.')
-      setVerifyingTaskId(null)
-      return
-    }
-
-    // Optimistically mark task as done after 3 seconds
-    const timer = setTimeout(() => {
+    setTimeout(() => {
       setTasks((prev) =>
         prev.map((t) =>
           t.id === task.id ? { ...t, verified: true } : t
@@ -239,35 +177,6 @@ export function FreeRaffleModal({
       )
       setVerifyingTaskId(null)
     }, 3000)
-
-    // Try backend verification in background (non-blocking)
-    try {
-      const authToken = getAuthToken()
-      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
-        method: 'POST',
-        headers: {
-          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          twitter_username: twitterUsername.trim(),
-          task_type: task.type,
-        }),
-      })
-
-      if (res.ok) {
-        const data = await res.json()
-        console.log('[FreeRaffle] task/submit response:', data)
-        if (data.signature) {
-          setSignature(data.signature)
-        }
-      }
-    } catch (err) {
-      console.error('Task verification failed:', err)
-    }
-
-    return () => clearTimeout(timer)
   }
 
   const handleEnterRaffle = async () => {
@@ -281,22 +190,58 @@ export function FreeRaffleModal({
       return
     }
 
-    if (!allVerified) {
-      setError('Please complete all tasks to enter the raffle.')
+    if (!twitterUsername.trim()) {
+      setError('Please enter your X (Twitter) username first.')
       return
     }
 
     setError(null)
+    setSubmittingEntry(true)
 
     try {
-      setIsSubmitting(true)
+      const authToken = getAuthToken()
+      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
+        method: 'POST',
+        headers: {
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+        body: JSON.stringify({
+          twitter_username: twitterUsername.trim(),
+        }),
+      })
 
-      if (!isConnected) {
-        throw new Error('Wallet disconnected. Please reconnect your wallet and try again.')
+      const data: TaskSubmitResponse = await res.json()
+      console.log('[FreeRaffle] task/submit response:', data)
+
+      if (res.status !== 201) {
+        let msg = data.message || 'Entry failed. Please try again.'
+
+        if (data.failed_tasks && data.failed_tasks.length > 0) {
+          msg = `Tasks incomplete: ${data.failed_tasks.join(', ')}. Please complete all tasks before entering.`
+        } else if (data.max_participants && data.current_participants !== undefined) {
+          msg = 'Participant slots are full.'
+        }
+
+        setError(msg)
+        setSubmittingEntry(false)
+        return
       }
 
-      const hash = await enterFreeRaffle({ raffleId, signature: signature || '' })
+      const sig = data.data?.signature
+      if (!sig) {
+        setError('Server did not return a signature. Please try again.')
+        setSubmittingEntry(false)
+        return
+      }
+
+      setSignature(sig)
+      setIsSubmitting(true)
+
+      const hash = await enterFreeRaffle({ raffleId, signature: sig })
       setEnterRaffleHash(hash as `0x${string}`)
+      setSubmittingEntry(false)
     } catch (err) {
       console.error('Free raffle entry failed:', err)
       let msg = 'Entry failed.'
@@ -313,6 +258,7 @@ export function FreeRaffleModal({
       }
       setError(msg)
       setIsSubmitting(false)
+      setSubmittingEntry(false)
     }
   }
 
@@ -472,7 +418,7 @@ export function FreeRaffleModal({
                   onChange={(e) => {
                     setTwitterUsername(e.target.value.replace(/^@/, ''))
                   }}
-                  disabled={isRaffleCreator || taskLoading}
+                  disabled={isRaffleCreator}
                   placeholder="username"
                   className="w-full bg-[#111111] border border-[#2a2a2a] rounded-lg py-2.5 pl-8 pr-4 font-mono text-sm text-[#F5F5F5] focus:outline-none focus:border-[#FFB800] transition-colors disabled:opacity-30 disabled:cursor-not-allowed placeholder:text-[#333333]"
                 />
@@ -595,21 +541,23 @@ export function FreeRaffleModal({
                   ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 cursor-not-allowed'
                   : isRaffleCreator
                   ? 'bg-[#111111] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
-                  : allVerified && !isEnterPending && !isConfirming
+                  : allVerified && !isEnterPending && !isConfirming && !submittingEntry
                   ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.3)]'
                   : 'bg-[#1a1a1a] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
               }`}
               onClick={handleEnterRaffle}
               disabled={
-                !allVerified ||
                 isEnterPending ||
                 isConfirming ||
                 isSubmitting ||
+                submittingEntry ||
                 isRaffleCreator ||
                 isSuccess
               }
             >
-              {isConfirming
+              {submittingEntry
+                ? 'Checking Eligibility...'
+                : isConfirming
                 ? 'Confirming...'
                 : isEnterPending
                 ? 'Entering Raffle...'

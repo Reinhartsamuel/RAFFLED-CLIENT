@@ -10,7 +10,7 @@
     ],
     "info": {
         "name": "Raffled API Documentation",
-        "_postman_id": "8e663c7e-f8e7-459a-852b-876ddbcc1500",
+        "_postman_id": "214397de-52a7-4b84-b484-b06cf5f59c51",
         "description": "",
         "schema": "https:\/\/schema.getpostman.com\/json\/collection\/v2.1.0\/collection.json"
     },
@@ -163,6 +163,41 @@
                             "name": "SSE stream (text\/event-stream)"
                         }
                     ]
+                },
+                {
+                    "name": "Event type summary.",
+                    "request": {
+                        "url": {
+                            "host": "{{baseUrl}}",
+                            "path": "api\/events\/summary",
+                            "query": [],
+                            "raw": "{{baseUrl}}\/api\/events\/summary"
+                        },
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application\/json"
+                            },
+                            {
+                                "key": "Accept",
+                                "value": "application\/json"
+                            }
+                        ],
+                        "body": null,
+                        "description": "Returns the total count of processed on-chain events grouped by event type,\nordered alphabetically. Unknown\/unresolved event types are excluded.\n\nUseful for dashboards or analytics that need a quick breakdown of\nactivity per event category without fetching individual records.",
+                        "auth": {
+                            "type": "noauth"
+                        }
+                    },
+                    "response": [
+                        {
+                            "header": [],
+                            "code": 200,
+                            "body": "[\n  {\"event_type\": \"FeeChangeProposed\",          \"count\": 2},\n  {\"event_type\": \"PlatformFeeCollected\",        \"count\": 15},\n  {\"event_type\": \"RaffleCreated\",               \"count\": 10},\n  {\"event_type\": \"RaffleExpired\",               \"count\": 3},\n  {\"event_type\": \"TicketPurchased\",             \"count\": 87},\n  {\"event_type\": \"UnderfilledPrizeReturned\",    \"count\": 1},\n  {\"event_type\": \"WinnerPicked\",                \"count\": 5}\n]",
+                            "name": "Success"
+                        }
+                    ]
                 }
             ]
         },
@@ -236,7 +271,7 @@
                                 {
                                     "id": "feeChangeEvent_id",
                                     "key": "feeChangeEvent_id",
-                                    "value": "17",
+                                    "value": "1",
                                     "description": "The ID of the feeChangeEvent."
                                 },
                                 {
@@ -1119,7 +1154,7 @@
                                 {
                                     "id": "user_address",
                                     "key": "user_address",
-                                    "value": "0x506888a16695c670579d06a0314cafdd549329fa",
+                                    "value": "0x1b903cd556117b1dd8871db9eb5afda222dccd90",
                                     "description": ""
                                 },
                                 {
