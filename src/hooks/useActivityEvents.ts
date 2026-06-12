@@ -1,6 +1,11 @@
 import { useState, useCallback, useEffect } from 'react'
 import { BACKEND_URL, apiFetch, getAuthToken } from '../config'
 
+export interface EventSummary {
+  event_type: string
+  count: number
+}
+
 // ─── Toggle mock vs real API ───────────────────────────────────────────────
 const USE_MOCK_DATA = false
 
@@ -11,8 +16,11 @@ export type EventType =
   | 'WinnerPicked'
   | 'RaffleExpired'
   | 'UnderfilledPrizeReturned'
+  | 'UnderfilledPayout'
   | 'PlatformFeeCollected'
   | 'FeeChangeProposed'
+  | 'NFTPrizeAwarded'
+  | 'TokenPrizeAwarded'
 
 export type ActivityFilter = 'all' | EventType
 
@@ -52,6 +60,33 @@ interface FeeChangeProposedData {
   effective_at: string
 }
 
+interface NFTPrizeAwardedData {
+  raffle_id: number
+  winner: string
+  nft_contract: string
+  token_id: string
+  host_amount: string
+  fee_amount: string
+}
+
+interface TokenPrizeAwardedData {
+  raffle_id: number
+  winner: string
+  prize_asset: string
+  winner_prize_amount: string
+  host_amount: string
+  prize_fee: string
+  payment_fee: string
+}
+
+interface UnderfilledPayoutData {
+  raffle_id: number
+  winner: string
+  payment_token: string
+  winner_amount: string
+  fee_amount: string
+}
+
 export type EventData =
   | TicketPurchasedData
   | RaffleCreatedData
@@ -60,6 +95,9 @@ export type EventData =
   | UnderfilledData
   | FeeCollectedData
   | FeeChangeProposedData
+  | NFTPrizeAwardedData
+  | TokenPrizeAwardedData
+  | UnderfilledPayoutData
 
 export interface ActivityEvent {
   id: number
@@ -310,6 +348,7 @@ export function useActivityEvents(filter: ActivityFilter) {
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
   const [total, setTotal] = useState(0)
+  const [summary, setSummary] = useState<EventSummary[]>([])
 
   const fetchPage = useCallback(async (pageNum: number, currentFilter: ActivityFilter) => {
     setLoading(true)
@@ -358,6 +397,26 @@ export function useActivityEvents(filter: ActivityFilter) {
     }
   }, [])
 
+  // Fetch summary (once, not tied to filter)
+  useEffect(() => {
+    const fetchSummary = async () => {
+      try {
+        const url = `${BACKEND_URL}/events/summary`
+        const res = await apiFetch(url, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
+        })
+        const data: EventSummary[] = await res.json()
+        setSummary(data)
+      } catch (err) {
+        console.error('Failed to fetch event summary:', err)
+      }
+    }
+    fetchSummary()
+  }, [])
+
   // Reset to page 1 whenever the filter changes
   useEffect(() => {
     setAllEvents([])
@@ -372,5 +431,5 @@ export function useActivityEvents(filter: ActivityFilter) {
     }
   }, [loading, hasMore, page, filter, fetchPage])
 
-  return { events: allEvents, loading, hasMore, loadMore, total }
+  return { events: allEvents, loading, hasMore, loadMore, total, summary }
 }

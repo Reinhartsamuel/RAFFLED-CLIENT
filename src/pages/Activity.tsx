@@ -5,13 +5,20 @@ import {
   type ActivityFilter,
   type ActivityEvent,
   type EventType,
+  type EventSummary,
 } from '../hooks/useActivityEvents'
 import { fadeInUp, staggerContainer, staggerItem } from '../utils/animations'
 
-// ─── Helpers ───────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────
 function truncate(addr: string): string {
   if (!addr || addr.length < 10) return addr
   return `${addr.slice(0, 6)}...${addr.slice(-4)}`
+}
+
+function formatNumber(num: string | number): string {
+  const n = typeof num === 'string' ? Number(num) : num
+  if (isNaN(n)) return String(num)
+  return n.toLocaleString('en-US')
 }
 
 function timeAgo(dateStr: string): string {
@@ -38,7 +45,7 @@ function getRowData(event: ActivityEvent): RowData {
       return {
         label: 'JOIN',
         address: String(d.buyer),
-        detail: `${d.ticket_count} ticket${Number(d.ticket_count) !== 1 ? 's' : ''}`,
+        detail: `${formatNumber(String(d.ticket_count))} ticket${Number(d.ticket_count) !== 1 ? 's' : ''}`,
         raffleId: Number(d.raffle_id),
       }
     case 'RaffleCreated':
@@ -52,28 +59,49 @@ function getRowData(event: ActivityEvent): RowData {
       return {
         label: 'WINNER',
         address: String(d.winner),
-        detail: '—',
+        detail: 'Winner selected',
         raffleId: Number(d.raffle_id),
       }
     case 'RaffleExpired':
       return {
         label: 'EXPIRED',
         address: null,
-        detail: '—',
+        detail: 'No winner',
         raffleId: Number(d.raffle_id),
       }
     case 'UnderfilledPrizeReturned':
       return {
         label: 'RETURNED',
         address: String(d.host),
-        detail: String(d.prize_amount_or_token_id),
+        detail: `${formatNumber(String(d.amount || d.prize_amount_or_token_id))} returned`,
+        raffleId: Number(d.raffle_id),
+      }
+    case 'UnderfilledPayout':
+      return {
+        label: 'PAYOUT',
+        address: String(d.winner),
+        detail: `${formatNumber(String(d.winner_amount))} paid`,
+        raffleId: Number(d.raffle_id),
+      }
+    case 'NFTPrizeAwarded':
+      return {
+        label: 'NFT AWARD',
+        address: String(d.winner),
+        detail: `Token #${d.token_id}`,
+        raffleId: Number(d.raffle_id),
+      }
+    case 'TokenPrizeAwarded':
+      return {
+        label: 'TOKEN AWARD',
+        address: String(d.winner),
+        detail: `${formatNumber(String(d.winner_prize_amount))} tokens`,
         raffleId: Number(d.raffle_id),
       }
     case 'PlatformFeeCollected':
       return {
         label: 'FEE',
         address: null,
-        detail: String(d.amount),
+        detail: `${formatNumber(String(d.amount))} fee`,
         raffleId: Number(d.raffle_id),
       }
     default:
@@ -88,6 +116,9 @@ const BADGE_STYLES: Record<string, string> = {
   WINNER: 'bg-[#22C55E]/15 text-[#22C55E] border border-[#22C55E]/30',
   EXPIRED: 'bg-[#555555]/20 text-[#555555] border border-[#555555]/30',
   RETURNED: 'bg-[#EF4444]/15 text-[#EF4444] border border-[#EF4444]/30',
+  PAYOUT: 'bg-[#F97316]/15 text-[#F97316] border border-[#F97316]/30',
+  'NFT AWARD': 'bg-[#A855F7]/15 text-[#A855F7] border border-[#A855F7]/30',
+  'TOKEN AWARD': 'bg-[#14B8A6]/15 text-[#14B8A6] border border-[#14B8A6]/30',
   FEE: 'bg-[#8B5CF6]/15 text-[#8B5CF6] border border-[#8B5CF6]/30',
 }
 
@@ -97,6 +128,9 @@ const ROW_ACCENT: Record<string, string> = {
   WINNER: 'border-l-[#22C55E]/50',
   EXPIRED: 'border-l-[#333333]',
   RETURNED: 'border-l-[#EF4444]/50',
+  PAYOUT: 'border-l-[#F97316]/50',
+  'NFT AWARD': 'border-l-[#A855F7]/50',
+  'TOKEN AWARD': 'border-l-[#14B8A6]/50',
   FEE: 'border-l-[#8B5CF6]/50',
 }
 
@@ -108,6 +142,9 @@ const FILTERS: { id: ActivityFilter; label: string }[] = [
   { id: 'WinnerPicked', label: 'Winner' },
   { id: 'RaffleExpired', label: 'Expired' },
   { id: 'UnderfilledPrizeReturned', label: 'Returned' },
+  { id: 'UnderfilledPayout', label: 'Payout' },
+  { id: 'NFTPrizeAwarded', label: 'NFT Award' },
+  { id: 'TokenPrizeAwarded', label: 'Token Award' },
 ]
 
 const EVENT_TYPE_COLORS: Record<EventType, string> = {
@@ -116,8 +153,11 @@ const EVENT_TYPE_COLORS: Record<EventType, string> = {
   WinnerPicked: '#22C55E',
   RaffleExpired: '#555555',
   UnderfilledPrizeReturned: '#EF4444',
+  UnderfilledPayout: '#F97316',
   PlatformFeeCollected: '#8B5CF6',
   FeeChangeProposed: '#8B5CF6',
+  NFTPrizeAwarded: '#A855F7',
+  TokenPrizeAwarded: '#14B8A6',
 }
 
 // ─── Activity Row ────────────────────────────────────────────────────────────
@@ -174,9 +214,9 @@ function ActivityRow({ event }: { event: ActivityEvent }) {
 }
 
 // ─── Stats bar ────────────────────────────────────────────────────────────────
-function StatsBar({ events }: { events: ActivityEvent[] }) {
-  const counts = events.reduce<Record<string, number>>((acc, e) => {
-    acc[e.event_type] = (acc[e.event_type] ?? 0) + 1
+function StatsBar({ summary }: { summary: EventSummary[] }) {
+  const counts = summary.reduce<Record<string, number>>((acc, s) => {
+    acc[s.event_type] = s.count
     return acc
   }, {})
 
@@ -184,17 +224,20 @@ function StatsBar({ events }: { events: ActivityEvent[] }) {
     { type: 'TicketPurchased' as EventType, label: 'Tickets sold' },
     { type: 'RaffleCreated' as EventType, label: 'Raffles created' },
     { type: 'WinnerPicked' as EventType, label: 'Winners picked' },
+    { type: 'NFTPrizeAwarded' as EventType, label: 'NFTs awarded' },
+    { type: 'TokenPrizeAwarded' as EventType, label: 'Token prizes' },
+    { type: 'UnderfilledPayout' as EventType, label: 'Underfilled payouts' },
   ]
 
   return (
-    <div className="grid grid-cols-3 gap-px bg-[#1f1f1f] rounded-xl overflow-hidden border border-[#1f1f1f]">
+    <div className="grid grid-cols-3 lg:grid-cols-6 gap-px bg-[#1f1f1f] rounded-xl overflow-hidden border border-[#1f1f1f]">
       {items.map(({ type, label }) => (
         <div key={type} className="bg-[#0a0a0a] px-5 py-4 flex flex-col gap-1">
           <span
             className="font-sans font-bold text-xl"
             style={{ color: EVENT_TYPE_COLORS[type] }}
           >
-            {counts[type] ?? 0}
+            {formatNumber(Number(counts[type] ?? 0))}
           </span>
           <span className="font-mono text-[10px] text-[#777777] uppercase tracking-widest">
             {label}
@@ -208,7 +251,7 @@ function StatsBar({ events }: { events: ActivityEvent[] }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export function ActivityPage() {
   const [filter, setFilter] = useState<ActivityFilter>('all')
-  const { events, loading, hasMore, loadMore, total } = useActivityEvents(filter)
+  const { events, loading, hasMore, loadMore, total, summary } = useActivityEvents(filter)
 
   return (
     <div className="p-6 lg:p-8 space-y-6">
@@ -234,14 +277,14 @@ export function ActivityPage() {
             </span>
           </div>
           <p className="font-mono text-xs text-[#555555] mt-1">
-            {total} events · Real-time blockchain feed
+            {total} events · Real-time Raffled. protocol feed
           </p>
         </div>
       </motion.div>
 
       {/* ── Stats ── */}
       <motion.div variants={fadeInUp} initial="initial" animate="animate">
-        <StatsBar events={events} />
+        <StatsBar summary={summary} />
       </motion.div>
 
       {/* ── Filter Tabs ── */}

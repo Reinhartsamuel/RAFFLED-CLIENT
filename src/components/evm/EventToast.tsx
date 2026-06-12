@@ -53,6 +53,24 @@ const EVENT_COLORS: Record<EventType, { border: string; badge: string; dot: stri
     dot: 'bg-[#8B5CF6]',
     icon: '◈',
   },
+  UnderfilledPayout: {
+    border: 'border-[#F97316]/25',
+    badge: 'bg-[#F97316]/15 text-[#F97316] border border-[#F97316]/30',
+    dot: 'bg-[#F97316]',
+    icon: '💸',
+  },
+  NFTPrizeAwarded: {
+    border: 'border-[#A855F7]/25',
+    badge: 'bg-[#A855F7]/15 text-[#A855F7] border border-[#A855F7]/30',
+    dot: 'bg-[#A855F7]',
+    icon: '🖼',
+  },
+  TokenPrizeAwarded: {
+    border: 'border-[#14B8A6]/25',
+    badge: 'bg-[#14B8A6]/15 text-[#14B8A6] border border-[#14B8A6]/30',
+    dot: 'bg-[#14B8A6]',
+    icon: '🪙',
+  },
 }
 
 // ─── Message formatting ─────────────────────────────────────────────────────

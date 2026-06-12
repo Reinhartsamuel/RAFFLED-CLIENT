@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { useAccount } from 'wagmi'
 import { motion, AnimatePresence } from 'framer-motion'
 import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
 import { useRaffleCount } from './hooks/useRaffleContract'
@@ -21,11 +20,9 @@ import MyTickets from './pages/MyTickets'
 
 const RAFFLE_CACHE_TTL = 30_000 // 30 seconds
 
-export function HomePage({ activeFilter, onFilterChange }: {
+export function HomePage({ activeFilter }: {
   activeFilter: string
-  onFilterChange: (filter: string) => void
 }) {
-  const { isConnected } = useAccount()
   const { data: raffleCount, refetch: refetchRaffleCount } = useRaffleCount()
   const [showCreateModal, setShowCreateModal] = useState(false)
 
@@ -161,7 +158,6 @@ export function HomePage({ activeFilter, onFilterChange }: {
 
 
 export default function Home() {
-  const { isConnected } = useAccount()
   const [activeFilter, setActiveFilter] = useState('home')
 
   const sidebar = (
@@ -171,7 +167,7 @@ export default function Home() {
   return (
     <Layout sidebar={sidebar}>
       <Routes>
-        <Route path="/" element={<HomePage activeFilter={activeFilter} onFilterChange={setActiveFilter} />} />
+        <Route path="/" element={<HomePage activeFilter={activeFilter} />} />
         <Route path="/raffle/:id" element={<RaffleDetail />} />
         <Route path="/create-raffle" element={<CreateRafflePage />} />
         <Route path="/faucet" element={<Faucet />} />
