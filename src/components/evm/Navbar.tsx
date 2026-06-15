@@ -62,23 +62,59 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   }, [authMessage])
 
   useEffect(() => {
-    if (address && !getAuthToken() && !signingInRef.current) {
+    const token = getAuthToken()
+    console.log('[Navbar] Address effect triggered. Address:', address, 'Token exists:', !!token, 'Signing in:', signingInRef.current)
+    
+    if (address && !token && !signingInRef.current) {
+      console.log('[Navbar] Triggering auto sign-in...')
       signingInRef.current = true
-      handleSignIn().finally(() => { signingInRef.current = false })
+      handleSignIn().finally(() => { 
+        signingInRef.current = false 
+        console.log('[Navbar] Sign-in attempt finished. Ref reset.')
+      })
     }
   }, [address])
 
   const handleSignIn = async () => {
-    if (getAuthToken()) {
+    const existingToken = getAuthToken()
+    console.log('[Navbar] handleSignIn called. Token exists:', !!existingToken, 'Address:', addressRef.current)
+    
+    if (existingToken) {
       setAuthStatus('ok')
       return
     }
 
+    if (!addressRef.current) {
+      console.error('[Navbar] No address available for sign-in')
+      setAuthStatus('error')
+      setAuthMessage('No wallet address found. Please reconnect your wallet.')
+      return
+    }
+
+    if (!BACKEND_URL) {
+      console.error('[Navbar] BACKEND_URL is not defined')
+      setAuthStatus('error')
+      setAuthMessage('Configuration error: BACKEND_URL is missing. Check your .env file.')
+      return
+    }
+
     try {
+      console.log('[Navbar] Fetching nonce from:', `${BACKEND_URL}/auth/nonce`)
       const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
-      const { nonce: fetchedNonce } = await nonceRes.json()
+      
+      if (!nonceRes.ok) {
+        throw new Error(`Server responded with ${nonceRes.status}: ${nonceRes.statusText}`)
+      }
+
+      const data = await nonceRes.json()
+      const fetchedNonce = data.nonce
+      
+      if (!fetchedNonce) {
+        throw new Error('No nonce returned from server')
+      }
+
       setNonce(fetchedNonce)
 
       const message = [
@@ -86,7 +122,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
         '',
         'Click to sign in and accept the Raffled Terms of Service and Privacy Policy. This request will not cost any gas fees.',
         '',
-        `Wallet address: ${addressRef.current || 'connected'}`,
+        `Wallet address: ${addressRef.current}`,
         `Nonce: ${fetchedNonce}`,
       ].join('\n')
 
@@ -95,9 +131,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setTermsAccepted(false)
       termsModalShownRef.current = true
     } catch (err) {
-      console.error('Error fetching nonce:', err)
+      console.error('[Navbar] Error fetching nonce:', err)
       setAuthStatus('error')
-      setAuthMessage('Failed to initialize sign-in.')
+      setAuthMessage(`Failed to initialize sign-in: ${err instanceof Error ? err.message : 'Unknown error'}`)
       termsModalShownRef.current = false
     }
   }

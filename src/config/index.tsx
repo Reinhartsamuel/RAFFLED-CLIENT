@@ -23,8 +23,7 @@ export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
 
 export const getAuthToken = () => {
   const token = localStorage.getItem('access_token')
-  // Return null if token is null, undefined, empty string, or the string "null"/"undefined"
-  if (!token || token === 'null' || token === 'undefined') {
+  if (!token || token === 'null' || token === 'undefined' || token.trim() === '') {
     return null
   }
   return token
