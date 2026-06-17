@@ -161,28 +161,6 @@ export function RaffleDetail() {
 
           // Debug log: free_raffle boolean
           // console.log('[RaffleDetail] free_raffle:', raw.free_raffle)
-
-          // Fetch /task/my if this is a free raffle
-          if (raw.free_raffle && authToken) {
-            console.log('[RaffleDetail] Fetching /task/my for free raffle')
-            try {
-              const taskRes = await apiFetch(`${BACKEND_URL}/raffles/${id}/task/my`, {
-                method: 'GET',
-                headers: {
-                  ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-                  'Content-Type': 'application/json',
-                  Accept: 'application/json',
-                },
-              })
-              if (taskRes.ok) {
-                const taskData = await taskRes.json()
-                console.log('[RaffleDetail] /task/my response:', taskData)
-                console.log('[RaffleDetail] free_raffle:', true)
-              }
-            } catch (taskErr) {
-              console.error('[RaffleDetail] Error fetching /task/my:', taskErr)
-            }
-          }
         } else {
           setRaffle(null)
         }
