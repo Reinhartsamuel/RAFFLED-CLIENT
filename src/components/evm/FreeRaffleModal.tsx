@@ -110,7 +110,7 @@ export function FreeRaffleModal({
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
   const [tasks, setTasks] = useState<DefaultTask[]>(DEFAULT_TASKS)
   const [tasksCompleted, setTasksCompleted] = useState(0)
-  const [tasksTotal, ] = useState(4)
+  const [tasksTotal, setTasksTotal] = useState(DEFAULT_TASKS.length)
   const [twitterUsername, setTwitterUsername] = useState('')
   const [, setSignature] = useState<string | null>(null)
   const [allVerified, setAllVerified] = useState(false)

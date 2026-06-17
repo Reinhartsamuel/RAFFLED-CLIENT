@@ -6,7 +6,7 @@ import { motion } from 'framer-motion'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { FreeRaffleModal } from '../components/evm/FreeRaffleModal'
-import { useConfig, useChainId } from 'wagmi'
+import { useConfig,  } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
@@ -122,6 +122,7 @@ export function RaffleDetail() {
               if (results[0].status === 'fulfilled') paymentSymbol = results[0].value as string
               if (results[1].status === 'fulfilled') paymentDecimals = Number(results[1].value)
             } catch {
+            //
             }
           }
 
