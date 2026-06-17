@@ -455,27 +455,6 @@ export function FreeRaffleModal({
                       </motion.div>
                     )}
 
-                    {/* Checkmark animation overlay */}
-                    {isDone && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 z-10"
-                      >
-                        <div className="w-6 h-6 bg-[#22C55E] rounded-full flex items-center justify-center">
-                          <motion.span
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{ delay: 0.1, type: 'spring', stiffness: 400 }}
-                            className="text-black text-xs font-bold"
-                          >
-                            ✓
-                          </motion.span>
-                        </div>
-                      </motion.div>
-                    )}
-
                     <div className={`flex items-center gap-4 transition-all duration-300 ${isVerifying ? 'opacity-30 blur-[2px]' : ''}`}>
                       {/* Task Number */}
                       <span
@@ -502,25 +481,34 @@ export function FreeRaffleModal({
                     </div>
 
                     {/* Verify Button */}
-                    {!isDone && (
-                      <button
-                        className={`font-mono text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-all relative z-20 ${
-                          isVerifying
-                            ? 'bg-[#FFB800]/10 text-[#FFB800]/50 cursor-wait'
-                            : twitterUsername.trim()
-                            ? 'bg-[#FFB800]/10 text-[#FFB800] hover:bg-[#FFB800]/20 border border-[#FFB800]/25'
-                            : 'bg-[#1a1a1a] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
-                        }`}
-                        onClick={() => handleVerifyTask(task)}
-                        disabled={
-                          isVerifying ||
-                          !twitterUsername.trim() ||
-                          isRaffleCreator
-                        }
-                      >
-                        {isVerifying ? 'VERIFYING' : 'VERIFY'}
-                      </button>
-                    )}
+                    <button
+                      className={`font-mono text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 rounded transition-all relative z-20 flex items-center gap-2 ${
+                        isDone
+                          ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/20 hover:bg-[#22C55E]/20'
+                          : isVerifying
+                          ? 'bg-[#FFB800]/10 text-[#FFB800]/50 cursor-wait'
+                          : twitterUsername.trim()
+                          ? 'bg-[#FFB800]/10 text-[#FFB800] hover:bg-[#FFB800]/20 border border-[#FFB800]/25'
+                          : 'bg-[#1a1a1a] text-[#333333] cursor-not-allowed border border-[#1f1f1f]'
+                      }`}
+                      onClick={() => handleVerifyTask(task)}
+                      disabled={
+                        isVerifying ||
+                        !twitterUsername.trim() ||
+                        isRaffleCreator
+                      }
+                    >
+                      {isDone ? (
+                        <>
+                          <span className="text-xs">✓</span>
+                          <span>REDIRECT</span>
+                        </>
+                      ) : isVerifying ? (
+                        'VERIFYING'
+                      ) : (
+                        'VERIFY'
+                      )}
+                    </button>
                   </motion.div>
                 )
               })}
