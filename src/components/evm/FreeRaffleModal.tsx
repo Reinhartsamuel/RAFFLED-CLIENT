@@ -148,8 +148,6 @@ export function FreeRaffleModal({
   }, [isSuccess, enterRaffleHash, onSuccess])
 
   const handleVerifyTask = async (task: DefaultTask) => {
-    if (task.verified) return
-
     if (!twitterUsername.trim()) {
       setError('Please enter your X (Twitter) username first.')
       return
@@ -161,14 +159,18 @@ export function FreeRaffleModal({
     const cleanUrl = task.url.replace(/^https?:\/\/x\.com/, 'https://x.com')
     window.open(cleanUrl, '_blank', 'noopener,noreferrer')
 
-    setTimeout(() => {
-      setTasks((prev) =>
-        prev.map((t) =>
-          t.id === task.id ? { ...t, verified: true } : t
+    if (!task.verified) {
+      setTimeout(() => {
+        setTasks((prev) =>
+          prev.map((t) =>
+            t.id === task.id ? { ...t, verified: true } : t
+          )
         )
-      )
+        setVerifyingTaskId(null)
+      }, 10000)
+    } else {
       setVerifyingTaskId(null)
-    }, 3000)
+    }
   }
 
   const handleEnterRaffle = async () => {
