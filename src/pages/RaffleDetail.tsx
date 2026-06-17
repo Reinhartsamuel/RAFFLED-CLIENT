@@ -433,7 +433,7 @@ export function RaffleDetail() {
           </motion.div>
 
           {/* Winner Banner */}
-          {address?.toLowerCase() === raffle.winner_address?.toLowerCase() && (
+          {(address?.toLowerCase() === raffle.winner_address?.toLowerCase() && address) && (
             <motion.div
               variants={fadeInUp}
               initial="initial"
