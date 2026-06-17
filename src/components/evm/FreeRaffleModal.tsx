@@ -3,7 +3,7 @@ import { usePublicClient, useAccount } from 'wagmi'
 import { useWaitForTransactionReceipt } from 'wagmi'
 import { ContractFunctionRevertedError } from 'viem'
 import { motion, AnimatePresence } from 'framer-motion'
-import { overlayVariants, modalVariants, fadeInUp, staggerContainer, staggerItem } from '../../utils/animations'
+import { overlayVariants, modalVariants, fadeInUp, staggerContainer } from '../../utils/animations'
 import { useEnterFreeRaffle } from '../../hooks/useRaffleContract'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../../config/index'
 import { TaskItem } from '../../interfaces/TaskItem'
@@ -95,14 +95,6 @@ export function FreeRaffleModal({
   },
   {
     id: 3,
-    type: 'share',
-    label: 'SHARE WITH FRIENDS',
-    description: 'Send the link to 3 Discord servers',
-    url: 'https://x.com/intent/tweet?text=Check%20out%20this%20raffle%20on%20Raffled!%20%23Raffled',
-    verified: false,
-  },
-  {
-    id: 4,
     type: 'reply',
     label: 'REPLY TO THREAD',
     description: 'Comment with your Wallet Address',
@@ -118,9 +110,9 @@ export function FreeRaffleModal({
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
   const [tasks, setTasks] = useState<DefaultTask[]>(DEFAULT_TASKS)
   const [tasksCompleted, setTasksCompleted] = useState(0)
-  const [tasksTotal, setTasksTotal] = useState(4)
+  const [tasksTotal, ] = useState(4)
   const [twitterUsername, setTwitterUsername] = useState('')
-  const [signature, setSignature] = useState<string | null>(null)
+  const [, setSignature] = useState<string | null>(null)
   const [allVerified, setAllVerified] = useState(false)
   const [verifyingTaskId, setVerifyingTaskId] = useState<number | null>(null)
   const [submittingEntry, setSubmittingEntry] = useState(false)
@@ -603,56 +595,3 @@ export function FreeRaffleModal({
     </AnimatePresence>
   )
 }
-
-function getTaskLabel(type: string): string {
-  switch (type.toLowerCase()) {
-    case 'follow':
-      return 'FOLLOW @RAFFLED'
-    case 'repost':
-    case 'retweet':
-      return 'REPOST RAFFLE'
-    case 'share':
-      return 'SHARE WITH FRIENDS'
-    case 'reply':
-    case 'comment':
-      return 'REPLY TO THREAD'
-    default:
-      return 'COMPLETE TASK'
-  }
-}
-
-function getTaskDescription(type: string): string {
-  switch (type.toLowerCase()) {
-    case 'follow':
-      return 'Link your X account and follow'
-    case 'repost':
-    case 'retweet':
-      return 'Share the raffle to your timeline'
-    case 'share':
-      return 'Send the link to 3 Discord servers'
-    case 'reply':
-    case 'comment':
-      return 'Comment with your lucky number'
-    default:
-      return 'Complete the required action'
-  }
-}
-
-function getTaskUrl(type: string, raffleId: number, twitterUsername: string): string {
-  switch (type.toLowerCase()) {
-    case 'follow':
-      return `https://x.com/useRaffled`
-    case 'repost':
-    case 'retweet':
-      return `https://x.com/useRaffled/status/${raffleId}`
-    case 'share':
-      return `https://discord.com/channels/@me`
-    case 'reply':
-    case 'comment':
-      return `https://x.com/useRaffled/status/${raffleId}`
-    default:
-      return `https://x.com/useRaffled`
-  }
-}
-
-export default FreeRaffleModal

@@ -1,8 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAppKitAccount } from '@reown/appkit/react'
 import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { fadeInUp, staggerContainer, staggerItem } from '../utils/animations'
+import { WalletConnect } from '../components/evm/WalletConnect'
 
 interface PurchasedRaffle {
   id: number
@@ -163,9 +165,32 @@ function StatsCard({
 
 export default function MyTickets() {
   const navigate = useNavigate()
+  const { isConnected } = useAppKitAccount()
   const [tickets, setTickets] = useState<PurchasedRaffle[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  if (!isConnected) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="max-w-md w-full text-center border border-[#1f1f1f] bg-[#0a0a0a] rounded-2xl p-10"
+        >
+          <div className="w-16 h-16 rounded-2xl bg-[#FFB800]/10 border border-[#FFB800]/20 flex items-center justify-center text-2xl mx-auto mb-6">
+            🎟️
+          </div>
+          <h2 className="font-sans font-bold text-2xl text-[#F5F5F5] mb-3">Connect Your Wallet</h2>
+          <p className="font-mono text-sm text-[#555555] mb-8">
+            Connect your wallet to view your purchased tickets and raffle history
+          </p>
+          <WalletConnect />
+        </motion.div>
+      </div>
+    )
+  }
 
   const fetchTickets = useCallback(async () => {
     setLoading(true)
