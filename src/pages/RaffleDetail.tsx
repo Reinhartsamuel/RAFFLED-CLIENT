@@ -50,6 +50,7 @@ interface RaffleDetailData {
   free_raffle?: boolean
   task?: TaskItem
   underfilled_return_tx_hash?: string | null
+  your_tickets?: number
 }
 
 export function RaffleDetail() {
@@ -90,6 +91,7 @@ export function RaffleDetail() {
 
         const data = await res.json()
         const raw = data.raffle
+        const yourTickets = Number(data.your_tickets ?? 0)
 
         let paymentAssetAddr = ''
         let paymentSymbol = 'USDC'
@@ -156,6 +158,7 @@ export function RaffleDetail() {
             free_raffle: raw.free_raffle,
             task: raw.task,
             underfilled_return_tx_hash: raw.underfilled_return_tx_hash,
+            your_tickets: yourTickets,
           }
           setRaffle(normalized)
 
@@ -359,8 +362,10 @@ export function RaffleDetail() {
   const buttonState = getButtonState()
 
   const isFreeRaffle = raffle?.free_raffle === true
+  const hasFreeRaffleTicket = isFreeRaffle && (raffle?.your_tickets ?? 0) >= 1
 
   const getButtonLabel = () => {
+    if (hasFreeRaffleTicket) return 'You Are in the Spot'
     if (isFreeRaffle) return 'Enter Free Raffle'
     return 'Buy Tickets'
   }
@@ -697,12 +702,23 @@ export function RaffleDetail() {
 
                   {/* Buy Button */}
                   {buttonState === 'active' && (
-                    <button
-                      className="w-full bg-amber-500 text-black py-4 font-mono font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_15px_rgba(255,184,0,0.4)] transition-all active:scale-[0.98]"
-                      onClick={() => isFreeRaffle ? setShowFreeRaffleModal(true) : setShowBuyModal(true)}
-                    >
-                      {getButtonLabel()}
-                    </button>
+                    <>
+                      {hasFreeRaffleTicket ? (
+                        <button
+                          className="w-full bg-[#1a1a1a] text-[#22C55E] py-4 font-mono font-bold uppercase tracking-widest text-sm border border-[#22C55E]/30 cursor-not-allowed opacity-80"
+                          disabled
+                        >
+                          You Are in the Spot
+                        </button>
+                      ) : (
+                        <button
+                          className="w-full bg-amber-500 text-black py-4 font-mono font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_15px_rgba(255,184,0,0.4)] transition-all active:scale-[0.98]"
+                          onClick={() => isFreeRaffle ? setShowFreeRaffleModal(true) : setShowBuyModal(true)}
+                        >
+                          {getButtonLabel()}
+                        </button>
+                      )}
+                    </>
                   )}
 
                   {buttonState === 'closed' && (
@@ -824,7 +840,9 @@ export function RaffleDetail() {
           ticketsSold={raffle.tickets_sold || 0}
           onClose={() => setShowBuyModal(false)}
           onSuccess={() => {
-            window.location.reload()
+            setTimeout(() => {
+              window.location.reload()
+            }, 2000)
           }}
         />
       )}
@@ -844,7 +862,9 @@ export function RaffleDetail() {
           onClose={() => setShowFreeRaffleModal(false)}
           task={raffle?.task}
           onSuccess={() => {
-            window.location.reload()
+            setTimeout(() => {
+              window.location.reload()
+            }, 2000)
           }}
         />
       )}

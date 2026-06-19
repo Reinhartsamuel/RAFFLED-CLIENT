@@ -110,17 +110,19 @@ export function FreeRaffleModal({
   const [enterRaffleHash, setEnterRaffleHash] = useState<`0x${string}` | undefined>()
   const [tasks, setTasks] = useState<DefaultTask[]>(DEFAULT_TASKS)
   const [tasksCompleted, setTasksCompleted] = useState(0)
-  const [tasksTotal, setTasksTotal] = useState(DEFAULT_TASKS.length)
+  const [tasksTotal, ] = useState(DEFAULT_TASKS.length)
   const [twitterUsername, setTwitterUsername] = useState('')
   const [, setSignature] = useState<string | null>(null)
   const [allVerified, setAllVerified] = useState(false)
   const [verifyingTaskId, setVerifyingTaskId] = useState<number | null>(null)
   const [submittingEntry, setSubmittingEntry] = useState(false)
+  const [isEligible, setIsEligible] = useState(false)
+  const [storedSignature, setStoredSignature] = useState<string | null>(null)
 
   const remainingTickets = maxTickets - ticketsSold
 
   const { enterFreeRaffle, isPending: isEnterPending } = useEnterFreeRaffle()
-  const { isLoading: isConfirming, isSuccess } = useWaitForTransactionReceipt({
+  const { isLoading: isConfirming, isSuccess, isError: isTxError, error: txError } = useWaitForTransactionReceipt({
     hash: enterRaffleHash,
   })
 
@@ -146,6 +148,13 @@ export function FreeRaffleModal({
       onSuccess?.()
     }
   }, [isSuccess, enterRaffleHash, onSuccess])
+
+  useEffect(() => {
+    if (isTxError && enterRaffleHash) {
+      setIsSubmitting(false)
+      setError(txError?.message || 'Transaction failed. Please try again.')
+    }
+  }, [isTxError, enterRaffleHash, txError])
 
   const handleVerifyTask = async (task: DefaultTask) => {
     if (!twitterUsername.trim()) {
@@ -189,6 +198,11 @@ export function FreeRaffleModal({
       return
     }
 
+    if (!allVerified) {
+      setError('Please complete all tasks before entering.')
+      return
+    }
+
     setError(null)
     setSubmittingEntry(true)
 
@@ -209,17 +223,18 @@ export function FreeRaffleModal({
       const data: TaskSubmitResponse = await res.json()
       console.log('[FreeRaffle] task/submit response:', data)
 
-      if (res.status !== 201) {
+      if (!data?.data?.signature) {
         let msg = data.message || 'Entry failed. Please try again.'
 
-        if (data.failed_tasks && data.failed_tasks.length > 0) {
-          msg = `Tasks incomplete: ${data.failed_tasks.join(', ')}. Please complete all tasks before entering.`
-        } else if (data.max_participants && data.current_participants !== undefined) {
+        if (data?.failed_tasks && data?.failed_tasks?.length > 0) {
+          msg = `Tasks incomplete: ${data?.failed_tasks?.join(', ')}. Please complete all tasks before entering.`
+        } else if (data?.max_participants && data?.current_participants !== undefined) {
           msg = 'Participant slots are full.'
         }
 
         setError(msg)
         setSubmittingEntry(false)
+        setIsEligible(false)
         return
       }
 
@@ -227,15 +242,40 @@ export function FreeRaffleModal({
       if (!sig) {
         setError('Server did not return a signature. Please try again.')
         setSubmittingEntry(false)
+        setIsEligible(false)
         return
       }
 
+      // Eligibility verified - signature received
       setSignature(sig)
-      setIsSubmitting(true)
-
-      const hash = await enterFreeRaffle({ raffleId, signature: sig })
-      setEnterRaffleHash(hash as `0x${string}`)
+      setStoredSignature(sig)
+      setIsEligible(true)
       setSubmittingEntry(false)
+    } catch (err) {
+      console.error('Free raffle entry failed:', err)
+      let msg = 'Entry failed.'
+      if (err instanceof Error) {
+        msg = err.message
+      }
+      setError(msg)
+      setIsEligible(false)
+      setSubmittingEntry(false)
+    }
+  }
+
+  const handleConfirmEntry = async () => {
+    if (!storedSignature || !address || !isConnected || !publicClient) {
+      setError('Missing required data to enter raffle.')
+      return
+    }
+
+    setError(null)
+    setIsSubmitting(true)
+
+    try {
+      const hash = await enterFreeRaffle({ raffleId, signature: storedSignature })
+      setEnterRaffleHash(hash as `0x${string}`)
+      // Don't reset isSubmitting here - let the transaction receipt handler do it
     } catch (err) {
       console.error('Free raffle entry failed:', err)
       let msg = 'Entry failed.'
@@ -246,13 +286,14 @@ export function FreeRaffleModal({
         const viem = err as Error & { shortMessage?: string }
         if (err.message.includes('Connector not connected') || err.message.includes('signature denied')) {
           msg = 'Wallet connection lost. Please reconnect your wallet and try again.'
+        } else if (err.message.includes('User rejected') || err.message.includes('user rejected')) {
+          msg = 'Transaction cancelled.'
         } else {
           msg = viem.shortMessage ?? err.message
         }
       }
       setError(msg)
       setIsSubmitting(false)
-      setSubmittingEntry(false)
     }
   }
 
@@ -523,31 +564,41 @@ export function FreeRaffleModal({
                   ? 'bg-[#22C55E]/10 text-[#22C55E] border border-[#22C55E]/30 cursor-not-allowed'
                   : isRaffleCreator
                   ? 'bg-[#111111] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
-                  : allVerified && !isEnterPending && !isConfirming && !submittingEntry
+                  : (isSubmitting || isEnterPending || isConfirming) && !isTxError
+                  ? 'bg-[#1a1a1a] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
+                  : isEligible
+                  ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.3)]'
+                  : allVerified && !submittingEntry
                   ? 'bg-[#FFB800] text-[#050505] hover:bg-[#FFCC33] shadow-[0_0_20px_rgba(255,184,0,0.2)] hover:shadow-[0_0_30px_rgba(255,184,0,0.3)]'
                   : 'bg-[#1a1a1a] text-[#333333] border border-[#1f1f1f] cursor-not-allowed'
               }`}
-              onClick={handleEnterRaffle}
+              onClick={isEligible ? handleConfirmEntry : handleEnterRaffle}
               disabled={
-                isEnterPending ||
+                (isEnterPending ||
                 isConfirming ||
                 isSubmitting ||
                 submittingEntry ||
                 isRaffleCreator ||
-                isSuccess
+                isSuccess) && !isTxError
               }
             >
               {submittingEntry
-                ? 'Checking Eligibility...'
+                ? 'Verifying Eligibility...'
+                : isSubmitting && !isTxError
+                ? 'Requesting Wallet Signature...'
                 : isConfirming
                 ? 'Confirming...'
                 : isEnterPending
                 ? 'Entering Raffle...'
                 : isSuccess
                 ? 'Successfully Entered!'
+                : isEligible
+                ? 'You Are Eligible! Click to Enter'
                 : isRaffleCreator
                 ? 'Your Raffle'
-                : 'ENTER FREE RAFFLE'}
+                : allVerified
+                ? 'Check Eligibility'
+                : 'Complete Tasks First'}
             </button>
 
             {/* Chainlink Footer */}

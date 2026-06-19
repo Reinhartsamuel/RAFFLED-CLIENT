@@ -300,6 +300,7 @@ export function useEnterFreeRaffle() {
 
     // Estimate gas using simulateContract for mobile wallet compatibility
     let gasLimit: bigint | undefined
+    const MAX_GAS_LIMIT = 1000000n // 1M gas cap to prevent exceeding network limits
     if (publicClient) {
       try {
         const { request } = await simulateContract(publicClient, {
@@ -309,10 +310,14 @@ export function useEnterFreeRaffle() {
           args,
         })
         if (request.gas) {
-          gasLimit = BigInt(Math.floor(Number(request.gas) * 1.2))
+          const estimatedGas = BigInt(Math.floor(Number(request.gas) * 1.2))
+          // Cap gas limit to prevent exceeding network maximum
+          gasLimit = estimatedGas > MAX_GAS_LIMIT ? MAX_GAS_LIMIT : estimatedGas
         }
       } catch (err) {
-        console.warn('Gas estimation failed, wallet will estimate:', err)
+        console.warn('Gas estimation failed, using fallback gas limit:', err)
+        // Fallback to reasonable gas limit for signature-based entry
+        gasLimit = 500000n
       }
     }
 
