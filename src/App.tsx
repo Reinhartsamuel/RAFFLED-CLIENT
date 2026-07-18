@@ -7,6 +7,7 @@ import { DeploymentInfo } from './components/DeploymentInfo';
 import { wagmiConfig, queryClient } from './config/evm.config';
 import LandingPageOriginal from './pages/LandingPageOriginal';
 import LandingPage2 from './pages/LandingPage2';
+import LandingPageFrequency from './pages/LandingPageFrequency';
 
 // Lazy load Home to prevent its CSS from loading on landing page
 const Home = lazy(() => import('./Home'));
@@ -18,7 +19,8 @@ function AppContent() {
     <>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/" element={<LandingPageOriginal />} />
+          <Route path="/" element={<LandingPageFrequency />} />
+          <Route path="/lp-2" element={<LandingPageOriginal />} />
           <Route path="/lp-old" element={<LandingPage2 />} />
           <Route
             path="/app/*"
