@@ -28,3 +28,9 @@ dist-ssr
 
 # Scripts
 scripts/
+
+
+.kilo/*
+.claude/*
+hermes-upload.sh
+hermes-download.sh
