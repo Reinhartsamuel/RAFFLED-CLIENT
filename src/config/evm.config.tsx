@@ -7,9 +7,12 @@ import { QueryClient } from '@tanstack/react-query'
 // Contract Addresses
 // ──────────────────────────────────────────────────────────────────────
 
+export const PONDER_GRAPHQL_URL: string =
+  import.meta.env.VITE_PONDER_GRAPHQL_URL || 'http://localhost:42069/graphql'
+
 export const CONTRACTS = {
   RaffleManager: {
-    baseSepolia: (import.meta.env.VITE_RAFFLE_MANAGER_ADDRESS_SEPOLIA || '0x0000000000000000000000000000000000000000') as `0x${string}`,
+    baseSepolia: '0xc17eee20B4990021bE9cc8eCB7833706465bb8b9' as const,
     base: (import.meta.env.VITE_RAFFLE_MANAGER_ADDRESS_BASE || '0x0000000000000000000000000000000000000000') as `0x${string}`,
   },
   MockUSDC: {
@@ -43,8 +46,8 @@ export const wagmiAdapter = new WagmiAdapter({
 export const metadata = {
   name: 'Raffled',
   description: 'On-chain raffles powered by Chainlink VRF',
-  url: import.meta.env.VITE_BASE_URL || 'http://localhost:5173',
-  icons: ['https://avatars.githubusercontent.com/u/179229932'],
+  url: import.meta.env.VITE_BASE_URL || 'https://raffled.tuttilabs.xyz',
+  icons: ['https://raffled.tuttilabs.xyz/favicon.ico'],
 }
 
 // Create wagmi config

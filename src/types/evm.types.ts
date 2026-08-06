@@ -1,11 +1,22 @@
 import type { Address } from 'viem'
 
 /**
- * Raffle status enum — RaffleManager3 only has OPEN and COMPLETED.
+ * Raffle status enum — RaffledCore has 4 states.
  */
 export enum RaffleStatus {
   OPEN = 0,
-  COMPLETED = 1,
+  PENDING_VRF = 1,
+  COMPLETED = 2,
+  CANCELLED = 3,
+}
+
+export type RaffleStatusValue = 0 | 1 | 2 | 3 // OPEN=0, PENDING_VRF=1, COMPLETED=2, CANCELLED=3
+
+export const RaffleStatusLabel: Record<number, string> = {
+  0: 'OPEN',
+  1: 'PENDING_VRF',
+  2: 'COMPLETED',
+  3: 'CANCELLED',
 }
 
 /**
@@ -155,4 +166,63 @@ export interface LeaderboardEntry {
   address: Address
   tickets: number
   spent: bigint
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Ponder Indexer Types
+// ──────────────────────────────────────────────────────────────────────
+
+export interface PonderRaffle {
+  id: string
+  host: string
+  prizeAsset: string
+  prizeType: 'ERC20' | 'ERC721'
+  prizeAmountOrTokenId: string
+  prizeSymbol: string
+  prizeDecimals: number
+  ticketPrice: string
+  maxCap: string
+  totalTickets: string
+  expiry: string
+  status: 'OPEN' | 'PENDING_VRF' | 'COMPLETED' | 'CANCELLED'
+  underfilled: boolean
+  winner: string | null
+  vrfRequestId: string | null
+  createdAt: string
+  resolvedAt: string | null
+}
+
+export interface PonderParticipant {
+  id: string
+  raffleId: string
+  user: string
+  ticketCount: string
+  amountPaid: string
+  isWinner: boolean
+  hasRefunded: boolean
+}
+
+export interface PonderEvent {
+  id: string
+  raffleId: string
+  eventName: string
+  from: string | null
+  data: Record<string, unknown>
+  txHash: string
+  blockTimestamp: string
+}
+
+/**
+ * Ponder list queries return a paginated page wrapper:
+ * `{ items, pageInfo, totalCount }`.
+ */
+export interface PonderPage<T> {
+  items: T[]
+  totalCount: number
+  pageInfo: {
+    hasNextPage: boolean
+    hasPreviousPage: boolean
+    startCursor: string | null
+    endCursor: string | null
+  }
 }

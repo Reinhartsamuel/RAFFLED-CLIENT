@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDisconnect, useSignMessage } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BACKEND_URL, getAuthToken } from '../../config/index'
+import { BACKEND_URL, BACKEND_ENABLED, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -88,6 +88,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       console.error('[Navbar] No address available for sign-in')
       setAuthStatus('error')
       setAuthMessage('No wallet address found. Please reconnect your wallet.')
+      return
+    }
+
+    if (!BACKEND_ENABLED) {
+      // Backend suspended — wallet connection is sufficient for on-chain actions
+      setAuthStatus('ok')
       return
     }
 

@@ -2,6 +2,9 @@ import { useEffect, useCallback } from 'react'
 import { BACKEND_URL } from '../config'
 import type { ActivityEvent } from './useActivityEvents'
 
+// ─── Backend suspended — SSE disabled ───────────────────────────────────────
+const SSE_ENABLED = false
+
 // ─── Toggle mock vs real SSE ───────────────────────────────────────────────
 const USE_MOCK_DATA = false;
 
@@ -143,6 +146,7 @@ function openSSEConnection() {
 // ─── Hook ──────────────────────────────────────────────────────────────────
 export function useSSEEvents() {
   useEffect(() => {
+    if (!SSE_ENABLED) return
     if (USE_MOCK_DATA) {
       startMockSSE()
       return () => {
@@ -158,6 +162,7 @@ export function useSSEEvents() {
   }, [])
 
   const subscribe = useCallback((cb: (event: ActivityEvent) => void) => {
+    if (!SSE_ENABLED) return () => {}
     listeners.add(cb)
     return () => {
       listeners.delete(cb)
@@ -168,5 +173,5 @@ export function useSSEEvents() {
     }
   }, [])
 
-  return { subscribe }
+  return { subscribe, isConnected: false }
 }

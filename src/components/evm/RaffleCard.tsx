@@ -1,11 +1,9 @@
 import { useNavigate } from "react-router-dom"
-import { BackendRaffle } from "../../interfaces/BackendRaffle"
 import { formatUnits } from 'viem'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { staggerItem } from '../../utils/animations'
-import fallbackImg from '../../assets/USDC-grey.webp'
-import { safeBigInt } from "../../utils/safeBigInt"
+import type { EnrichedRaffle } from '../../hooks/useRaffles'
 
 interface TimeUnitProps {
     value: number
@@ -25,18 +23,13 @@ function TimeUnit({ value, label }: TimeUnitProps) {
     )
 }
 
-function useCountdown(endsAt: string) {
+function useCountdown(endsAtSeconds: number) {
     const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
     const [isEnded, setIsEnded] = useState(false)
 
     useEffect(() => {
         function calc() {
-            // Parse the date string as UTC (handle both formats)
-            const endDate = endsAt.includes('T') && endsAt.endsWith('Z')
-                ? new Date(endsAt)
-                : new Date(endsAt.replace(' ', 'T') + 'Z')
-            const diff = endDate.getTime() - Date.now()
-            
+            const diff = endsAtSeconds * 1000 - Date.now()
             if (diff <= 0 || isNaN(diff)) {
                 setIsEnded(true)
                 setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 })
@@ -53,37 +46,42 @@ function useCountdown(endsAt: string) {
         calc()
         const id = setInterval(calc, 1000)
         return () => clearInterval(id)
-    }, [endsAt])
+    }, [endsAtSeconds])
 
     return { timeLeft, isEnded }
+}
+
+const STATUS_COLORS: Record<EnrichedRaffle['status'], { text: string; bg: string; border: string }> = {
+    OPEN: { text: 'text-[#22C55E]', bg: 'bg-[#22C55E]', border: 'border-[#22C55E]/30' },
+    PENDING_VRF: { text: 'text-[#3B82F6]', bg: 'bg-[#3B82F6]', border: 'border-[#3B82F6]/30' },
+    COMPLETED: { text: 'text-[#555555]', bg: 'bg-[#555555]', border: 'border-[#555555]/30' },
+    CANCELLED: { text: 'text-[#EF4444]', bg: 'bg-[#EF4444]', border: 'border-[#EF4444]/30' },
 }
 
 export function RaffleCard({
     raffle
 }: {
-    raffle: BackendRaffle
+    raffle: EnrichedRaffle
 }) {
     const navigate = useNavigate()
     const cardRef = useRef<HTMLDivElement>(null)
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
     const [isHovered, setIsHovered] = useState(false)
-    // Backend may use either ends_at or expire_at
-    const endDate = raffle.expire_at || raffle.ends_at
-    const { timeLeft, isEnded } = useCountdown(endDate)
-    
-    const decimals = raffle.prize_asset_decimals || 6
-    const symbol = raffle.prize_asset_symbol || 'USDC'
-    const soldTickets = Number(raffle.sold_tickets ?? 0)
-    const maxTickets = Number(raffle.max_tickets ?? 0)
-    const remainingTickets = maxTickets - soldTickets
-    const isSoldOut = soldTickets >= maxTickets
-    const ticketPrice = raffle.ticket_price_usd
-        ? Number(raffle.ticket_price_usd).toFixed(2)
-        : formatUnits(safeBigInt(raffle.ticket_price_amount), decimals)
-    const progressPct = maxTickets > 0 ? Math.min((soldTickets / maxTickets) * 100, 100) : 0
 
-    // Determine if raffle is over 70% sold (for progress bar color)
+    const isNft = raffle.prizeType === 'ERC721'
+    const decimals = raffle.prizeDecimals || 6
+    const symbol = raffle.prizeSymbol || (isNft ? 'NFT' : 'TOKEN')
+    const soldTickets = Number(raffle.totalTickets ?? 0)
+    const maxTickets = Number(raffle.maxCap ?? 0)
+    const remainingTickets = Math.max(0, maxTickets - soldTickets)
+    const isSoldOut = raffle.isFilled
+    const isEnded = raffle.isExpired || raffle.status === 'COMPLETED' || raffle.status === 'CANCELLED'
+    const ticketPrice = formatUnits(BigInt(raffle.ticketPrice || 0n), 6)
+    const progressPct = raffle.progressPercent
+
+    const { timeLeft, isEnded: countdownEnded } = useCountdown(raffle.expiryNum)
     const isAlmostSoldOut = progressPct >= 70
+    const statusColor = STATUS_COLORS[raffle.status] ?? STATUS_COLORS.COMPLETED
 
     useEffect(() => {
         const handleMouseMove = (e: MouseEvent) => {
@@ -105,52 +103,14 @@ export function RaffleCard({
         }
     }, [isHovered])
 
-    // Use prize_amount_or_token_id (new backend field) with fallback to prize_amount
-    const prizeValue = raffle.prize_amount_or_token_id ?? raffle.prize_amount ?? '0'
-    // Determine if it's an NFT prize - use type field or prize_type field
-    const isNftPrize = raffle.type === 'nft' || raffle.prize_type === 'erc721'
-    const prizeAmountDisplay = isNftPrize
+    const prizeValue = raffle.prizeAmountOrTokenId || '0'
+    const prizeAmountDisplay = isNft
         ? <><span className="text-xs border border-[#FFB800]/40 text-[#FFB800] px-1.5 py-0.5 rounded">NFT</span> #{prizeValue}</>
-        : <>{formatUnits(safeBigInt(prizeValue), decimals)} <span className="text-[#999999] text-sm">{symbol}</span></>
+        : <>{formatUnits(BigInt(prizeValue), decimals)} <span className="text-[#999999] text-sm">{symbol}</span></>
 
-    const isOfficial = raffle.official_raffle === true
-    const isFree = raffle.free_raffle === true
-
-    const cardBorderColor = isOfficial
-        ? (isHovered ? 'rgba(255, 184, 0, 0.6)' : 'rgba(255, 184, 0, 0.35)')
-        : isFree
-            ? (isHovered ? 'rgba(34, 197, 94, 0.6)' : 'rgba(34, 197, 94, 0.35)')
-            : (isHovered ? 'rgba(255, 184, 0, 0.3)' : '#1f1f1f')
-
-    const hoverShadow = isOfficial
-        ? '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 184, 0, 0.25)'
-        : isFree
-            ? '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 30px rgba(34, 197, 94, 0.2)'
-            : '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 184, 0, 0.15)'
-
-    const spotlightColor = isOfficial
-        ? 'rgba(255, 184, 0, 0.12)'
-        : isFree
-            ? 'rgba(34, 197, 94, 0.1)'
-            : 'rgba(255, 184, 0, 0.08)'
-
-    const accentLineColor = isOfficial
-        ? 'from-[#FFB800] to-[#FFA500]'
-        : isFree
-            ? 'from-[#22C55E] to-[#16A34A]'
-            : 'from-[#1f1f1f] to-[#1f1f1f]'
-
-    const ribbonBg = isOfficial
-        ? 'bg-gradient-to-r from-[#FFB800] to-[#FFA500]'
-        : 'bg-gradient-to-r from-[#22C55E] to-[#16A34A]'
-
-    const ribbonText = isOfficial ? 'text-[#0a0a0a]' : 'text-white'
-
-    const imageOverlayGradient = isOfficial
-        ? 'from-[#FFB800]/10'
-        : isFree
-            ? 'from-[#22C55E]/10'
-            : 'from-[#050505]'
+    const cardBorderColor = isHovered ? 'rgba(255, 184, 0, 0.3)' : '#1f1f1f'
+    const hoverShadow = '0 20px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 184, 0, 0.15)'
+    const spotlightColor = 'rgba(255, 184, 0, 0.08)'
 
     return (
         <motion.div
@@ -162,7 +122,7 @@ export function RaffleCard({
             }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            onClick={() => navigate(`/app/raffle/${raffle.id}`)}
+            onClick={() => navigate(`/app/raffle/${raffle.raffleIdNum}`)}
             whileHover={{
                 y: -8,
                 boxShadow: hoverShadow,
@@ -182,68 +142,37 @@ export function RaffleCard({
             )}
 
             {/* Image Section */}
-            <div className="relative aspect-square w-full overflow-hidden">
-                <img
-                    src={raffle.image_url || fallbackImg}
-                    alt={raffle.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = fallbackImg }}
-                />
-
-                {/* Gradient overlay — colored for special raffles */}
-                <div className={`absolute inset-0 bg-gradient-to-t ${imageOverlayGradient} via-transparent to-transparent opacity-60`} />
-
-                {/* Ribbon Banner for Official/Free */}
-                {(isOfficial || isFree) && (
-                    <div className="absolute top-0 left-0 right-0 z-20">
-                        <div className={`${ribbonBg} py-1 px-2 flex items-center justify-center gap-1.5`}>
-                            {isOfficial && (
-                                <svg className="w-3.5 h-3.5 text-[#0a0a0a]" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"/>
-                                </svg>
-                            )}
-                            <span className={`font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${ribbonText}`}>
-                                {isOfficial && isFree
-                                    ? 'Official Free Raffle'
-                                    : isOfficial
-                                        ? 'Raffled Official'
-                                        : 'Free Entry'}
-                            </span>
-                            {isFree && !isOfficial && (
-                                <svg className="w-3.5 h-3.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                                </svg>
-                            )}
-                        </div>
+            <div className="relative aspect-square w-full overflow-hidden bg-[#111111]">
+                {/* Prize grid backdrop */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                        <p className="font-mono text-[10px] text-[#333333] uppercase tracking-widest mb-2">
+                            {isNft ? 'NFT PRIZE' : 'PRIZE POOL'}
+                        </p>
+                        <p className="font-mono text-2xl sm:text-3xl font-bold text-[#FFB800]/90 px-4 truncate max-w-full">
+                            {isNft ? `#${prizeValue}` : formatUnits(BigInt(prizeValue), decimals)}
+                        </p>
+                        {!isNft && (
+                            <p className="font-mono text-xs text-[#555555] mt-1 uppercase tracking-wider">{symbol}</p>
+                        )}
                     </div>
-                )}
+                </div>
 
-                {/* Small badges when no ribbon (or stacked below ribbon) */}
-                {isOfficial && !isFree && (
-                    <div className="absolute top-9 left-2 z-20">
-                        <span className="flex items-center gap-1 bg-[#FFB800]/90 backdrop-blur-sm rounded-full px-2 py-0.5 border border-[#FFB800]">
-                            <svg className="w-3 h-3 text-[#0a0a0a]" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-                            </svg>
-                            <span className="font-mono text-[8px] sm:text-[9px] text-[#0a0a0a] uppercase tracking-wider font-bold">Verified</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-60" />
+
+                {/* Status Ribbon */}
+                <div className="absolute top-0 left-0 right-0 z-20">
+                    <div className={`py-1 px-2 flex items-center justify-center gap-1.5 bg-[#050505]/85 backdrop-blur-sm border-b border-[#1f1f1f] ${statusColor.border}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${statusColor.bg} ${raffle.status === 'OPEN' && !isEnded ? 'animate-pulse' : ''}`} />
+                        <span className={`font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${statusColor.text}`}>
+                            {raffle.status === 'PENDING_VRF' ? 'PENDING VRF' : raffle.status}
                         </span>
                     </div>
-                )}
+                </div>
 
-                {isFree && !isOfficial && (
-                    <div className="absolute top-9 left-2 z-20">
-                        <span className="flex items-center gap-1 bg-[#22C55E]/90 backdrop-blur-sm rounded-full px-2 py-0.5 border border-[#22C55E]">
-                            <svg className="w-3 h-3 text-[#0a0a0a]" fill="currentColor" viewBox="0 0 24 24">
-                                <path d="M20 12l-1.41-1.41L10 19.17l-5.59-5.58L3 15l7 7 10-10z"/>
-                            </svg>
-                            <span className="font-mono text-[8px] sm:text-[9px] text-[#0a0a0a] uppercase tracking-wider font-bold">No Ticket Cost</span>
-                        </span>
-                    </div>
-                )}
-
-                {/* Countdown Timer at Top */}
-                <div className={`absolute left-0 right-0 px-1.5 ${isOfficial || isFree ? 'top-8' : 'top-2'}`}>
-                    {!isEnded ? (
+                {/* Countdown Timer */}
+                <div className="absolute left-0 right-0 top-9 px-1.5">
+                    {!countdownEnded && !isEnded ? (
                         <div className="flex gap-0.5 sm:gap-1 items-center justify-center">
                             <TimeUnit value={timeLeft.days} label="Days" />
                             <span className="text-[#FFB800] font-mono text-[9px] sm:text-xs mb-2">:</span>
@@ -256,13 +185,15 @@ export function RaffleCard({
                     ) : (
                         <div className="flex items-center justify-center">
                             <div className="bg-[#050505] border border-[#1f1f1f] rounded px-2 py-0.5">
-                                <span className="text-[#555555] font-mono text-[10px] sm:text-sm font-bold">ENDED</span>
+                                <span className="text-[#555555] font-mono text-[10px] sm:text-sm font-bold">
+                                    {raffle.status === 'CANCELLED' ? 'CANCELLED' : 'ENDED'}
+                                </span>
                             </div>
                         </div>
                     )}
                 </div>
 
-                {/* Status dot — bottom-right to avoid collision with countdown */}
+                {/* Live / Sold Out badge */}
                 {!isEnded && !isSoldOut && (
                     <div className="absolute bottom-2 right-2">
                         <span className="flex items-center gap-1 bg-[#050505]/80 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-[#1f1f1f]">
@@ -271,12 +202,19 @@ export function RaffleCard({
                         </span>
                     </div>
                 )}
-
-                {/* Sold Out Badge */}
-                {isSoldOut && (
+                {isSoldOut && !isEnded && (
                     <div className="absolute bottom-2 right-2">
                         <span className="flex items-center gap-1 bg-[#050505]/80 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-[#1f1f1f]">
                             <span className="font-mono text-[8px] sm:text-[9px] text-[#EF4444] uppercase tracking-wider">Sold Out</span>
+                        </span>
+                    </div>
+                )}
+
+                {/* Underfilled badge */}
+                {raffle.underfilled && (
+                    <div className="absolute bottom-2 left-2">
+                        <span className="flex items-center gap-1 bg-[#050505]/80 backdrop-blur-sm rounded-full px-1.5 py-0.5 border border-[#F97316]/30">
+                            <span className="font-mono text-[8px] sm:text-[9px] text-[#F97316] uppercase tracking-wider">Underfilled</span>
                         </span>
                     </div>
                 )}
@@ -291,17 +229,12 @@ export function RaffleCard({
                             transition={{ duration: 0.2 }}
                             className="absolute inset-0 flex items-center justify-center bg-[#050505]/80 backdrop-blur-sm"
                         >
-                            <div className={`${
-                                isFree 
-                                    ? 'bg-[#22C55E] hover:bg-[#22C55E]/90 shadow-lg shadow-[#22C55E]/20' 
-                                    : 'bg-[#FFB800] hover:bg-[#FFB800]/90 shadow-lg shadow-[#FFB800]/20'
-                            } text-[#050505] font-mono font-bold text-lg px-8 py-6 rounded-lg`}>
-                                {isFree ? 'Join Free' : 'Buy Now'}
+                            <div className="bg-[#FFB800] hover:bg-[#FFB800]/90 shadow-lg shadow-[#FFB800]/20 text-[#050505] font-mono font-bold text-lg px-8 py-6 rounded-lg">
+                                Buy Now
                             </div>
                         </motion.div>
                     )}
-                    
-                    {/* Show Ended overlay on hover for ended/sold out raffles */}
+
                     {isHovered && (isEnded || isSoldOut) && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
@@ -319,30 +252,24 @@ export function RaffleCard({
             </div>
 
             {/* Card Body */}
-            <div className={`p-3 sm:p-5 space-y-3 sm:space-y-4 relative ${isOfficial || isFree ? '' : ''}`}>
-                {/* Accent line for special raffles */}
-                {(isOfficial || isFree) && (
-                    <div className={`absolute top-0 left-4 right-0 h-[1px] bg-gradient-to-r ${accentLineColor} opacity-60`} />
-                )}
-                {/* Prize Pool + Ticket Price */}
+            <div className="p-3 sm:p-5 space-y-3 sm:space-y-4 relative">
+                {/* Raffle ID + Prize Pool */}
                 <div className="flex items-center justify-between gap-1">
                     <div className="min-w-0">
-                        <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Prize Pool</p>
+                        <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">
+                            Raffle #{raffle.raffleIdNum} · {symbol}
+                        </p>
                         <p className="text-[#FFB800] text-base sm:text-2xl font-mono font-bold truncate">
                             {prizeAmountDisplay}
                         </p>
                     </div>
                     <div className="text-right flex-shrink-0">
                         <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Ticket</p>
-                        {isFree ? (
-                            <p className="text-[#22C55E] text-sm sm:text-lg font-mono font-semibold">Free</p>
-                        ) : (
-                            <p className="text-white text-sm sm:text-lg font-mono font-semibold">${ticketPrice}</p>
-                        )}
+                        <p className="text-white text-sm sm:text-lg font-mono font-semibold">${Number(ticketPrice).toFixed(2)}</p>
                     </div>
                 </div>
 
-                {/* Progress Bar with Shimmer */}
+                {/* Progress Bar */}
                 <div className="space-y-1.5 sm:space-y-2">
                     <div className="flex items-center justify-between text-xs font-mono">
                         <span className="text-[#666] text-[9px] sm:text-xs">Tickets Sold</span>
@@ -350,15 +277,13 @@ export function RaffleCard({
                             {soldTickets} / {maxTickets}
                         </span>
                     </div>
-                    
+
                     <div className="relative h-2 bg-[#1f1f1f] rounded-full overflow-hidden">
                         <motion.div
                             className={`absolute top-0 left-0 h-full rounded-full transition-colors duration-300 ${
-                                isAlmostSoldOut 
-                                    ? 'bg-gradient-to-r from-[#EF4444] to-[#FF6B00]' 
-                                    : isFree
-                                        ? 'bg-gradient-to-r from-[#22C55E] to-[#16A34A]'
-                                        : 'bg-gradient-to-r from-[#FFB800] to-[#FFA500]'
+                                isAlmostSoldOut
+                                    ? 'bg-gradient-to-r from-[#EF4444] to-[#FF6B00]'
+                                    : 'bg-gradient-to-r from-[#FFB800] to-[#FFA500]'
                             }`}
                             initial={{ width: 0 }}
                             animate={{ width: `${progressPct}%` }}
@@ -368,15 +293,11 @@ export function RaffleCard({
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-shimmer" />
                         )}
                     </div>
-                    
+
                     <div className="flex items-center justify-between font-mono">
                         <span className="text-[#666] text-[9px] sm:text-xs">{progressPct.toFixed(1)}% Sold</span>
                         <span className={`text-[9px] sm:text-xs ${
-                            isAlmostSoldOut 
-                                ? 'text-[#EF4444]' 
-                                : isFree 
-                                    ? 'text-[#22C55E]' 
-                                    : 'text-[#FFB800]'
+                            isAlmostSoldOut ? 'text-[#EF4444]' : 'text-[#FFB800]'
                         }`}>
                             {remainingTickets} Left
                         </span>

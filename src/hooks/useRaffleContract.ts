@@ -3,7 +3,7 @@ import { useReadContract, useWriteContract, useSimulateContract, useChainId, use
 import { parseUnits, formatUnits, type Address } from 'viem'
 import { simulateContract } from 'viem/actions'
 import { getRaffleManagerAddress } from '../config/evm.config'
-import RaffleManagerABI from '../abis/RaffleManager.json'
+import RaffleManagerABI from '../abis/RaffledCore.json'
 import { PrizeType } from '../types/evm.types'
 
 /**
@@ -39,10 +39,10 @@ export function useRaffleCount() {
 
 /**
  * Get detailed raffle data by ID.
- * RaffleManager3 struct tuple layout:
+ * RaffledCore `getRaffle` returns the RaffleData struct tuple:
  * [0] host (address)
  * [1] expiry (uint48)
- * [2] status (uint8) — 0=OPEN, 1=COMPLETED
+ * [2] status (uint8) — 0=OPEN, 1=PENDING_VRF, 2=COMPLETED, 3=CANCELLED
  * [3] underfilled (bool)
  * [4] prizeType (uint8) — 0=ERC20, 1=ERC721
  * [5] prizeAsset (address)
@@ -57,27 +57,36 @@ export function useRaffleData(raffleId: number | undefined) {
   const { data: raffleArray, isLoading, error, refetch } = useReadContract({
     address: contract.address,
     abi: contract.abi,
-    functionName: 'raffles',
+    functionName: 'getRaffle',
     args: raffleId !== undefined ? [BigInt(raffleId)] : undefined,
     query: {
       enabled: raffleId !== undefined,
     },
   })
 
-  // Parse raffle array into structured object (RaffleManager3 layout — 10 elements)
-  const raffle = raffleArray && Array.isArray(raffleArray) && raffleArray.length >= 10
-    ? {
-        host: (raffleArray as any[])[0] as Address,
-        expiry: Number((raffleArray as any[])[1]) as number,
-        status: Number((raffleArray as any[])[2]) as 0 | 1, // 0=OPEN, 1=COMPLETED
-        underfilled: (raffleArray as any[])[3] as boolean,
-        prizeType: Number((raffleArray as any[])[4]) as PrizeType,
-        prizeAsset: (raffleArray as any[])[5] as Address,
-        ticketsSold: Number((raffleArray as any[])[6]) as number,
-        prizeAmountOrTokenId: (raffleArray as any[])[7] as bigint,
-        ticketPrice: (raffleArray as any[])[8] as bigint,
-        maxCap: Number((raffleArray as any[])[9]) as number,
-      }
+  // Parse raffle tuple into structured object (RaffledCore layout — 10 elements).
+  // viem may return either an array (unnamed tuple) or an object (named tuple).
+  const raffle = raffleArray
+    ? (() => {
+        const arr = Array.isArray(raffleArray) ? raffleArray : null
+        const obj = (raffleArray as Record<string, unknown> | null) && typeof raffleArray === 'object' && !Array.isArray(raffleArray)
+          ? raffleArray as Record<string, any>
+          : null
+        const get = (index: number, key: string): any => (arr ? arr[index] : obj ? obj[key] : undefined)
+        if (!arr && !obj) return null
+        return {
+          host: get(0, 'host') as Address,
+          expiry: Number(get(1, 'expiry')) as number,
+          status: Number(get(2, 'status')) as 0 | 1 | 2 | 3, // 0=OPEN, 1=PENDING_VRF, 2=COMPLETED, 3=CANCELLED
+          underfilled: get(3, 'underfilled') as boolean,
+          prizeType: Number(get(4, 'prizeType')) as PrizeType,
+          prizeAsset: get(5, 'prizeAsset') as Address,
+          ticketsSold: Number(get(6, 'ticketsSold')) as number,
+          prizeAmountOrTokenId: get(7, 'prizeAmountOrTokenId') as bigint,
+          ticketPrice: get(8, 'ticketPrice') as bigint,
+          maxCap: Number(get(9, 'maxCap')) as number,
+        }
+      })()
     : null
 
   return {
@@ -90,18 +99,19 @@ export function useRaffleData(raffleId: number | undefined) {
 }
 
 /**
- * Get participant address for a raffle at a specific index
+ * Get total tickets sold for a raffle.
+ * RaffledCore: `totalTickets(uint256)` (public mapping getter).
  */
-export function useParticipant(raffleId: number | undefined, index: number | undefined) {
+export function useTotalTickets(raffleId: number | undefined) {
   const contract = useRaffleContract()
 
   return useReadContract({
     address: contract.address,
     abi: contract.abi,
-    functionName: 'participants',
-    args: raffleId !== undefined && index !== undefined ? [BigInt(raffleId), BigInt(index)] : undefined,
+    functionName: 'totalTickets',
+    args: raffleId !== undefined ? [BigInt(raffleId)] : undefined,
     query: {
-      enabled: raffleId !== undefined && index !== undefined,
+      enabled: raffleId !== undefined,
     },
   })
 }

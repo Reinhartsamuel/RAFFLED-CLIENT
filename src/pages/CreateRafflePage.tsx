@@ -5,7 +5,7 @@ import { parseUnits, type Address } from 'viem'
 import { motion } from 'framer-motion'
 import { useCreateRaffleERC20, useCreateRaffleERC721 } from '../hooks/useRaffleContract'
 import { useTokenApproval, useTokenDecimals, useTokenBalance, useNFTApproval } from '../hooks/useTokenApproval'
-import { getRaffleManagerAddress, getMockUSDCAddress } from '../config/evm.config'
+import { getRaffleManagerAddress, getMockUSDCAddress, queryClient } from '../config/evm.config'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { WalletConnect } from '../components/evm/WalletConnect'
 import { useAccount } from 'wagmi'
@@ -284,14 +284,24 @@ export default function CreateRafflePage() {
       }
       setCreateHash(hash)
       setCreateStep('success')
-      const backendData = await postRaffleToBackend(hash)
-      console.log('============logging backend data....============');
-      console.log({ backendData });
-      console.log('============logging backend data done ============');
-      console.log(`is this a free raflle? ${isFreeRaffle}`)
-      if (isFreeRaffle && backendData?.raffle?.id) {
-        console.log(`Raffle created with ID ${backendData.id}, creating task...`)
-        await postRaffleTask(backendData.raffle.id)
+      // Invalidate Ponder queries so the new raffle appears in lists immediately
+      try {
+        await queryClient.invalidateQueries({ queryKey: ['ponder'] })
+      } catch {
+        // non-fatal
+      }
+      try {
+        const backendData = await postRaffleToBackend(hash)
+        console.log('============logging backend data....============');
+        console.log({ backendData });
+        console.log('============logging backend data done ============');
+        console.log(`is this a free raflle? ${isFreeRaffle}`)
+        if (isFreeRaffle && backendData?.raffle?.id) {
+          console.log(`Raffle created with ID ${backendData.id}, creating task...`)
+          await postRaffleTask(backendData.raffle.id)
+        }
+      } catch {
+        console.warn('Backend unavailable — raffle metadata not saved off-chain')
       }
     } catch (err: any) {
       console.error('Create raffle error:', err)
@@ -312,6 +322,20 @@ export default function CreateRafflePage() {
   ]
 
   const currentStepIndex = stepConfig.findIndex(s => s.id === wizardStep)
+
+  const canProceedToStep2 = prizeType === PrizeType.ERC20
+    ? (prizeAsset && prizeAmount)
+    : (nftAsset && tokenId)
+  const canProceedToStep3 = ticketPrice && maxCap && duration
+
+  const handleNext = () => {
+    if (wizardStep === 'asset_details' && canProceedToStep2) setWizardStep('mechanics')
+    else if (wizardStep === 'mechanics' && canProceedToStep3) setWizardStep('review')
+  }
+  const handleBack = () => {
+    if (wizardStep === 'mechanics') setWizardStep('asset_details')
+    else if (wizardStep === 'review') setWizardStep('mechanics')
+  }
 
   return (
     <>
@@ -377,6 +401,7 @@ export default function CreateRafflePage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
             <div className="lg:col-span-8 space-y-4 md:space-y-5">
+              {wizardStep === 'asset_details' && (
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl">
                 <div className="px-4 py-4 md:px-6 md:py-5 border-b border-[#1f1f1f]">
                   <h3 className="font-mono text-sm md:text-base font-bold text-[#FFB800] tracking-wider flex items-center gap-2">
@@ -496,8 +521,10 @@ export default function CreateRafflePage() {
                   }
                 </div>
               </div>
+              )}
 
               {/* Raffle Mechanics */}
+              {wizardStep === 'mechanics' && (
               <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl">
                 <div className="px-4 py-4 md:px-6 md:py-5 border-b border-[#1f1f1f]">
                   <h3 className="font-mono text-sm md:text-base font-bold text-[#F5F5F5] tracking-wider flex items-center gap-2">
@@ -543,6 +570,21 @@ export default function CreateRafflePage() {
 
                   {error && <div className="bg-[#EF4444]/[0.06] border border-[#EF4444]/30 rounded-lg p-3.5 font-mono text-xs text-[#EF4444] break-word">{error}</div>}
                 </div>
+              </div>
+              )}
+
+              {/* Wizard navigation */}
+              <div className="flex gap-3 mt-6">
+                {wizardStep !== 'asset_details' && (
+                  <button onClick={handleBack} className="flex-1 p-3 border border-[#2a2a2a] rounded-lg font-mono text-xs text-[#999999] uppercase tracking-wider hover:border-[#555555] hover:text-[#F5F5F5]">
+                    ← Back
+                  </button>
+                )}
+                {wizardStep !== 'review' ? (
+                  <button onClick={handleNext} disabled={(wizardStep === 'asset_details' && !canProceedToStep2) || (wizardStep === 'mechanics' && !canProceedToStep3)} className="flex-1 p-3 bg-[#FFB800] rounded-lg font-mono text-xs text-[#050505] font-bold uppercase tracking-wider disabled:bg-[#111111] disabled:text-[#333333]">
+                    Next →
+                  </button>
+                ) : null}
               </div>
 
               {isFreeRaffleAdmin && (

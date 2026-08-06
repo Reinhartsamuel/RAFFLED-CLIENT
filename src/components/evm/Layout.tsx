@@ -85,12 +85,14 @@ export function Layout({ children, sidebar }: LayoutProps) {
       <footer className="border-t border-[#1f1f1f] bg-[#050505] py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <p className="font-mono text-xs text-[#555555]">
-            © 2025 Raffled · On-chain raffles with verifiable randomness
+            © 2026 Raffled · <a href="https://raffled.tuttilabs.xyz" className="hover:text-[#FFB800] transition-colors">raffled.tuttilabs.xyz</a>
           </p>
           <div className="flex items-center gap-4 font-mono text-xs">
-            <a href="#" className="text-[#555555] hover:text-[#FFB800] transition-colors">Docs</a>
+            <a href="/docs/embed" className="text-[#555555] hover:text-[#FFB800] transition-colors">Embed Docs</a>
             <span className="text-[#2a2a2a]">·</span>
-            <a href="#" className="text-[#555555] hover:text-[#FFB800] transition-colors">GitHub</a>
+            <a href="/raffle/1/proof" className="text-[#555555] hover:text-[#FFB800] transition-colors">View Proof Demo</a>
+            <span className="text-[#2a2a2a]">·</span>
+            <a href="https://github.com/Reinhartsamuel/RAFFLED-CONTRACTS" target="_blank" rel="noopener noreferrer" className="text-[#555555] hover:text-[#FFB800] transition-colors">GitHub</a>
             <span className="text-[#2a2a2a]">·</span>
             <a href="#" className="text-[#555555] hover:text-[#FFB800] transition-colors">Discord</a>
           </div>

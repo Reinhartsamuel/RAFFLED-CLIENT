@@ -1,18 +1,21 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { formatUnits } from 'viem'
 import { motion } from 'framer-motion'
-import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { FreeRaffleModal } from '../components/evm/FreeRaffleModal'
-import { useConfig,  } from 'wagmi'
+import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
 import { EXPLORER_URL } from '../utils/constants'
 import { TaskItem } from '../interfaces/TaskItem'
-// import { usePaymentToken } from '../hooks/useRaffleContract'
+import { useRaffleData, useTotalTickets, usePaymentToken, useRaffleContract } from '../hooks/useRaffleContract'
+import { useAllRaffles, useRaffleLeaderboard, useUserTickets } from '../hooks/useRaffles'
+import { ponderQuery } from '../utils/ponder'
+import type { PonderEvent, PonderPage } from '../types/evm.types'
+import { PrizeType, RaffleStatusLabel } from '../types/evm.types'
 
 interface LeaderboardEntry {
   user_address: string
@@ -53,177 +56,129 @@ interface RaffleDetailData {
   your_tickets?: number
 }
 
+/**
+ * Raffle detail — data source hierarchy:
+ *  1. On-chain `getRaffle(id)` (1 RPC call) — authoritative state.
+ *  2. Ponder GraphQL — prize metadata (symbol/decimals), winner, tx hashes.
+ * No backend dependency.
+ */
 export function RaffleDetail() {
   const { id } = useParams<{ id: string }>()
+  const raffleId = id !== undefined && /^\d+$/.test(id) ? Number(id) : undefined
   const navigate = useNavigate()
   const { isConnected, address } = useAppKitAccount()
   const config = useConfig()
-  // const chainId = useChainId()
-  // const { data: contractPaymentToken } = usePaymentToken()
-  const contractPaymentToken = import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA;
 
-  const [raffle, setRaffle] = useState<RaffleDetailData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const { raffle: onChainRaffle, isLoading: onChainLoading } = useRaffleData(raffleId)
+  const { data: onChainTotalTickets } = useTotalTickets(raffleId)
+  const { data: paymentTokenData } = usePaymentToken()
+  const { address: contractAddress } = useRaffleContract()
+  const { data: allRaffles = [] } = useAllRaffles()
+  const { data: leaderboardData = [], isLoading: leaderboardLoading } = useRaffleLeaderboard(raffleId)
+  const { data: yourTickets = 0 } = useUserTickets(raffleId)
+
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [showFreeRaffleModal, setShowFreeRaffleModal] = useState(false)
   const [balanceData, setBalanceData] = useState<bigint | null>(null)
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-  const [leaderboardLoading, setLeaderboardLoading] = useState(false)
+  const [drawTx, setDrawTx] = useState<string | null>(null)
+  const [returnTx, setReturnTx] = useState<string | null>(null)
 
+  const ponderRaffle = raffleId !== undefined
+    ? allRaffles.find((r) => r.id === String(raffleId))
+    : undefined
+
+  // Winner-picked / prize-returned tx hashes from Ponder (0 RPC)
   useEffect(() => {
-    const fetchRaffleDetail = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-
-        const authToken = getAuthToken()
-        const res = await apiFetch(`${BACKEND_URL}/raffles/${id as string}`, {
-          method: 'GET',
-          headers: {
-            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-        })
-
-        if (!res.ok) throw new Error('Failed to fetch raffle details')
-
-        const data = await res.json()
-        const raw = data.raffle
-        const yourTickets = Number(data.your_tickets ?? 0)
-
-        let paymentAssetAddr = ''
-        let paymentSymbol = 'USDC'
-        let paymentDecimals = 6
-
-        if (raw) {
-          const backendPaymentAsset = raw.payment_asset as string | undefined
-          const fallbackPaymentAsset = (contractPaymentToken as `0x${string}` | undefined)?.toLowerCase() || ''
-
-          paymentAssetAddr = backendPaymentAsset || fallbackPaymentAsset
-
-          paymentSymbol = raw.payment_asset_symbol ?? 'USDC'
-          paymentDecimals = Number(raw.payment_asset_decimals ?? 6)
-
-          if (!backendPaymentAsset && contractPaymentToken) {
-            try {
-              const tokenAddr = contractPaymentToken as `0x${string}`
-              const results = await Promise.allSettled([
-                readContract(config, {
-                  address: tokenAddr,
-                  abi: [{ name: 'symbol', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'string' }] }],
-                  functionName: 'symbol',
-                }),
-                readContract(config, {
-                  address: tokenAddr,
-                  abi: [{ name: 'decimals', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ name: '', type: 'uint8' }] }],
-                  functionName: 'decimals',
-                }),
-              ])
-              if (results[0].status === 'fulfilled') paymentSymbol = results[0].value as string
-              if (results[1].status === 'fulfilled') paymentDecimals = Number(results[1].value)
-            } catch {
-            //
-            }
-          }
-
-          const normalized: RaffleDetailData = {
-            id: raw.id,
-            title: raw.title,
-            description: raw.description,
-            prize_type: raw.type === 'nft' ? 'erc721' : 'erc20',
-            prize_amount: raw.prize_amount_or_token_id ?? raw.prize_amount ?? '0',
-            prize_asset_symbol: raw.prize_asset_symbol ?? '',
-            prize_asset_decimals: Number(raw.prize_asset_decimals ?? 6),
-            ticket_price_usd: raw.ticket_price_usd ?? '0',
-            ticket_price_amount: raw.ticket_price_amount ?? '0',
-            max_tickets: Number(raw.max_tickets ?? 0),
-            tickets_sold: Number(raw.sold_tickets ?? raw.tickets_sold ?? 0),
-            ends_at: raw.expire_at ?? raw.ends_at ?? '',
-            status: raw.status ?? '',
-            image_url: raw.image_url,
-            prize_tx_hash: raw.raffle_tx_hash ?? raw.prize_tx_hash,
-            contract_address: raw.contract_address,
-            creator_address: raw.owner_address ?? raw.creator_address,
-            created_at: raw.created_at,
-            payment_asset: paymentAssetAddr,
-            payment_asset_symbol: paymentSymbol,
-            payment_asset_decimals: paymentDecimals,
-            type: raw.type,
-            underfilled: raw.underfilled,
-            winner_address: raw.winner_address,
-            winner_picked_tx_hash: raw.winner_picked_tx_hash,
-            official_raffle: raw.official_raffle,
-            free_raffle: raw.free_raffle,
-            task: raw.task,
-            underfilled_return_tx_hash: raw.underfilled_return_tx_hash,
-            your_tickets: yourTickets,
-          }
-          setRaffle(normalized)
-
-          // Debug log: free_raffle boolean
-          // console.log('[RaffleDetail] free_raffle:', raw.free_raffle)
-        } else {
-          setRaffle(null)
+    if (!raffleId) return
+    let cancelled = false
+    ponderQuery<{ events: PonderPage<PonderEvent> }>(`
+      query RaffleTx($raffleId: BigInt!) {
+        events(where: { raffleId: $raffleId }, orderBy: "blockTimestamp", orderDirection: "desc", limit: 20) {
+          items { eventName txHash }
         }
-
-        if (address && paymentAssetAddr && config) {
-          try {
-            const balance = await readContract(config, {
-              address: paymentAssetAddr as `0x${string}`,
-              abi: [
-                {
-                  name: 'balanceOf',
-                  type: 'function',
-                  stateMutability: 'view',
-                  inputs: [{ name: 'account', type: 'address' }],
-                  outputs: [{ name: 'balance', type: 'uint256' }],
-                },
-              ],
-              functionName: 'balanceOf',
-              args: [address as `0x${string}`],
-            })
-            setBalanceData(balance as bigint)
-          } catch (balanceError) {
-            console.error('Error fetching balance:', balanceError)
-          }
-        }
-      } catch (err) {
-        console.error('Error fetching raffle detail:', err)
-        setError(err instanceof Error ? err.message : 'Failed to load raffle')
-      } finally {
-        setLoading(false)
       }
-    }
+    `, { raffleId: String(raffleId) })
+      .then((d) => {
+        if (cancelled) return
+        const w = d.events.items.find((e) => e.eventName === 'WinnerPicked')
+        const r = d.events.items.find((e) => e.eventName === 'UnderfilledPrizeReturned')
+        if (w) setDrawTx(w.txHash)
+        if (r) setReturnTx(r.txHash)
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [raffleId])
 
-    if (id) fetchRaffleDetail()
-  }, [id, address, config, contractPaymentToken])
-
+  // USDC balance for the buy modal
   useEffect(() => {
-    if (!id) return
-    const fetchLeaderboard = async () => {
-      setLeaderboardLoading(true)
-      try {
-        const res = await apiFetch(`${BACKEND_URL}/raffles/${id}/leaderboard?per_page=10`, {
-          headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        })
-        if (!res.ok) return
-        const data = await res.json()
-        const entries: LeaderboardEntry[] = (data.data || []).map((item: Record<string, unknown>) => ({
-          user_address: (item.user_address ?? item.address ?? item.wallet_address ?? item.buyer_address ?? '') as string,
-          tickets: (item.tickets ?? item.tickets_count ?? item.ticket_count ?? item.count ?? '0') as string,
-          total_spent_raw: (item.total_spent_raw ?? item.total_spent ?? '') as string,
-        }))
-        setLeaderboard(entries)
-      } catch (err) {
-        console.error('Error fetching leaderboard:', err)
-      } finally {
-        setLeaderboardLoading(false)
-      }
+    const token = paymentTokenData as `0x${string}` | undefined
+    if (!address || !token || !config) return
+    readContract(config, {
+      address: token,
+      abi: [
+        {
+          name: 'balanceOf',
+          type: 'function',
+          stateMutability: 'view',
+          inputs: [{ name: 'account', type: 'address' }],
+          outputs: [{ name: 'balance', type: 'uint256' }],
+        },
+      ],
+      functionName: 'balanceOf',
+      args: [address as `0x${string}`],
+    })
+      .then((b) => setBalanceData(b as bigint))
+      .catch(() => setBalanceData(null))
+  }, [address, config, paymentTokenData])
+
+  const raffle = useMemo<RaffleDetailData | null>(() => {
+    if (!raffleId || !onChainRaffle) return null
+    const statusLabel = RaffleStatusLabel[onChainRaffle.status] ?? 'UNKNOWN'
+    const prizeSymbol = ponderRaffle?.prizeSymbol || 'TOKEN'
+    const prizeDecimals = ponderRaffle?.prizeDecimals || 6
+    const paymentToken = (paymentTokenData as string | undefined)
+      || (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA as string | undefined)
+      || ''
+    return {
+      id: raffleId,
+      title: `Raffle #${raffleId}`,
+      description: '',
+      prize_type: onChainRaffle.prizeType === PrizeType.ERC721 ? 'erc721' : 'erc20',
+      prize_amount: onChainRaffle.prizeAmountOrTokenId.toString(),
+      prize_asset_symbol: prizeSymbol,
+      prize_asset_decimals: prizeDecimals,
+      ticket_price_usd: Number(formatUnits(onChainRaffle.ticketPrice, 6)).toFixed(2),
+      ticket_price_amount: onChainRaffle.ticketPrice.toString(),
+      max_tickets: onChainRaffle.maxCap,
+      tickets_sold: Number(onChainTotalTickets ?? 0n) || onChainRaffle.ticketsSold,
+      ends_at: new Date(onChainRaffle.expiry * 1000).toISOString(),
+      status: statusLabel.toLowerCase(),
+      contract_address: contractAddress,
+      creator_address: onChainRaffle.host,
+      created_at: ponderRaffle?.createdAt ? new Date(Number(ponderRaffle.createdAt) * 1000).toISOString() : undefined,
+      payment_asset: paymentToken,
+      payment_asset_symbol: 'USDC',
+      payment_asset_decimals: 6,
+      type: onChainRaffle.prizeType === PrizeType.ERC721 ? 'nft' : 'crypto',
+      underfilled: onChainRaffle.underfilled,
+      winner_address: ponderRaffle?.winner ?? null,
+      winner_picked_tx_hash: drawTx,
+      underfilled_return_tx_hash: returnTx,
+      official_raffle: false,
+      free_raffle: false,
+      your_tickets: yourTickets,
     }
-    fetchLeaderboard()
-  }, [id])
+  }, [raffleId, onChainRaffle, onChainTotalTickets, ponderRaffle, contractAddress, paymentTokenData, drawTx, returnTx, yourTickets])
+
+  const leaderboard: LeaderboardEntry[] = leaderboardData.map((p) => ({
+    user_address: p.user,
+    tickets: p.ticketCount,
+  }))
+
+  const loading = onChainLoading && !onChainRaffle
+  const error = !loading && !onChainRaffle && raffleId !== undefined
+    ? 'Raffle not found on chain. Connect your wallet to the Base Sepolia network.'
+    : null
 
   if (loading) {
     return (
@@ -288,9 +243,7 @@ export function RaffleDetail() {
   }
 
   const now = new Date()
-  const endTime = raffle.ends_at.includes('T')
-    ? new Date(raffle.ends_at)
-    : new Date(`${raffle.ends_at.replace(' ', 'T')}Z`)
+  const endTime = raffle.ends_at ? new Date(raffle.ends_at) : new Date()
   const isSoldOut = (raffle.tickets_sold || 0) >= raffle.max_tickets
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
@@ -322,6 +275,24 @@ export function RaffleDetail() {
         bgColor: 'bg-green-500/10',
         borderColor: 'border-green-500/30',
         dotColor: 'bg-green-500',
+      }
+    }
+    if (raffle.status === 'cancelled') {
+      return {
+        label: 'CANCELLED',
+        color: 'text-red-500',
+        bgColor: 'bg-red-500/10',
+        borderColor: 'border-red-500/30',
+        dotColor: 'bg-red-500',
+      }
+    }
+    if (raffle.status === 'pending_vrf') {
+      return {
+        label: 'PENDING VRF',
+        color: 'text-blue-500',
+        bgColor: 'bg-blue-500/10',
+        borderColor: 'border-blue-500/30',
+        dotColor: 'bg-blue-500',
       }
     }
     if (raffle.status === 'completed' || isExpired) {

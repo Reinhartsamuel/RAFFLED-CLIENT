@@ -5,9 +5,10 @@ import { Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { DeploymentInfo } from './components/DeploymentInfo';
 import { wagmiConfig, queryClient } from './config/evm.config';
-import LandingPageOriginal from './pages/LandingPageOriginal';
-import LandingPage2 from './pages/LandingPage2';
 import LandingPageFrequency from './pages/LandingPageFrequency';
+import EmbedRaffle from './pages/EmbedRaffle';
+import RaffleProof from './pages/RaffleProof';
+import DocsEmbed from './pages/DocsEmbed';
 
 // Lazy load Home to prevent its CSS from loading on landing page
 const Home = lazy(() => import('./Home'));
@@ -20,8 +21,9 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<LandingPageFrequency />} />
-          <Route path="/lp-2" element={<LandingPageOriginal />} />
-          <Route path="/lp-old" element={<LandingPage2 />} />
+          <Route path="/embed/:id" element={<EmbedRaffle />} />
+          <Route path="/docs/embed" element={<DocsEmbed />} />
+          <Route path="/raffle/:id/proof" element={<RaffleProof />} />
           <Route
             path="/app/*"
             element={

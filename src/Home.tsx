@@ -1,14 +1,11 @@
 import { useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BACKEND_URL, getAuthToken, apiFetch } from './config/index'
-import { useRaffleCount } from './hooks/useRaffleContract'
+import { getAuthToken } from './config/index'
 import { Layout, DashboardSidebar } from './components/evm/Layout'
 import { CreateRaffleModal } from './components/evm/CreateRaffleModal'
 import RaffleDetail from './pages/RaffleDetail'
 import './AppEVM.css'
-import { BackendRaffle } from './interfaces/BackendRaffle'
 import { RaffleCard } from './components/evm/RaffleCard'
 import { staggerContainer, staggerItem } from './utils/animations'
 import Faucet from './pages/Faucet'
@@ -17,41 +14,35 @@ import RaffleAdminPage, { AdminRaffleDetailPage } from './pages/RaffleAdminPage'
 import { EventToastContainer } from './components/evm/EventToast'
 import CreateRafflePage from './pages/CreateRafflePage'
 import MyTickets from './pages/MyTickets'
+import { useAllRaffles, useFilteredRaffles, enrichRaffle } from './hooks/useRaffles'
 
-const RAFFLE_CACHE_TTL = 30_000 // 30 seconds
+const OFFICIAL_HOST = '0xE13d4F4676A146564aB75bFd86E06ec38B9a7201'
 
 export function HomePage({ activeFilter }: {
   activeFilter: string
 }) {
-  const { data: raffleCount, refetch: refetchRaffleCount } = useRaffleCount()
   const [showCreateModal, setShowCreateModal] = useState(false)
 
   const activeToken = getAuthToken()
 
-  // Fetch raffles whenever wallet is connected (regardless of auth status)
-  const { data: rafflesData, isLoading: rafflesLoading, refetch: refetchRaffles } = useQuery<BackendRaffle[]>({
-    queryKey: ['raffles', activeFilter],
-    queryFn: async () => {
-      const token = getAuthToken()
-      const res = await apiFetch(buildRafflesUrl(activeFilter), {
-        method: 'GET',
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      })
-      const data = await res.json()
-      return data.data || []
-    },
-    enabled: true, // Always fetch to show public raffles
-    staleTime: RAFFLE_CACHE_TTL,
-    gcTime: RAFFLE_CACHE_TTL * 2,
-  })
+  const filters = activeFilter === 'tokens'
+    ? { type: 'crypto' as const }
+    : activeFilter === 'nft'
+      ? { type: 'nft' as const }
+      : activeFilter === 'ended'
+        ? { status: 'ended' as const }
+        : undefined
 
-  const raffles = rafflesData ?? []
+  // Listing + filtering comes from Ponder GraphQL — 0 RPC calls
+  const { data: filteredRaffles = [], isLoading: rafflesLoading } = useFilteredRaffles(filters)
+  const { data: allRaffles = [] } = useAllRaffles()
 
-  const totalRaffles = Number(raffleCount || 0)
+  const officialFiltered = activeFilter === 'official'
+    ? filteredRaffles.filter((r) => r.host.toLowerCase() === OFFICIAL_HOST.toLowerCase())
+    : filteredRaffles
+
+  const raffles = officialFiltered.map((r) => enrichRaffle(r))
+  const totalRaffles = allRaffles.length
 
   return (
     <>
@@ -147,8 +138,6 @@ export function HomePage({ activeFilter }: {
         <CreateRaffleModal
           onClose={() => {
             setShowCreateModal(false)
-            refetchRaffleCount()
-            refetchRaffles()
           }}
         />
       )}
@@ -176,27 +165,9 @@ export default function Home() {
         <Route path="/veryyyy-secure-admin-pageee" element={<RaffleAdminPage />} />
         <Route path="/veryyyy-secure-admin-pageee/raffles/:id" element={<AdminRaffleDetailPage />} />
       </Routes>
-      {/* Global SSE toast notifications — persists across page navigations */}
+      {/* Global toast notifications — polls Ponder — persists across page navigations */}
       <EventToastContainer />
     </Layout>
   )
-}
-
-
-function buildRafflesUrl(filter: string): string {
-  const url = new URL(`${BACKEND_URL}/raffles`)
-  if (filter === 'official') {
-    url.searchParams.set('owner_address', '0xE13d4F4676A146564aB75bFd86E06ec38B9a7201')
-  } else if (filter === 'recent') {
-    url.searchParams.set('sort_by', 'created_at')
-    url.searchParams.set('sort_dir', 'desc')
-  } else if (filter === 'tokens') {
-    url.searchParams.set('type', 'crypto')
-  } else if (filter === 'nft') {
-    url.searchParams.set('type', 'nft')
-  } else if (filter === 'ended') {
-    url.searchParams.set('status', 'completed')
-  }
-  return url.toString()
 }
 

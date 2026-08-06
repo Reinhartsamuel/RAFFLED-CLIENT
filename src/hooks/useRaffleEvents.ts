@@ -1,7 +1,7 @@
 import { useWatchContractEvent, useChainId } from 'wagmi'
 import { type Address } from 'viem'
 import { getRaffleManagerAddress } from '../config/evm.config'
-import RaffleManagerABI from '../abis/RaffleManager.json'
+import RaffleManagerABI from '../abis/RaffledCore.json'
 import { PrizeType } from '../types/evm.types'
 
 /**

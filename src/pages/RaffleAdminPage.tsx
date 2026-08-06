@@ -1,15 +1,17 @@
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useAccount, useReadContract, useChainId } from 'wagmi'
-import { formatUnits, type Address } from 'viem'
+import { useAccount, useReadContract, useChainId, useWriteContract } from 'wagmi'
+import { formatUnits, encodeAbiParameters, type Address } from 'viem'
 import { Layout } from '../components/evm/Layout'
 import { CreateRaffleModal } from '../components/evm/CreateRaffleModal'
 import { BACKEND_URL, apiFetch, getAuthToken } from '../config/index'
 import { getRaffleManagerAddress } from '../config/evm.config'
 import { EXPLORER_URL } from '../utils/constants'
 import type { BackendRaffle } from '../interfaces/BackendRaffle'
-import RaffleManagerABI from '../abis/RaffleManager.json'
+import RaffleManagerABI from '../abis/RaffledCore.json'
+import { useAllRaffles } from '../hooks/useRaffles'
+import type { PonderRaffle } from '../types/evm.types'
 
 const ADMIN_ROUTE_PATH = '/app/veryyyy-secure-admin-pageee'
 const ADMIN_ALLOWED_ADDRESS = '0x753dfc03b4d37b3a316d0fe5ab9f677c0d3c20f8'
@@ -113,6 +115,72 @@ function truncate(value: string, start = 6, end = 4): string {
   return `${value.slice(0, start)}...${value.slice(-end)}`
 }
 
+interface RaffleRow {
+  key: string
+  id: string
+  title: string
+  type: string
+  status: string
+  statusTone: 'open' | 'pending' | 'completed' | 'cancelled' | 'other'
+  sold: number
+  max: number
+  ends: string
+  winner: string | null
+  winnerTx: string | null
+}
+
+function backendToRow(r: BackendRaffle): RaffleRow {
+  const status = r.status || 'unknown'
+  const tone: RaffleRow['statusTone'] =
+    status === 'completed' ? 'completed'
+    : status === 'open' ? 'open'
+    : status === 'cancelled' ? 'cancelled'
+    : status === 'pending' ? 'pending'
+    : 'other'
+  return {
+    key: `be-${r.id}`,
+    id: String(r.id),
+    title: r.title,
+    type: r.type || 'crypto',
+    status,
+    statusTone: tone,
+    sold: Number(r.sold_tickets ?? 0),
+    max: Number(r.max_tickets ?? 0),
+    ends: r.expire_at || r.ends_at || '-',
+    winner: r.winner_address ?? null,
+    winnerTx: r.winner_picked_tx_hash ?? null,
+  }
+}
+
+function ponderToRow(r: PonderRaffle): RaffleRow {
+  const tone: RaffleRow['statusTone'] =
+    r.status === 'OPEN' ? 'open'
+    : r.status === 'PENDING_VRF' ? 'pending'
+    : r.status === 'COMPLETED' ? 'completed'
+    : 'cancelled'
+  return {
+    key: `oc-${r.id}`,
+    id: r.id,
+    title: `Raffle #${r.id}`,
+    type: r.prizeType === 'ERC721' ? 'nft' : 'crypto',
+    status: r.status,
+    statusTone: tone,
+    sold: Number(r.totalTickets ?? 0),
+    max: Number(r.maxCap ?? 0),
+    ends: new Date(Number(r.expiry) * 1000).toLocaleString(),
+    winner: r.winner ?? null,
+    winnerTx: null,
+  }
+}
+
+const STATUS_TONE_COLORS: Record<RaffleRow['statusTone'], string> = {
+  open: 'text-[#FFB800]',
+  pending: 'text-[#3B82F6]',
+  completed: 'text-[#22C55E]',
+  cancelled: 'text-[#EF4444]',
+  other: 'text-[#999999]',
+}
+
 function createAuthHeaders(): HeadersInit {
   const token = getAuthToken()
   return {
@@ -180,6 +248,15 @@ export default function RaffleAdminPage() {
   const [error, setError] = useState<string | null>(null)
 
   const token = getAuthToken()
+
+  // On-chain fallback via Ponder — used when the backend API is unavailable
+  const { data: onChainRaffles = [] } = useAllRaffles()
+
+  const displayRaffles: RaffleRow[] = rafflesData?.data?.length
+    ? rafflesData.data.map(backendToRow)
+    : onChainRaffles.map(ponderToRow)
+
+  const isUsingPonderFallback = !rafflesData?.data?.length && onChainRaffles.length > 0
 
   useEffect(() => {
     const fetchEventSummary = async () => {
@@ -303,9 +380,16 @@ export default function RaffleAdminPage() {
           <section className="border border-[#1f1f1f] rounded-xl overflow-hidden bg-[#0a0a0a]">
             <div className="px-4 py-3 border-b border-[#1f1f1f] flex items-center justify-between">
               <h2 className="font-sans font-semibold text-sm text-[#F5F5F5]">Raffles</h2>
-              <span className="font-mono text-[10px] text-[#555555] uppercase tracking-widest">
-                {rafflesData?.total || 0} total
-              </span>
+              <div className="flex items-center gap-2">
+                {isUsingPonderFallback && (
+                  <span className="font-mono text-[9px] uppercase tracking-widest px-2 py-0.5 rounded text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/30">
+                    Ponder fallback
+                  </span>
+                )}
+                <span className="font-mono text-[10px] text-[#555555] uppercase tracking-widest">
+                  {rafflesData?.data?.length ? (rafflesData?.total || 0) : displayRaffles.length} total
+                </span>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -320,51 +404,41 @@ export default function RaffleAdminPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(rafflesData?.data || []).map((raffle) => (
-                    <tr key={raffle.id} className="border-b border-[#111111] hover:bg-[#101010]">
+                  {displayRaffles.map((raffle) => (
+                    <tr key={raffle.key} className="border-b border-[#111111] hover:bg-[#101010]">
                       <td className="px-4 py-3 font-mono text-xs text-[#999999]">#{raffle.id}</td>
                       <td className="px-4 py-3 font-mono text-xs text-[#F5F5F5]">{raffle.title}</td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#999999] uppercase">{raffle.type || 'crypto'}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#999999] uppercase">{raffle.type}</td>
                       <td className="px-4 py-3 font-mono text-xs uppercase">
-                        {raffle.status === 'completed' ? (
-                          <span className="text-[#22C55E]">{raffle.status}</span>
-                        ) : raffle.status === 'open' ? (
-                          <span className="text-[#FFB800]">{raffle.status}</span>
-                        ) : raffle.status === 'cancelled' ? (
-                          <span className="text-[#EF4444]">{raffle.status}</span>
-                        ) : raffle.status === 'pending' ? (
-                          <span className="text-[#3B82F6]">{raffle.status}</span>
-                        ) : (
-                          <span className="text-[#999999]">{raffle.status}</span>
-                        )}
+                        <span className={STATUS_TONE_COLORS[raffle.statusTone]}>{raffle.status}</span>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs text-[#999999]">
-                        {Number(raffle.sold_tickets || 0)} / {Number(raffle.max_tickets || 0)}
+                        {raffle.sold} / {raffle.max}
                       </td>
-                      <td className="px-4 py-3 font-mono text-xs text-[#999999]">{raffle.expire_at || raffle.ends_at || '-'}</td>
+                      <td className="px-4 py-3 font-mono text-xs text-[#999999]">{raffle.ends}</td>
                       <td className="px-4 py-3 font-mono text-xs">
-                        {raffle.winner_address ? (
+                        {raffle.winner ? (
                           <a
-                            href={`${EXPLORER_URL}/address/${raffle.winner_address}`}
+                            href={`${EXPLORER_URL}/address/${raffle.winner}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#3B82F6] hover:text-[#60A5FA] transition-colors"
                           >
-                            {truncate(raffle.winner_address, 10, 6)}
+                            {truncate(raffle.winner, 10, 6)}
                           </a>
                         ) : (
                           <span className="text-[#444444]">-</span>
                         )}
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">
-                        {raffle.winner_picked_tx_hash ? (
+                        {raffle.winnerTx ? (
                           <a
-                            href={`${EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
+                            href={`${EXPLORER_URL}/tx/${raffle.winnerTx}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#3B82F6] hover:text-[#60A5FA] transition-colors"
                           >
-                            {truncate(raffle.winner_picked_tx_hash, 10, 6)}
+                            {truncate(raffle.winnerTx, 10, 6)}
                           </a>
                         ) : (
                           <span className="text-[#444444]">-</span>
@@ -380,7 +454,7 @@ export default function RaffleAdminPage() {
                       </td>
                     </tr>
                   ))}
-                  {!loadingRaffles && (rafflesData?.data || []).length === 0 ? (
+                  {!loadingRaffles && displayRaffles.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="px-4 py-8 text-center font-mono text-xs text-[#444444]">No raffles found.</td>
                     </tr>
@@ -391,24 +465,28 @@ export default function RaffleAdminPage() {
 
             <div className="px-4 py-3 border-t border-[#1f1f1f] flex items-center justify-between">
               <span className="font-mono text-[10px] uppercase tracking-widest text-[#555555]">
-                {loadingRaffles ? 'Loading...' : `Page ${rafflesData?.current_page || 1} / ${rafflesData?.last_page || 1}`}
+                {loadingRaffles ? 'Loading...' : isUsingPonderFallback
+                  ? `On-chain via Ponder (${displayRaffles.length})`
+                  : `Page ${rafflesData?.current_page || 1} / ${rafflesData?.last_page || 1}`}
               </span>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setRafflesPage((prev) => Math.max(1, prev - 1))}
-                  disabled={!rafflesData || rafflesData.current_page <= 1 || loadingRaffles}
-                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-[#2a2a2a] rounded text-[#999999] disabled:opacity-40"
-                >
-                  Prev
-                </button>
-                <button
-                  onClick={() => setRafflesPage((prev) => Math.min(rafflesData?.last_page || 1, prev + 1))}
-                  disabled={!rafflesData || rafflesData.current_page >= rafflesData.last_page || loadingRaffles}
-                  className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-[#2a2a2a] rounded text-[#999999] disabled:opacity-40"
-                >
-                  Next
-                </button>
-              </div>
+              {!isUsingPonderFallback && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setRafflesPage((prev) => Math.max(1, prev - 1))}
+                    disabled={!rafflesData || rafflesData.current_page <= 1 || loadingRaffles}
+                    className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-[#2a2a2a] rounded text-[#999999] disabled:opacity-40"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setRafflesPage((prev) => Math.min(rafflesData?.last_page || 1, prev + 1))}
+                    disabled={!rafflesData || rafflesData.current_page >= rafflesData.last_page || loadingRaffles}
+                    className="font-mono text-[10px] uppercase tracking-widest px-3 py-2 border border-[#2a2a2a] rounded text-[#999999] disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </div>
           </section>
 
@@ -502,6 +580,32 @@ export function AdminRaffleDetailPage() {
 
   const [contractRaffleId, setContractRaffleId] = useState<number | undefined>(undefined)
   const [paymentTokenDecimals, setPaymentTokenDecimals] = useState<number>(6)
+  const [resolveTx, setResolveTx] = useState<string>('')
+  const [resolveError, setResolveError] = useState<string>('')
+
+  const { writeContractAsync, isPending: isResolving } = useWriteContract()
+
+  const handleManualResolve = async () => {
+    if (!contractRaffleId) return
+    try {
+      setResolveError('')
+      setResolveTx('')
+      const performData = encodeAbiParameters(
+        [{ type: 'uint256' }],
+        [BigInt(contractRaffleId)]
+      )
+      const hash = await writeContractAsync({
+        address: contractAddress as Address,
+        abi: RaffleManagerABI,
+        functionName: 'performUpkeep',
+        args: [performData],
+      })
+      setResolveTx(hash)
+    } catch (err) {
+      console.error('Manual resolve failed:', err)
+      setResolveError(err instanceof Error ? err.message : 'Manual resolve failed')
+    }
+  }
 
   useEffect(() => {
     console.log('[AdminDetail] fetchRaffle triggered', { id, isConnected, hasToken: !!token })
@@ -630,18 +734,37 @@ export function AdminRaffleDetailPage() {
     <WalletGuard>
       <Layout>
         <div className="p-6 lg:p-8 space-y-6">
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <h1 className="font-sans font-bold text-2xl text-[#F5F5F5]">Admin Raffle Detail #{id}</h1>
-              <p className="font-mono text-xs text-[#555555] mt-1">Admin transactions endpoint: /api/raffles/{id}/transactions</p>
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <h1 className="font-sans font-bold text-2xl text-[#F5F5F5]">Admin Raffle Detail #{id}</h1>
+                <p className="font-mono text-xs text-[#555555] mt-1">Admin transactions endpoint: /api/raffles/{id}/transactions</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleManualResolve}
+                  disabled={!contractRaffleId || isResolving}
+                  className="font-mono text-xs uppercase tracking-wider px-4 py-2 bg-[#FFB800] text-[#050505] font-bold rounded-lg hover:bg-[#FFCC33] transition-colors disabled:bg-[#111111] disabled:text-[#333333]"
+                  title={contractRaffleId ? 'Trigger performUpkeep for this raffle' : 'No on-chain raffle ID available'}
+                >
+                  {isResolving ? 'Resolving...' : 'Manual Resolve'}
+                </button>
+                <button
+                  onClick={() => navigate(ADMIN_ROUTE_PATH)}
+                  className="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#2a2a2a] text-[#999999] hover:text-[#F5F5F5] hover:border-[#555555] rounded-lg transition-colors"
+                >
+                  Back to admin page
+                </button>
+              </div>
             </div>
-            <button
-              onClick={() => navigate(ADMIN_ROUTE_PATH)}
-              className="font-mono text-xs uppercase tracking-wider px-4 py-2 border border-[#2a2a2a] text-[#999999] hover:text-[#F5F5F5] hover:border-[#555555] rounded-lg transition-colors"
-            >
-              Back to admin page
-            </button>
-          </div>
+
+            {resolveTx && (
+              <p className="font-mono text-xs text-[#22C55E] break-all">
+                Resolve tx: <a href={`${EXPLORER_URL}/tx/${resolveTx}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{resolveTx}</a>
+              </p>
+            )}
+            {resolveError && (
+              <p className="font-mono text-xs text-[#EF4444]">{resolveError}</p>
+            )}
 
           {!isConnected ? <p className="font-mono text-sm text-[#EF4444]">Connect wallet to view admin raffle detail.</p> : null}
           {isConnected && !token ? <p className="font-mono text-sm text-[#EF4444]">Authenticate wallet signature to load raffle detail.</p> : null}
