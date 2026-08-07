@@ -8,7 +8,8 @@ import { QueryClient } from '@tanstack/react-query'
 // ──────────────────────────────────────────────────────────────────────
 
 export const PONDER_GRAPHQL_URL: string =
-  import.meta.env.VITE_PONDER_GRAPHQL_URL || 'http://localhost:42069/graphql'
+  import.meta.env.VITE_PONDER_GRAPHQL_URL ||
+  (import.meta.env.PROD ? '/api/graphql' : 'http://localhost:42069/graphql')
 
 export const CONTRACTS = {
   RaffleManager: {
