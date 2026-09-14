@@ -9,7 +9,7 @@ import { getRaffleManagerAddress, getMockUSDCAddress, queryClient } from '../con
 import { useAppKitAccount } from '@reown/appkit/react'
 import { WalletConnect } from '../components/evm/WalletConnect'
 import { useAccount } from 'wagmi'
-import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
+import { API_URL, getAuthToken, apiFetch } from '../config/index'
 import { TransactionReceipt } from '../components/evm/TransactionReceipt'
 import { PrizeType } from '../types/evm.types'
 import '../components/evm/CreateRaffleModal.css'
@@ -202,7 +202,7 @@ export default function CreateRafflePage() {
       body.append('description', description || '')
       if (image) body.append('image', image)
       const token = getAuthToken()
-      const res = await apiFetch(`${BACKEND_URL}/raffles`, {
+      const res = await apiFetch(`${API_URL}/raffles`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -223,7 +223,7 @@ export default function CreateRafflePage() {
     if (!isFreeRaffle || !tweetId || !maxParticipants) return
     try {
       const token = getAuthToken()
-      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task`, {
+      const res = await apiFetch(`${API_URL}/raffles/${raffleId}/task`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -284,9 +284,9 @@ export default function CreateRafflePage() {
       }
       setCreateHash(hash)
       setCreateStep('success')
-      // Invalidate Ponder queries so the new raffle appears in lists immediately
+      // Invalidate raffle queries so the new raffle appears in lists immediately
       try {
-        await queryClient.invalidateQueries({ queryKey: ['ponder'] })
+        await queryClient.invalidateQueries({ queryKey: ['raffles'] })
       } catch {
         // non-fatal
       }

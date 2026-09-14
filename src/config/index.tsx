@@ -19,11 +19,8 @@ export const networks: [AppKitNetwork, ...AppKitNetwork[]] = [solana, solanaTest
 
 // Set up Solana Adapter
 
-export const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
-
-// ─── Backend suspended — all off-chain API calls short-circuit ────────────
-// Raffle data comes from the Ponder indexer (0 RPC). Auth is wallet-only.
-export const BACKEND_ENABLED = false
+export const BACKEND_URL = 'https://api.winr.fun'
+export const API_URL = `${BACKEND_URL}/api`
 
 export const getAuthToken = () => {
   const token = localStorage.getItem('access_token')
@@ -41,19 +38,8 @@ export const clearAuthToken = () => {
  * Drop-in replacement for fetch that automatically handles 401 responses.
  * On 401 it clears the stored auth token and fires an 'auth:unauthorized'
  * DOM event so the Navbar can disconnect the wallet.
- *
- * When the backend is suspended (BACKEND_ENABLED = false) every request
- * short-circuits with a 503 response — no dead-domain network calls.
  */
 export const apiFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-  if (!BACKEND_ENABLED) {
-    console.warn(`[apiFetch] Backend suspended — skipping ${String(input)}`)
-    return new Response(JSON.stringify({ error: 'Backend suspended' }), {
-      status: 503,
-      headers: { 'Content-Type': 'application/json' },
-    })
-  }
-  console.log(`[API FETCH] ${input}, init: ${JSON.stringify(init, null, 2)}`)
   const response = await fetch(input, init)
   if (response.status === 401) {
     clearAuthToken()

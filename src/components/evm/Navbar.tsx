@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useDisconnect, useSignMessage } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { BACKEND_URL, BACKEND_ENABLED, getAuthToken } from '../../config/index'
+import { API_URL, getAuthToken } from '../../config/index'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
@@ -64,12 +64,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   useEffect(() => {
     const token = getAuthToken()
     console.log('[Navbar] Address effect triggered. Address:', address, 'Token exists:', !!token, 'Signing in:', signingInRef.current)
-    
+
     if (address && !token && !signingInRef.current) {
       console.log('[Navbar] Triggering auto sign-in...')
       signingInRef.current = true
-      handleSignIn().finally(() => { 
-        signingInRef.current = false 
+      handleSignIn().finally(() => {
+        signingInRef.current = false
         console.log('[Navbar] Sign-in attempt finished. Ref reset.')
       })
     }
@@ -78,7 +78,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const handleSignIn = async () => {
     const existingToken = getAuthToken()
     console.log('[Navbar] handleSignIn called. Token exists:', !!existingToken, 'Address:', addressRef.current)
-    
+
     if (existingToken) {
       setAuthStatus('ok')
       return
@@ -91,32 +91,26 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       return
     }
 
-    if (!BACKEND_ENABLED) {
-      // Backend suspended — wallet connection is sufficient for on-chain actions
-      setAuthStatus('ok')
-      return
-    }
-
-    if (!BACKEND_URL) {
-      console.error('[Navbar] BACKEND_URL is not defined')
+    if (!API_URL) {
+      console.error('[Navbar] API_URL is not defined')
       setAuthStatus('error')
-      setAuthMessage('Configuration error: BACKEND_URL is missing. Check your .env file.')
+      setAuthMessage('Configuration error: API_URL is missing.')
       return
     }
 
     try {
-      console.log('[Navbar] Fetching nonce from:', `${BACKEND_URL}/auth/nonce`)
-      const nonceRes = await fetch(`${BACKEND_URL}/auth/nonce`, {
+      console.log('[Navbar] Fetching nonce from:', `${API_URL}/auth/nonce`)
+      const nonceRes = await fetch(`${API_URL}/auth/nonce`, {
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       })
-      
+
       if (!nonceRes.ok) {
         throw new Error(`Server responded with ${nonceRes.status}: ${nonceRes.statusText}`)
       }
 
       const data = await nonceRes.json()
       const fetchedNonce = data.nonce
-      
+
       if (!fetchedNonce) {
         throw new Error('No nonce returned from server')
       }
@@ -124,9 +118,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       setNonce(fetchedNonce)
 
       const message = [
-        'Welcome to Raffled!',
+        'Welcome to Winr.fun!',
         '',
-        'Click to sign in and accept the Raffled Terms of Service and Privacy Policy. This request will not cost any gas fees.',
+        'Click to sign in and accept the Winr.fun Terms of Service and Privacy Policy. This request will not cost any gas fees.',
         '',
         `Wallet address: ${addressRef.current}`,
         `Nonce: ${fetchedNonce}`,
@@ -159,7 +153,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     try {
       const signature = await signMessageAsync({ message: pendingSignature.message })
 
-      const verifyRes = await fetch(`${BACKEND_URL}/auth/verify`, {
+      const verifyRes = await fetch(`${API_URL}/auth/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
@@ -253,10 +247,10 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
             />
             <div className="flex flex-col">
               <h1 className="font-sans font-bold text-xl tracking-tight text-[#F5F5F5] leading-none">
-                RAFFLED<span className="text-[#FFB800]">.</span>
+                Winr<span className="text-[#FFB800]">.</span>fun
               </h1>
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#555555] mt-0.5 hidden sm:block">
-                On-chain · Chainlink VRF
+                On-chain · Quiver VRF
               </p>
             </div>
           </div>
@@ -314,12 +308,12 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
               {/* Header */}
               <div className="px-6 py-4 border-b border-[#1f1f1f] flex items-center gap-3">
                 <img
-                  src="/useRaffled.webp"
-                  alt="Raffled"
+                  src="/useWinr.fun.webp"
+                  alt="Winr.fun"
                   className="w-8 h-8 rounded-md object-cover"
                 />
                 <h2 className="font-sans font-bold text-lg text-[#F5F5F5]">
-                  Welcome to <span className="text-[#FFB800]">Raffled</span>
+                  Welcome to <span className="text-[#FFB800]">Winr.fun</span>
                 </h2>
               </div>
 

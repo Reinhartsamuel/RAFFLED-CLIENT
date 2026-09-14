@@ -6,8 +6,8 @@ import { useRaffleStats } from '../hooks/useRaffles'
 
 const FEATURES = [
   {
-    title: 'Chainlink VRF Verified',
-    body: 'Every winner is picked by Chainlink on-chain randomness. Participants can verify the VRF transaction on BaseScan. No trust required.',
+    title: 'Quiver VRF Verified',
+    body: 'Every winner is picked by Quiver on-chain randomness. Participants can verify the VRF transaction on BaseScan. No trust required.',
   },
   {
     title: 'Whitelist & Free Entry',
@@ -45,7 +45,7 @@ const PLANS = [
     features: [
       'Full wizard access',
       'Embed widget',
-      'Chainlink VRF',
+      'Quiver VRF',
       'Up to 500 tickets',
       'No credit card needed',
     ],
@@ -100,7 +100,7 @@ const HOST_STEPS = [
   {
     step: '03',
     title: 'Verify',
-    body: 'Chainlink VRF picks winner. Prize sent automatically. Everything on-chain, verifiable on BaseScan.',
+    body: 'Quiver VRF picks winner. Prize sent automatically. Everything on-chain, verifiable on BaseScan.',
   },
 ]
 
@@ -138,7 +138,7 @@ const START_STEPS = [
 const FAQS = [
   {
     q: 'How is the winner picked?',
-    a: 'When a raffle expires, Chainlink VRF v2.5 generates on-chain randomness. A verifiably random ticket wins — the draw transaction is public on BaseScan.',
+    a: 'When a raffle expires, Quiver VRF v2.5 generates on-chain randomness. A verifiably random ticket wins — the draw transaction is public on BaseScan.',
   },
   {
     q: 'What happens if my raffle underfills?',
@@ -183,7 +183,7 @@ export default function LandingPageFrequency() {
         <div className="absolute top-0 inset-x-0 z-20">
           <div className="max-w-6xl mx-auto px-4 py-5 flex items-center justify-between">
             <span className="font-mono font-bold text-sm tracking-[0.2em] text-[#F5F5F5]">
-              RAFFLED<span className="text-[#FFB800]">.</span>
+              Winr<span className="text-[#FFB800]">.</span>fun
             </span>
             <div className="flex items-center gap-3">
               <a
@@ -204,14 +204,14 @@ export default function LandingPageFrequency() {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center px-4">
           <p className="font-mono text-[10px] text-[#FFB800] uppercase tracking-[0.3em] mb-6">
-            B2B RAFFLE INFRASTRUCTURE · CHAINLINK VRF
+            RAFFLE INFRASTRUCTURE · QUIVER VRF
           </p>
           <h1 className="font-sans font-bold text-4xl md:text-6xl lg:text-7xl text-[#F5F5F5] leading-[1.1] mb-6">
             Launch a provably-fair<br />
             <span className="text-[#FFB800]">raffle in 2 minutes.</span>
           </h1>
           <p className="font-mono text-sm md:text-base text-[#666666] max-w-xl mx-auto mb-10">
-            White-label raffle infrastructure for Base projects. Whitelist draws, token drops, NFT giveaways — all verified by Chainlink VRF. No bots. No Google Forms.
+            White-label raffle infrastructure for Base projects. Whitelist draws, token drops, NFT giveaways — all verified by Quiver VRF. No bots. No Google Forms.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <a href="/app/create-raffle" className="px-8 py-4 bg-[#FFB800] text-[#050505] font-mono font-bold text-sm uppercase tracking-wider rounded-lg hover:bg-[#FFCC33] hover:shadow-[0_0_24px_rgba(255,184,0,0.3)] transition-all inline-block">
@@ -228,7 +228,7 @@ export default function LandingPageFrequency() {
       <section className="py-16 border-t border-[#1f1f1f]">
         <div className="max-w-5xl mx-auto px-4">
           <p className="font-mono text-[10px] text-[#555555] uppercase tracking-[0.3em] text-center mb-10">
-            Trusted by projects on Base
+            Trusted by projects on Robinhood
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-[#1f1f1f] rounded-xl overflow-hidden border border-[#1f1f1f]">
             {[
@@ -420,7 +420,7 @@ export default function LandingPageFrequency() {
                 RAFFLED<span className="text-[#FFB800]">.</span>
               </p>
               <p className="font-mono text-[10px] text-[#555555] mt-2 uppercase tracking-[0.12em]">
-                B2B raffle infrastructure on Base · Chainlink VRF
+                B2B raffle infrastructure on Base · Quiver VRF
               </p>
             </div>
             <a

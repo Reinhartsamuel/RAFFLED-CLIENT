@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { ponderQuery } from '../utils/ponder'
-import type { PonderEvent, PonderPage } from '../types/evm.types'
+import { API_URL, apiFetch, getAuthToken } from '../config'
 
 export interface EventSummary {
   event_type: string
@@ -44,107 +43,64 @@ export interface ActivityPage {
 
 const PAGE_SIZE = 20
 
-// ─── Ponder → ActivityEvent mapping ─────────────────────────────────────────
-function camelToSnake(key: string): string {
-  return key.replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase()
-}
-
-function mapData(data: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {}
-  for (const [k, v] of Object.entries(data ?? {})) {
-    out[camelToSnake(k)] = v
-  }
-  return out
-}
-
-function toActivityEvent(e: PonderEvent, index: number): ActivityEvent {
-  const logIndex = Number(e.id.split('-').pop() ?? 0) || 0
-  const tsMs = Number(e.blockTimestamp) * 1000
-  return {
-    id: index + 1,
-    event_type: e.eventName as EventType,
-    source: 'ponder',
-    block_number: Number(e.blockTimestamp),
-    log_index: logIndex,
-    tx_hash: e.txHash,
-    event_data: mapData(e.data as Record<string, unknown>),
-    created_at: new Date(tsMs).toISOString().replace('T', ' ').slice(0, 19),
-  }
-}
-
-/**
- * Convert a Ponder event into the app's ActivityEvent shape.
- * Used by activity feed, EventToast, and any other consumer.
- */
-export function ponderEventToActivity(e: PonderEvent, index = 0): ActivityEvent {
-  return toActivityEvent(e, index)
-}
-
 // ─── Hook ──────────────────────────────────────────────────────────────────
 export function useActivityEvents(filter: ActivityFilter) {
   const [allEvents, setAllEvents] = useState<ActivityEvent[]>([])
   const [loading, setLoading] = useState(false)
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(true)
+  const [total, setTotal] = useState(0)
   const [summary, setSummary] = useState<EventSummary[]>([])
-
-  // Ponder has no total-count query in the plan's shape — report loaded count
-  const total = allEvents.length
 
   const fetchPage = useCallback(async (pageNum: number, currentFilter: ActivityFilter) => {
     setLoading(true)
     try {
-      const where = currentFilter !== 'all' ? `where: { eventName: "${currentFilter}" }` : ''
-      const data = await ponderQuery<{ events: PonderPage<PonderEvent> }>(`
-        query ActivityEvents($limit: Int!, $offset: Int!) {
-          events(
-            ${where ? where + '\n' : ''}orderBy: "blockTimestamp"
-            orderDirection: "desc"
-            limit: $limit
-            offset: $offset
-          ) {
-            items {
-              id eventName raffleId from data txHash blockTimestamp
-            }
-          }
-        }
-      `, { limit: PAGE_SIZE, offset: (pageNum - 1) * PAGE_SIZE })
-      const mapped = data.events.items.map((e, i) => toActivityEvent(e, (pageNum - 1) * PAGE_SIZE + i))
-      setAllEvents((prev) => (pageNum === 1 ? mapped : [...prev, ...mapped]))
-      setHasMore(mapped.length === PAGE_SIZE)
-      setPage(pageNum)
+      const url = new URL(`${API_URL}/events`)
+      url.searchParams.set('per_page', String(PAGE_SIZE))
+      url.searchParams.set('page', String(pageNum))
+      url.searchParams.set('sort_by', 'created_at')
+      url.searchParams.set('sort_dir', 'desc')
+      if (currentFilter !== 'all') {
+        url.searchParams.set('event_type', currentFilter)
+      }
+      const token = getAuthToken()
+      const res = await apiFetch(url.toString(), {
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      })
+      if (!res.ok) throw new Error(`Events HTTP ${res.status}`)
+      const data: ActivityPage = await res.json()
+      setAllEvents((prev) => (pageNum === 1 ? data.data : [...prev, ...data.data]))
+      setHasMore(data.current_page < data.last_page)
+      setTotal(Number(data.total ?? 0))
+      setPage(data.current_page)
     } catch (err) {
-      console.error('Failed to fetch activity events from Ponder:', err)
+      console.error('Failed to fetch activity events:', err)
       setHasMore(false)
     } finally {
       setLoading(false)
     }
   }, [])
 
-  // Fetch summary counts from the latest 100 events (Ponder 0.17 has no
-  // aggregate queries) — good enough for the stats bar.
+  // Fetch summary (once, not tied to filter)
   useEffect(() => {
     let cancelled = false
     const fetchSummary = async () => {
       try {
-        const data = await ponderQuery<{ events: PonderPage<PonderEvent> }>(`
-          query RecentEvents($limit: Int!) {
-            events(orderBy: "blockTimestamp", orderDirection: "desc", limit: $limit) {
-              items {
-                id eventName raffleId from data txHash blockTimestamp
-              }
-            }
-          }
-        `, { limit: 100 })
-        const grouped = new Map<string, number>()
-        data.events.items.forEach((e) => {
-          grouped.set(e.eventName, (grouped.get(e.eventName) ?? 0) + 1)
+        const res = await apiFetch(`${API_URL}/events/summary`, {
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+          },
         })
-        if (!cancelled) {
-          setSummary(Array.from(grouped.entries()).map(([event_type, count]) => ({ event_type, count })))
-        }
+        if (!res.ok) return
+        const data: EventSummary[] = await res.json()
+        if (!cancelled) setSummary(data)
       } catch (err) {
-        console.error('Failed to fetch event summary from Ponder:', err)
+        console.error('Failed to fetch event summary:', err)
       }
     }
     fetchSummary()

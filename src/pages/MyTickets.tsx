@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAppKitAccount } from '@reown/appkit/react'
-import { BACKEND_URL, getAuthToken, apiFetch } from '../config/index'
+import { API_URL, getAuthToken, apiFetch } from '../config/index'
 import { fadeInUp, staggerContainer, staggerItem } from '../utils/animations'
 import { WalletConnect } from '../components/evm/WalletConnect'
 
@@ -197,7 +197,7 @@ export default function MyTickets() {
     setError(null)
     try {
       const token = getAuthToken()
-      const res = await apiFetch(`${BACKEND_URL}/raffles/my-tickets`, {
+      const res = await apiFetch(`${API_URL}/raffles/my-tickets`, {
         method: 'GET',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),

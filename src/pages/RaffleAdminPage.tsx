@@ -5,13 +5,11 @@ import { useAccount, useReadContract, useChainId, useWriteContract } from 'wagmi
 import { formatUnits, encodeAbiParameters, type Address } from 'viem'
 import { Layout } from '../components/evm/Layout'
 import { CreateRaffleModal } from '../components/evm/CreateRaffleModal'
-import { BACKEND_URL, apiFetch, getAuthToken } from '../config/index'
+import { API_URL, apiFetch, getAuthToken } from '../config/index'
 import { getRaffleManagerAddress } from '../config/evm.config'
 import { EXPLORER_URL } from '../utils/constants'
 import type { BackendRaffle } from '../interfaces/BackendRaffle'
 import RaffleManagerABI from '../abis/RaffledCore.json'
-import { useAllRaffles } from '../hooks/useRaffles'
-import type { PonderRaffle } from '../types/evm.types'
 
 const ADMIN_ROUTE_PATH = '/app/veryyyy-secure-admin-pageee'
 const ADMIN_ALLOWED_ADDRESS = '0x753dfc03b4d37b3a316d0fe5ab9f677c0d3c20f8'
@@ -152,27 +150,6 @@ function backendToRow(r: BackendRaffle): RaffleRow {
   }
 }
 
-function ponderToRow(r: PonderRaffle): RaffleRow {
-  const tone: RaffleRow['statusTone'] =
-    r.status === 'OPEN' ? 'open'
-    : r.status === 'PENDING_VRF' ? 'pending'
-    : r.status === 'COMPLETED' ? 'completed'
-    : 'cancelled'
-  return {
-    key: `oc-${r.id}`,
-    id: r.id,
-    title: `Raffle #${r.id}`,
-    type: r.prizeType === 'ERC721' ? 'nft' : 'crypto',
-    status: r.status,
-    statusTone: tone,
-    sold: Number(r.totalTickets ?? 0),
-    max: Number(r.maxCap ?? 0),
-    ends: new Date(Number(r.expiry) * 1000).toLocaleString(),
-    winner: r.winner ?? null,
-    winnerTx: null,
-  }
-}
-
 const STATUS_TONE_COLORS: Record<RaffleRow['statusTone'], string> = {
   open: 'text-[#FFB800]',
   pending: 'text-[#3B82F6]',
@@ -249,19 +226,12 @@ export default function RaffleAdminPage() {
 
   const token = getAuthToken()
 
-  // On-chain fallback via Ponder — used when the backend API is unavailable
-  const { data: onChainRaffles = [] } = useAllRaffles()
-
-  const displayRaffles: RaffleRow[] = rafflesData?.data?.length
-    ? rafflesData.data.map(backendToRow)
-    : onChainRaffles.map(ponderToRow)
-
-  const isUsingPonderFallback = !rafflesData?.data?.length && onChainRaffles.length > 0
+  const displayRaffles: RaffleRow[] = (rafflesData?.data ?? []).map(backendToRow)
 
   useEffect(() => {
     const fetchEventSummary = async () => {
       try {
-        const res = await apiFetch(`${BACKEND_URL}/events/summary`, { method: 'GET' })
+        const res = await apiFetch(`${API_URL}/events/summary`, { method: 'GET' })
         if (!res.ok) return
         const body = await res.json()
         setEventSummary(Array.isArray(body) ? body : [])
@@ -277,7 +247,7 @@ export default function RaffleAdminPage() {
       if (!isConnected || !token) return
       try {
         setLoadingRaffles(true)
-        const url = new URL(`${BACKEND_URL}/raffles`)
+        const url = new URL(`${API_URL}/raffles`)
         url.searchParams.set('per_page', '10')
         url.searchParams.set('page', String(rafflesPage))
         url.searchParams.set('sort_by', 'created_at')
@@ -311,7 +281,7 @@ export default function RaffleAdminPage() {
       if (!isConnected || !token) return
       try {
         setLoadingEvents(true)
-        const url = new URL(`${BACKEND_URL}/events`)
+        const url = new URL(`${API_URL}/events`)
         url.searchParams.set('per_page', '20')
         url.searchParams.set('page', String(eventsPage))
 
@@ -381,13 +351,8 @@ export default function RaffleAdminPage() {
             <div className="px-4 py-3 border-b border-[#1f1f1f] flex items-center justify-between">
               <h2 className="font-sans font-semibold text-sm text-[#F5F5F5]">Raffles</h2>
               <div className="flex items-center gap-2">
-                {isUsingPonderFallback && (
-                  <span className="font-mono text-[9px] uppercase tracking-widest px-2 py-0.5 rounded text-[#3B82F6] bg-[#3B82F6]/10 border border-[#3B82F6]/30">
-                    Ponder fallback
-                  </span>
-                )}
                 <span className="font-mono text-[10px] text-[#555555] uppercase tracking-widest">
-                  {rafflesData?.data?.length ? (rafflesData?.total || 0) : displayRaffles.length} total
+                  {rafflesData?.total || displayRaffles.length} total
                 </span>
               </div>
             </div>
@@ -465,11 +430,9 @@ export default function RaffleAdminPage() {
 
             <div className="px-4 py-3 border-t border-[#1f1f1f] flex items-center justify-between">
               <span className="font-mono text-[10px] uppercase tracking-widest text-[#555555]">
-                {loadingRaffles ? 'Loading...' : isUsingPonderFallback
-                  ? `On-chain via Ponder (${displayRaffles.length})`
-                  : `Page ${rafflesData?.current_page || 1} / ${rafflesData?.last_page || 1}`}
+                {loadingRaffles ? 'Loading...' : `Page ${rafflesData?.current_page || 1} / ${rafflesData?.last_page || 1}`}
               </span>
-              {!isUsingPonderFallback && (
+              {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setRafflesPage((prev) => Math.max(1, prev - 1))}
@@ -486,7 +449,7 @@ export default function RaffleAdminPage() {
                     Next
                   </button>
                 </div>
-              )}
+              }
             </div>
           </section>
 
@@ -614,7 +577,7 @@ export function AdminRaffleDetailPage() {
 
       try {
         setLoadingRaffle(true)
-        const url = new URL(`${BACKEND_URL}/raffles/${id}`)
+        const url = new URL(`${API_URL}/raffles/${id}`)
         console.log('[AdminDetail] Fetching raffle from:', url.toString())
         const res = await apiFetch(url.toString(), { method: 'GET', headers: createAuthHeaders() })
         console.log('[AdminDetail] Raffle fetch response status:', res.status)
@@ -703,7 +666,7 @@ export function AdminRaffleDetailPage() {
 
       try {
         setLoading(true)
-        const url = new URL(`${BACKEND_URL}/raffles/${id}/transactions`)
+        const url = new URL(`${API_URL}/raffles/${id}/transactions`)
         url.searchParams.set('per_page', '10')
         url.searchParams.set('page', String(txPage))
 

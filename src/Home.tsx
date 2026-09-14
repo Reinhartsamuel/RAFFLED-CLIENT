@@ -14,7 +14,7 @@ import RaffleAdminPage, { AdminRaffleDetailPage } from './pages/RaffleAdminPage'
 import { EventToastContainer } from './components/evm/EventToast'
 import CreateRafflePage from './pages/CreateRafflePage'
 import MyTickets from './pages/MyTickets'
-import { useAllRaffles, useFilteredRaffles, enrichRaffle } from './hooks/useRaffles'
+import { useAllRaffles, useFilteredRaffles, useInvalidateRaffles, enrichRaffle } from './hooks/useRaffles'
 
 const OFFICIAL_HOST = '0xE13d4F4676A146564aB75bFd86E06ec38B9a7201'
 
@@ -33,12 +33,13 @@ export function HomePage({ activeFilter }: {
         ? { status: 'ended' as const }
         : undefined
 
-  // Listing + filtering comes from Ponder GraphQL — 0 RPC calls
+  // Listing + filtering comes from the backend API
   const { data: filteredRaffles = [], isLoading: rafflesLoading } = useFilteredRaffles(filters)
   const { data: allRaffles = [] } = useAllRaffles()
+  const { invalidateAll } = useInvalidateRaffles()
 
   const officialFiltered = activeFilter === 'official'
-    ? filteredRaffles.filter((r) => r.host.toLowerCase() === OFFICIAL_HOST.toLowerCase())
+    ? filteredRaffles.filter((r) => (r.owner_address ?? '').toLowerCase() === OFFICIAL_HOST.toLowerCase())
     : filteredRaffles
 
   const raffles = officialFiltered.map((r) => enrichRaffle(r))
@@ -138,6 +139,7 @@ export function HomePage({ activeFilter }: {
         <CreateRaffleModal
           onClose={() => {
             setShowCreateModal(false)
+            invalidateAll()
           }}
         />
       )}
@@ -165,7 +167,7 @@ export default function Home() {
         <Route path="/veryyyy-secure-admin-pageee" element={<RaffleAdminPage />} />
         <Route path="/veryyyy-secure-admin-pageee/raffles/:id" element={<AdminRaffleDetailPage />} />
       </Routes>
-      {/* Global toast notifications — polls Ponder — persists across page navigations */}
+      {/* Global toast notifications — backend SSE — persists across page navigations */}
       <EventToastContainer />
     </Layout>
   )

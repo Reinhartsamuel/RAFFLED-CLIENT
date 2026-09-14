@@ -7,10 +7,6 @@ import { QueryClient } from '@tanstack/react-query'
 // Contract Addresses
 // ──────────────────────────────────────────────────────────────────────
 
-export const PONDER_GRAPHQL_URL: string =
-  import.meta.env.VITE_PONDER_GRAPHQL_URL ||
-  (import.meta.env.PROD ? '/api/graphql' : 'http://localhost:42069/graphql')
-
 export const CONTRACTS = {
   RaffleManager: {
     baseSepolia: '0xc17eee20B4990021bE9cc8eCB7833706465bb8b9' as const,

@@ -1,9 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import type { ActivityEvent, EventType } from '../../hooks/useActivityEvents'
-import { ponderEventToActivity } from '../../hooks/useActivityEvents'
-import { ponderQuery } from '../../utils/ponder'
-import type { PonderEvent, PonderPage } from '../../types/evm.types'
+import { useSSEEvents } from '../../hooks/useSSEEvents'
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 interface ToastItem {
@@ -230,56 +228,23 @@ function ToastCard({
 }
 
 // ─── Container (mount once at app root) ────────────────────────────────────
-// SSE backend is suspended — poll Ponder GraphQL every 15s for new events.
-const POLL_INTERVAL_MS = 15_000
-const POLL_LIMIT = 5
-
 export function EventToastContainer() {
+  const { subscribe } = useSSEEvents()
   const [toasts, setToasts] = useState<ToastItem[]>([])
-  const seenRef = useRef<Set<string>>(new Set())
 
   useEffect(() => {
-    let cancelled = false
-
-    const poll = async () => {
-      try {
-        const data = await ponderQuery<{ events: PonderPage<PonderEvent> }>(`
-          query LatestEvents($limit: Int!) {
-            events(orderBy: "blockTimestamp", orderDirection: "desc", limit: $limit) {
-              items {
-                id eventName raffleId from data txHash blockTimestamp
-              }
-            }
-          }
-        `, { limit: POLL_LIMIT })
-        if (cancelled) return
-        // Newest first from Ponder — reverse so the oldest of the batch lands on top
-        const fresh = data.events.items
-          .filter((e) => !seenRef.current.has(e.id))
-          .reverse()
-        fresh.forEach((e) => seenRef.current.add(e.id))
-        fresh.forEach((e) => {
-          const activity = ponderEventToActivity(e)
-          setToasts((prev) => {
-            const newToast: ToastItem = {
-              id: `${e.id}-${Date.now()}`,
-              event: activity,
-            }
-            return [newToast, ...prev].slice(0, 3)
-          })
-        })
-      } catch {
-        // Ponder not reachable — stay silent, retry on next poll
-      }
-    }
-
-    poll()
-    const id = setInterval(poll, POLL_INTERVAL_MS)
-    return () => {
-      cancelled = true
-      clearInterval(id)
-    }
-  }, [])
+    const unsubscribe = subscribe((event) => {
+      setToasts((prev) => {
+        const newToast: ToastItem = {
+          id: `${event.id}-${Date.now()}`,
+          event,
+        }
+        // Newest first, max 3 visible
+        return [newToast, ...prev].slice(0, 3)
+      })
+    })
+    return unsubscribe
+  }, [subscribe])
 
   const dismiss = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))

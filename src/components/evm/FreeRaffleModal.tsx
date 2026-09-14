@@ -5,7 +5,7 @@ import { ContractFunctionRevertedError } from 'viem'
 import { motion, AnimatePresence } from 'framer-motion'
 import { overlayVariants, modalVariants, fadeInUp, staggerContainer } from '../../utils/animations'
 import { useEnterFreeRaffle } from '../../hooks/useRaffleContract'
-import { BACKEND_URL, getAuthToken, apiFetch } from '../../config/index'
+import { API_URL, getAuthToken, apiFetch } from '../../config/index'
 import { TaskItem } from '../../interfaces/TaskItem'
 
 const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
@@ -20,6 +20,7 @@ const CONTRACT_ERROR_MESSAGES: Record<string, string> = {
 
 interface FreeRaffleModalProps {
   raffleId: number
+  contractRaffleId?: number
   prizeImage?: string
   prizeTitle: string
   prizeAmount?: string
@@ -63,6 +64,7 @@ interface TaskSubmitResponse {
 
 export function FreeRaffleModal({
   raffleId,
+  contractRaffleId,
   prizeImage,
   prizeTitle,
   prizeAmount,
@@ -208,7 +210,7 @@ export function FreeRaffleModal({
 
     try {
       const authToken = getAuthToken()
-      const res = await apiFetch(`${BACKEND_URL}/raffles/${raffleId}/task/submit`, {
+      const res = await apiFetch(`${API_URL}/raffles/${raffleId}/task/submit`, {
         method: 'POST',
         headers: {
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
@@ -273,7 +275,7 @@ export function FreeRaffleModal({
     setIsSubmitting(true)
 
     try {
-      const hash = await enterFreeRaffle({ raffleId, signature: storedSignature })
+      const hash = await enterFreeRaffle({ raffleId: contractRaffleId ?? raffleId, signature: storedSignature })
       setEnterRaffleHash(hash as `0x${string}`)
       // Don't reset isSubmitting here - let the transaction receipt handler do it
     } catch (err) {

@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { formatUnits } from 'viem'
-import { useRaffleData, useTotalTickets } from '../hooks/useRaffleContract'
-import { RaffleStatusLabel, PrizeType } from '../types/evm.types'
+import { useRaffleDetail, parseBackendDate } from '../hooks/useRaffles'
 
 function useCountdown(endsAt: number) {
   const [left, setLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0, ended: true })
@@ -30,33 +29,39 @@ function useCountdown(endsAt: number) {
   return left
 }
 
-const STATUS_STYLES: Record<number, string> = {
-  0: 'text-[#22C55E] border-[#22C55E]/30 bg-[#22C55E]/10',
-  1: 'text-[#3B82F6] border-[#3B82F6]/30 bg-[#3B82F6]/10',
-  2: 'text-[#555555] border-[#555555]/30 bg-[#555555]/10',
-  3: 'text-[#EF4444] border-[#EF4444]/30 bg-[#EF4444]/10',
+const STATUS_STYLES: Record<string, string> = {
+  open: 'text-[#22C55E] border-[#22C55E]/30 bg-[#22C55E]/10',
+  pending: 'text-[#3B82F6] border-[#3B82F6]/30 bg-[#3B82F6]/10',
+  pending_vrf: 'text-[#3B82F6] border-[#3B82F6]/30 bg-[#3B82F6]/10',
+  completed: 'text-[#555555] border-[#555555]/30 bg-[#555555]/10',
+  cancelled: 'text-[#EF4444] border-[#EF4444]/30 bg-[#EF4444]/10',
+  canceled: 'text-[#EF4444] border-[#EF4444]/30 bg-[#EF4444]/10',
 }
 
 /**
  * Minimal iframe-friendly embed page — no navbar, sidebar, or footer.
- * Reads on-chain raffle data via `getRaffle` (1 RPC call per embed).
+ * Reads raffle data from the backend API.
  */
 export default function EmbedRaffle() {
   const { id } = useParams<{ id: string }>()
   const raffleId = id !== undefined && /^\d+$/.test(id) ? Number(id) : undefined
 
-  const { raffle, isLoading, error } = useRaffleData(raffleId)
-  const { data: totalTickets } = useTotalTickets(raffleId)
+  const { data: detail, isLoading, error } = useRaffleDetail(raffleId)
+  const raffle = detail?.raffle ?? null
 
-  const countdown = useCountdown(raffle?.expiry ?? 0)
+  const status = (raffle?.status || '').toLowerCase()
+  const expiryTs = raffle ? parseBackendDate(raffle.expire_at || raffle.ends_at) : 0
+  const countdown = useCountdown(expiryTs)
 
-  const isEnded = !!raffle && (countdown.ended || raffle.status === 2 || raffle.status === 3)
-  const isSoldOut = !!raffle && (Number(totalTickets ?? 0) >= raffle.maxCap)
+  const isEnded = !!raffle && (countdown.ended || status === 'completed' || status === 'cancelled' || status === 'canceled')
+  const isSoldOut = !!raffle && Number(raffle.sold_tickets ?? 0) >= Number(raffle.max_tickets ?? 0)
+  const isNft = raffle ? raffle.prize_type === 'erc721' || raffle.type === 'nft' : false
+  const host = raffle?.owner_address ?? ''
 
   const prizeDisplay = raffle
-    ? raffle.prizeType === PrizeType.ERC721
-      ? `#${raffle.prizeAmountOrTokenId.toString()}`
-      : formatUnits(raffle.prizeAmountOrTokenId, 6)
+    ? isNft
+      ? `#${raffle.prize_amount_or_token_id ?? raffle.prize_amount ?? '0'}`
+      : formatUnits(BigInt(raffle.prize_amount_or_token_id ?? raffle.prize_amount ?? '0'), Number(raffle.prize_asset_decimals ?? 6))
     : null
 
   return (
@@ -71,8 +76,8 @@ export default function EmbedRaffle() {
             RAFFLED<span className="text-[#FFB800]">.</span>
           </span>
           {raffle && (
-            <span className={`font-mono text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${STATUS_STYLES[raffle.status] ?? STATUS_STYLES[2]}`}>
-              {RaffleStatusLabel[raffle.status] ?? 'UNKNOWN'}
+            <span className={`font-mono text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border ${STATUS_STYLES[status] ?? STATUS_STYLES.completed}`}>
+              {status ? status.toUpperCase() : 'UNKNOWN'}
             </span>
           )}
         </div>
@@ -100,7 +105,7 @@ export default function EmbedRaffle() {
             {/* Prize */}
             <div className="px-4 py-6 text-center border-b border-[#1f1f1f]">
               <p className="font-mono text-[10px] text-[#666666] uppercase tracking-widest mb-2">
-                {raffle.prizeType === PrizeType.ERC721 ? 'NFT PRIZE' : 'PRIZE POOL'}
+                {isNft ? 'NFT PRIZE' : 'PRIZE POOL'}
               </p>
               <p className="font-mono font-bold text-3xl text-[#FFB800] truncate">
                 {prizeDisplay}
@@ -115,13 +120,13 @@ export default function EmbedRaffle() {
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] text-[#555555] uppercase tracking-wider">Ticket Price</span>
                 <span className="font-mono text-xs text-[#F5F5F5]">
-                  ${Number(formatUnits(raffle.ticketPrice, 6)).toFixed(2)} USDC
+                  ${Number(formatUnits(BigInt(raffle.ticket_price_amount ?? '0'), Number(raffle.payment_asset_decimals ?? 6))).toFixed(2)} {raffle.payment_asset_symbol ?? 'USDC'}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] text-[#555555] uppercase tracking-wider">Tickets</span>
                 <span className="font-mono text-xs text-[#F5F5F5]">
-                  {Number(totalTickets ?? 0)} / {raffle.maxCap.toLocaleString()}
+                  {Number(raffle.sold_tickets ?? 0)} / {Number(raffle.max_tickets ?? 0).toLocaleString()}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -135,7 +140,7 @@ export default function EmbedRaffle() {
               <div className="flex items-center justify-between">
                 <span className="font-mono text-[10px] text-[#555555] uppercase tracking-wider">Host</span>
                 <span className="font-mono text-[10px] text-[#999999] truncate ml-3">
-                  {raffle.host.slice(0, 6)}...{raffle.host.slice(-4)}
+                  {host.slice(0, 6)}...{host.slice(-4)}
                 </span>
               </div>
             </div>

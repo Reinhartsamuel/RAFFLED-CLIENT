@@ -1,6 +1,6 @@
 {
   "rewrites": [
-    { "source": "/api/:path*", "destination": "https://raffled-api.tuttilabs.xyz/:path*" },
+    { "source": "/api/:path*", "destination": "https://api.winr.fun/api/:path*" },
     { "source": "/docs", "destination": "/docs/index.html" },
     { "source": "/docs/:path*", "destination": "/docs/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }

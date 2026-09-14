@@ -1,17 +1,18 @@
 import { useParams } from 'react-router-dom'
 import { formatUnits } from 'viem'
-import { useRaffleData, useTotalTickets, useRaffleContract } from '../hooks/useRaffleContract'
-import { useAllRaffles } from '../hooks/useRaffles'
-import { PrizeType } from '../types/evm.types'
+import { useRaffleDetail, parseBackendDate } from '../hooks/useRaffles'
+import type { BackendRaffle } from '../interfaces/BackendRaffle'
 import { EXPLORER_URL } from '../utils/constants'
 
 const CONTRACT_ADDRESS = '0xc17eee20B4990021bE9cc8eCB7833706465bb8b9'
 
-const STATUS_STYLES: Record<number, { label: string; color: string }> = {
-  0: { label: 'OPEN', color: '#22C55E' },
-  1: { label: 'PENDING_VRF', color: '#3B82F6' },
-  2: { label: 'COMPLETED', color: '#555555' },
-  3: { label: 'CANCELLED', color: '#EF4444' },
+const STATUS_STYLES: Record<string, { label: string; color: string }> = {
+  open: { label: 'OPEN', color: '#22C55E' },
+  pending: { label: 'PENDING_VRF', color: '#3B82F6' },
+  pending_vrf: { label: 'PENDING_VRF', color: '#3B82F6' },
+  completed: { label: 'COMPLETED', color: '#555555' },
+  cancelled: { label: 'CANCELLED', color: '#EF4444' },
+  canceled: { label: 'CANCELLED', color: '#EF4444' },
 }
 
 function truncate(value: string, start = 10, end = 8): string {
@@ -19,28 +20,33 @@ function truncate(value: string, start = 10, end = 8): string {
   return `${value.slice(0, start)}...${value.slice(-end)}`
 }
 
+function isNft(r: BackendRaffle): boolean {
+  return r.prize_type === 'erc721' || r.type === 'nft'
+}
+
 /**
- * Public verifiable proof page — shows on-chain raffle data for transparency.
- * Reads via `getRaffle` (1 RPC call per page view).
+ * Public verifiable proof page — shows indexed on-chain raffle data for transparency.
+ * All data comes from the backend API, which indexes the RaffledCore contract.
  */
 export default function RaffleProof() {
   const { id } = useParams<{ id: string }>()
   const raffleId = id !== undefined && /^\d+$/.test(id) ? Number(id) : undefined
 
-  const { raffle, isLoading, error } = useRaffleData(raffleId)
-  const { data: totalTickets } = useTotalTickets(raffleId)
-  const { address } = useRaffleContract()
+  const { data: detail, isLoading, error } = useRaffleDetail(raffleId)
+  const raffle = detail?.raffle ?? null
 
-  // Winner + VRF request data comes from Ponder (0 extra RPC calls)
-  const { data: allRaffles = [] } = useAllRaffles()
-  const ponderRaffle = raffleId !== undefined
-    ? allRaffles.find((r) => r.id === String(raffleId))
-    : undefined
-  const winner = ponderRaffle?.winner ?? null
-  const vrfRequestId = ponderRaffle?.vrfRequestId ?? null
-
-  const statusInfo = raffle ? (STATUS_STYLES[raffle.status] ?? STATUS_STYLES[2]) : null
+  const statusInfo = raffle
+    ? (STATUS_STYLES[(raffle.status || '').toLowerCase()] ?? STATUS_STYLES.completed)
+    : null
   const explorerBase = EXPLORER_URL || 'https://sepolia.basescan.org'
+
+  const prizeDisplay = raffle
+    ? isNft(raffle)
+      ? `NFT #${raffle.prize_amount_or_token_id ?? raffle.prize_amount ?? '0'}`
+      : `${formatUnits(BigInt(raffle.prize_amount_or_token_id ?? raffle.prize_amount ?? '0'), Number(raffle.prize_asset_decimals ?? 6))} ${raffle.prize_asset_symbol ?? ''}`
+    : '—'
+  const expiryTs = raffle ? parseBackendDate(raffle.expire_at || raffle.ends_at) : 0
+  const host = raffle?.owner_address ?? ''
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#F5F5F5] py-10 px-4">
@@ -72,13 +78,13 @@ export default function RaffleProof() {
 
         {isLoading && (
           <div className="mt-10 border border-[#1f1f1f] rounded-xl bg-[#0a0a0a] p-8 text-center">
-            <p className="font-mono text-xs text-[#555555] animate-pulse">READING_ON_CHAIN_DATA...</p>
+            <p className="font-mono text-xs text-[#555555] animate-pulse">READING_INDEXED_DATA...</p>
           </div>
         )}
 
         {error && (
           <div className="mt-10 border border-[#1f1f1f] rounded-xl bg-[#0a0a0a] p-8 text-center">
-            <p className="font-mono text-xs text-[#EF4444]">Failed to read raffle from chain</p>
+            <p className="font-mono text-xs text-[#EF4444]">Failed to load raffle data</p>
             <p className="font-mono text-[10px] text-[#555555] mt-2">{error.message}</p>
           </div>
         )}
@@ -100,39 +106,39 @@ export default function RaffleProof() {
                 <div className="bg-[#0a0a0a] px-5 py-4">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Host</p>
                   <a
-                    href={`${explorerBase}/address/${raffle.host}`}
+                    href={`${explorerBase}/address/${host}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors break-all"
                   >
-                    {raffle.host}
+                    {host}
                   </a>
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Prize</p>
                   <p className="font-mono text-xs text-[#F5F5F5] break-all">
-                    {raffle.prizeType === PrizeType.ERC721
-                      ? `NFT #${raffle.prizeAmountOrTokenId.toString()}`
-                      : `${formatUnits(raffle.prizeAmountOrTokenId, 6)} tokens`}
-                    <span className="text-[#555555]"> @ {raffle.prizeAsset.slice(0, 6)}...{raffle.prizeAsset.slice(-4)}</span>
+                    {prizeDisplay}
+                    {raffle.prize_asset && (
+                      <span className="text-[#555555]"> @ {truncate(raffle.prize_asset, 6, 4)}</span>
+                    )}
                   </p>
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Tickets</p>
                   <p className="font-mono text-xs text-[#F5F5F5]">
-                    {Number(totalTickets ?? 0)} / {raffle.maxCap.toLocaleString()}
+                    {Number(raffle.sold_tickets ?? 0)} / {Number(raffle.max_tickets ?? 0).toLocaleString()}
                   </p>
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Ticket Price</p>
                   <p className="font-mono text-xs text-[#F5F5F5]">
-                    ${Number(formatUnits(raffle.ticketPrice, 6)).toFixed(2)} USDC
+                    ${formatUnits(BigInt(raffle.ticket_price_amount ?? '0'), Number(raffle.payment_asset_decimals ?? 6))} {raffle.payment_asset_symbol ?? 'USDC'}
                   </p>
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Expiry</p>
                   <p className="font-mono text-xs text-[#F5F5F5]">
-                    {new Date(raffle.expiry * 1000).toLocaleString()}
+                    {expiryTs > 0 ? new Date(expiryTs * 1000).toLocaleString() : '—'}
                   </p>
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4">
@@ -143,25 +149,47 @@ export default function RaffleProof() {
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4 md:col-span-2">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Winner</p>
-                  {winner ? (
+                  {raffle.winner_address ? (
                     <a
-                      href={`${explorerBase}/address/${winner}`}
+                      href={`${explorerBase}/address/${raffle.winner_address}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-mono text-xs text-[#22C55E] hover:text-[#4ADE80] transition-colors break-all"
                     >
-                      {winner}
+                      {raffle.winner_address}
                     </a>
                   ) : (
                     <p className="font-mono text-xs text-[#555555]">Pending / not drawn</p>
                   )}
                 </div>
                 <div className="bg-[#0a0a0a] px-5 py-4 md:col-span-2">
-                  <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">VRF Request ID</p>
-                  {vrfRequestId ? (
-                    <p className="font-mono text-xs text-[#3B82F6] break-all">{vrfRequestId}</p>
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Winner Draw Tx</p>
+                  {raffle.winner_picked_tx_hash ? (
+                    <a
+                      href={`${explorerBase}/tx/${raffle.winner_picked_tx_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors break-all"
+                    >
+                      {raffle.winner_picked_tx_hash}
+                    </a>
                   ) : (
-                    <p className="font-mono text-xs text-[#555555]">Not requested yet</p>
+                    <p className="font-mono text-xs text-[#555555]">Not drawn yet</p>
+                  )}
+                </div>
+                <div className="bg-[#0a0a0a] px-5 py-4 md:col-span-2">
+                  <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Raffle Tx</p>
+                  {raffle.raffle_tx_hash ? (
+                    <a
+                      href={`${explorerBase}/tx/${raffle.raffle_tx_hash}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors break-all"
+                    >
+                      {raffle.raffle_tx_hash}
+                    </a>
+                  ) : (
+                    <p className="font-mono text-xs text-[#555555]">—</p>
                   )}
                 </div>
               </div>
@@ -190,10 +218,10 @@ export default function RaffleProof() {
             {/* Contract footer */}
             <div className="mt-8 text-center">
               <p className="font-mono text-[10px] text-[#555555]">
-                All data verified on Base Sepolia · RaffledCore {CONTRACT_ADDRESS}
+                Indexed from RaffledCore {CONTRACT_ADDRESS}
               </p>
               <a
-                href={`${explorerBase}/address/${address}`}
+                href={`${explorerBase}/address/${CONTRACT_ADDRESS}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-block mt-2 font-mono text-[10px] text-[#3B82F6] hover:text-[#60A5FA] transition-colors underline underline-offset-2 break-all"

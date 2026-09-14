@@ -11,11 +11,8 @@ import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
 import { EXPLORER_URL } from '../utils/constants'
 import { TaskItem } from '../interfaces/TaskItem'
-import { useRaffleData, useTotalTickets, usePaymentToken, useRaffleContract } from '../hooks/useRaffleContract'
-import { useAllRaffles, useRaffleLeaderboard, useUserTickets } from '../hooks/useRaffles'
-import { ponderQuery } from '../utils/ponder'
-import type { PonderEvent, PonderPage } from '../types/evm.types'
-import { PrizeType, RaffleStatusLabel } from '../types/evm.types'
+import { useRaffleContract } from '../hooks/useRaffleContract'
+import { useRaffleDetail, useRaffleLeaderboard } from '../hooks/useRaffles'
 
 interface LeaderboardEntry {
   user_address: string
@@ -57,10 +54,8 @@ interface RaffleDetailData {
 }
 
 /**
- * Raffle detail — data source hierarchy:
- *  1. On-chain `getRaffle(id)` (1 RPC call) — authoritative state.
- *  2. Ponder GraphQL — prize metadata (symbol/decimals), winner, tx hashes.
- * No backend dependency.
+ * Raffle detail — all off-chain data (metadata, tickets, winner, tx hashes)
+ * comes from the backend API. Contract interactions happen in the modals.
  */
 export function RaffleDetail() {
   const { id } = useParams<{ id: string }>()
@@ -69,49 +64,21 @@ export function RaffleDetail() {
   const { isConnected, address } = useAppKitAccount()
   const config = useConfig()
 
-  const { raffle: onChainRaffle, isLoading: onChainLoading } = useRaffleData(raffleId)
-  const { data: onChainTotalTickets } = useTotalTickets(raffleId)
-  const { data: paymentTokenData } = usePaymentToken()
   const { address: contractAddress } = useRaffleContract()
-  const { data: allRaffles = [] } = useAllRaffles()
+  const { data: detail, isLoading: detailLoading, error: detailError } = useRaffleDetail(raffleId)
   const { data: leaderboardData = [], isLoading: leaderboardLoading } = useRaffleLeaderboard(raffleId)
-  const { data: yourTickets = 0 } = useUserTickets(raffleId)
+
+  const backendRaffle = detail?.raffle ?? null
+  const yourTickets = detail?.yourTickets ?? 0
+  const fallbackPaymentAsset = (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA as string | undefined) || ''
 
   const [showBuyModal, setShowBuyModal] = useState(false)
   const [showFreeRaffleModal, setShowFreeRaffleModal] = useState(false)
   const [balanceData, setBalanceData] = useState<bigint | null>(null)
-  const [drawTx, setDrawTx] = useState<string | null>(null)
-  const [returnTx, setReturnTx] = useState<string | null>(null)
-
-  const ponderRaffle = raffleId !== undefined
-    ? allRaffles.find((r) => r.id === String(raffleId))
-    : undefined
-
-  // Winner-picked / prize-returned tx hashes from Ponder (0 RPC)
-  useEffect(() => {
-    if (!raffleId) return
-    let cancelled = false
-    ponderQuery<{ events: PonderPage<PonderEvent> }>(`
-      query RaffleTx($raffleId: BigInt!) {
-        events(where: { raffleId: $raffleId }, orderBy: "blockTimestamp", orderDirection: "desc", limit: 20) {
-          items { eventName txHash }
-        }
-      }
-    `, { raffleId: String(raffleId) })
-      .then((d) => {
-        if (cancelled) return
-        const w = d.events.items.find((e) => e.eventName === 'WinnerPicked')
-        const r = d.events.items.find((e) => e.eventName === 'UnderfilledPrizeReturned')
-        if (w) setDrawTx(w.txHash)
-        if (r) setReturnTx(r.txHash)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [raffleId])
 
   // USDC balance for the buy modal
   useEffect(() => {
-    const token = paymentTokenData as `0x${string}` | undefined
+    const token = detail?.raffle?.payment_asset as `0x${string}` | undefined
     if (!address || !token || !config) return
     readContract(config, {
       address: token,
@@ -129,55 +96,54 @@ export function RaffleDetail() {
     })
       .then((b) => setBalanceData(b as bigint))
       .catch(() => setBalanceData(null))
-  }, [address, config, paymentTokenData])
+  }, [address, config, detail?.raffle?.payment_asset])
 
   const raffle = useMemo<RaffleDetailData | null>(() => {
-    if (!raffleId || !onChainRaffle) return null
-    const statusLabel = RaffleStatusLabel[onChainRaffle.status] ?? 'UNKNOWN'
-    const prizeSymbol = ponderRaffle?.prizeSymbol || 'TOKEN'
-    const prizeDecimals = ponderRaffle?.prizeDecimals || 6
-    const paymentToken = (paymentTokenData as string | undefined)
-      || (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA as string | undefined)
-      || ''
+    if (!backendRaffle) return null
+    const isNft = backendRaffle.prize_type === 'erc721' || backendRaffle.type === 'nft'
     return {
-      id: raffleId,
-      title: `Raffle #${raffleId}`,
-      description: '',
-      prize_type: onChainRaffle.prizeType === PrizeType.ERC721 ? 'erc721' : 'erc20',
-      prize_amount: onChainRaffle.prizeAmountOrTokenId.toString(),
-      prize_asset_symbol: prizeSymbol,
-      prize_asset_decimals: prizeDecimals,
-      ticket_price_usd: Number(formatUnits(onChainRaffle.ticketPrice, 6)).toFixed(2),
-      ticket_price_amount: onChainRaffle.ticketPrice.toString(),
-      max_tickets: onChainRaffle.maxCap,
-      tickets_sold: Number(onChainTotalTickets ?? 0n) || onChainRaffle.ticketsSold,
-      ends_at: new Date(onChainRaffle.expiry * 1000).toISOString(),
-      status: statusLabel.toLowerCase(),
-      contract_address: contractAddress,
-      creator_address: onChainRaffle.host,
-      created_at: ponderRaffle?.createdAt ? new Date(Number(ponderRaffle.createdAt) * 1000).toISOString() : undefined,
-      payment_asset: paymentToken,
-      payment_asset_symbol: 'USDC',
-      payment_asset_decimals: 6,
-      type: onChainRaffle.prizeType === PrizeType.ERC721 ? 'nft' : 'crypto',
-      underfilled: onChainRaffle.underfilled,
-      winner_address: ponderRaffle?.winner ?? null,
-      winner_picked_tx_hash: drawTx,
-      underfilled_return_tx_hash: returnTx,
-      official_raffle: false,
-      free_raffle: false,
+      id: Number(backendRaffle.contract_raffle_id ?? backendRaffle.id),
+      title: backendRaffle.title || `Raffle #${backendRaffle.contract_raffle_id ?? backendRaffle.id}`,
+      description: backendRaffle.description ?? '',
+      prize_type: isNft ? 'erc721' : 'erc20',
+      prize_amount: backendRaffle.prize_amount_or_token_id ?? backendRaffle.prize_amount ?? '0',
+      prize_asset_symbol: backendRaffle.prize_asset_symbol ?? '',
+      prize_asset_decimals: Number(backendRaffle.prize_asset_decimals ?? 6),
+      ticket_price_usd: backendRaffle.ticket_price_usd ?? '',
+      ticket_price_amount: backendRaffle.ticket_price_amount ?? '0',
+      max_tickets: Number(backendRaffle.max_tickets ?? 0),
+      tickets_sold: Number(backendRaffle.sold_tickets ?? 0),
+      ends_at: backendRaffle.expire_at ?? backendRaffle.ends_at ?? '',
+      status: (backendRaffle.status ?? '').toLowerCase(),
+      image_url: backendRaffle.image_url,
+      prize_tx_hash: backendRaffle.raffle_tx_hash ?? backendRaffle.prize_tx_hash,
+      contract_address: backendRaffle.contract_address || contractAddress,
+      creator_address: backendRaffle.owner_address ?? '',
+      created_at: backendRaffle.created_at,
+      payment_asset: backendRaffle.payment_asset || fallbackPaymentAsset,
+      payment_asset_symbol: backendRaffle.payment_asset_symbol ?? 'USDC',
+      payment_asset_decimals: Number(backendRaffle.payment_asset_decimals ?? 6),
+      type: backendRaffle.type,
+      underfilled: backendRaffle.underfilled,
+      winner_address: backendRaffle.winner_address ?? null,
+      winner_picked_tx_hash: backendRaffle.winner_picked_tx_hash ?? null,
+      official_raffle: backendRaffle.official_raffle,
+      free_raffle: backendRaffle.free_raffle === true,
+      task: backendRaffle.task,
+      underfilled_return_tx_hash: backendRaffle.underfilled_return_tx_hash ?? null,
       your_tickets: yourTickets,
     }
-  }, [raffleId, onChainRaffle, onChainTotalTickets, ponderRaffle, contractAddress, paymentTokenData, drawTx, returnTx, yourTickets])
+  }, [backendRaffle, contractAddress, fallbackPaymentAsset, yourTickets])
 
-  const leaderboard: LeaderboardEntry[] = leaderboardData.map((p) => ({
-    user_address: p.user,
-    tickets: p.ticketCount,
+  const leaderboard: LeaderboardEntry[] = leaderboardData.map((entry) => ({
+    user_address: entry.user_address,
+    tickets: String(entry.tickets),
+    total_spent_raw: entry.total_spent_raw,
   }))
 
-  const loading = onChainLoading && !onChainRaffle
-  const error = !loading && !onChainRaffle && raffleId !== undefined
-    ? 'Raffle not found on chain. Connect your wallet to the Base Sepolia network.'
+  const loading = detailLoading && !backendRaffle
+  const error = !loading && !backendRaffle && raffleId !== undefined
+    ? (detailError ? 'Failed to load raffle data.' : 'Raffle not found.')
     : null
 
   if (loading) {
@@ -822,7 +788,8 @@ export function RaffleDetail() {
       {/* {showFreeRaffleModal && isFreeRaffle && ( */}
       {showFreeRaffleModal && (
         <FreeRaffleModal
-          raffleId={raffle.id}
+          raffleId={raffleId!}
+          contractRaffleId={raffle.id}
           prizeImage={raffle.image_url}
           prizeTitle={raffle.title}
           prizeAmount={prizeAmountDisplay}
