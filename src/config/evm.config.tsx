@@ -41,8 +41,8 @@ export const wagmiAdapter = new WagmiAdapter({
 })
 
 export const metadata = {
-  name: 'Raffled',
-  description: 'On-chain raffles powered by Chainlink VRF',
+  name: 'Winr.fun',
+  description: 'Robinhood On-chain raffles powered by Quiver VRF',
   url: import.meta.env.VITE_BASE_URL || 'https://raffled.tuttilabs.xyz',
   icons: ['https://raffled.tuttilabs.xyz/favicon.ico'],
 }

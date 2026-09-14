@@ -9,8 +9,8 @@ if (!projectId) {
 }
 // Create a metadata object - optional
 export const metadata = {
-  name: 'Raffled',
-  description: 'Raffled app',
+  name: 'Winr.fun',
+  description: 'Robinhood On-chain raffles powered by Quiver VRF',
   url: import.meta.env.VITE_BASE_URL, // origin must match your domain & subdomain
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
