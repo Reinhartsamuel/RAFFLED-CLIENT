@@ -157,13 +157,6 @@ export function getMockUSDCAddress(chainId: number): `0x${string}` {
 }
 
 /**
- * Check if the current chain is supported
- */
-export function isSupportedChain(chainId: number): boolean {
-  return chainId === 84532 || chainId === 8453 ||chainId === 46630 || chainId === 4663
-}
-
-/**
  * Get network name from chain ID
  */
 export function getNetworkName(chainId: number): string {

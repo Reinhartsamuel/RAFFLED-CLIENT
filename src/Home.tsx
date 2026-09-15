@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getAuthToken } from './config/index'
 import { Layout, DashboardSidebar } from './components/evm/Layout'
@@ -22,7 +22,7 @@ export function HomePage({ activeFilter }: {
   activeFilter: string
 }) {
   const [showCreateModal, setShowCreateModal] = useState(false)
-
+  const navigate = useNavigate()
   const activeToken = getAuthToken()
 
   const filters = activeFilter === 'tokens'
@@ -109,7 +109,7 @@ export function HomePage({ activeFilter }: {
                 {activeToken && (
                   <button
                     className="font-mono text-xs uppercase tracking-wider px-5 py-2.5 border border-[#2a2a2a] text-[#555555] hover:border-[#FFB800] hover:text-[#FFB800] rounded-lg transition-all"
-                    onClick={() => setShowCreateModal(true)}
+                    onClick={() => navigate('/app/create-raffle')}
                   >
                     Create the first raffle →
                   </button>
@@ -172,4 +172,3 @@ export default function Home() {
     </Layout>
   )
 }
-

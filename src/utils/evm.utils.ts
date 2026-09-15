@@ -119,7 +119,7 @@ export function isValidAddress(address: string): boolean {
  * Check if chain ID is supported
  */
 export function isSupportedChain(chainId: number): boolean {
-  return [84532, 8453].includes(chainId) // Base Sepolia, Base
+   return chainId === 84532 || chainId === 8453 ||chainId === 46630 || chainId === 4663
 }
 
 /**
