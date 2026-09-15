@@ -1,7 +1,7 @@
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { base } from '@reown/appkit/networks'
 import { formatAddress, isSupportedChain } from '../../utils/evm.utils'
+import { DEFAULT_CHAIN, DEFAULT_CHAIN_ID } from '../../config/evm.config'
 
 export function WalletConnect() {
   const appKit = useAppKit()
@@ -33,10 +33,10 @@ export function WalletConnect() {
       {!isSupported && (
         <button
           className="flex items-center gap-1.5 px-3 py-2 rounded-md border border-[#F59E0B]/30 bg-[#F59E0B]/10 text-[#F59E0B] font-mono text-xs hover:bg-[#F59E0B]/20 transition-all duration-200"
-          onClick={() => switchChain({ chainId: base.id })}
+          onClick={() => switchChain({ chainId: DEFAULT_CHAIN_ID })}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-[#F59E0B]" />
-          Switch to Base
+          Switch to {DEFAULT_CHAIN.name}
         </button>
       )}
 

@@ -1,15 +1,18 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useDisconnect, useSignMessage } from 'wagmi'
+import { useDisconnect, useSignMessage, useChainId, useSwitchChain } from 'wagmi'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { API_URL, getAuthToken } from '../../config/index'
+import { DEFAULT_CHAIN_ID, DEFAULT_CHAIN, isSupportedChainId } from '../../config/evm.config'
 import { WalletConnect } from './WalletConnect'
 
 export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const navigate = useNavigate()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
+  const chainId = useChainId()
+  const { switchChainAsync } = useSwitchChain()
   const { open } = useAppKit()
   const { address: appKitAddress, caipAddress } = useAppKitAccount({ namespace: 'eip155' })
   const address = appKitAddress ?? (caipAddress ? caipAddress.split(':').pop() : undefined)
@@ -74,6 +77,39 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       })
     }
   }, [address])
+
+  const isConnectorChainMismatchError = (err: unknown) => {
+    const { name, message } = (err ?? {}) as { name?: string; message?: string }
+    return (
+      name === 'ConnectorChainMismatchError' ||
+      !!message?.includes("does not match the connection's chain")
+    )
+  }
+
+  /**
+   * wagmi's `getConnectorClient` (used by `signMessage`) asserts that the
+   * connector chain id strictly equals the connection chain id. On mobile,
+   * AppKit's WalletConnect connector returns the active network id as a string
+   * while the connection stores a number, so a wallet sitting on an
+   * unconfigured chain (e.g. BSC 56) throws `ConnectorChainMismatchError`
+   * before the signature prompt ever appears. Move to a configured chain first.
+   */
+  const ensureSupportedChain = async () => {
+    if (isSupportedChainId(chainId)) return
+    console.warn('[Navbar] Wallet is on unsupported chain', chainId, '- switching to', DEFAULT_CHAIN_ID)
+    await switchChainAsync({ chainId: DEFAULT_CHAIN_ID })
+  }
+
+  const signInMessage = async (message: string) => {
+    try {
+      return await signMessageAsync({ message })
+    } catch (err) {
+      if (!isConnectorChainMismatchError(err)) throw err
+      console.warn('[Navbar] Connector/connection chain mismatch - switching and retrying signature')
+      await switchChainAsync({ chainId: DEFAULT_CHAIN_ID })
+      return await signMessageAsync({ message })
+    }
+  }
 
   const handleSignIn = async () => {
     const existingToken = getAuthToken()
@@ -151,7 +187,8 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
     setSignatureError(null)
 
     try {
-      const signature = await signMessageAsync({ message: pendingSignature.message })
+      await ensureSupportedChain()
+      const signature = await signInMessage(pendingSignature.message)
 
       const verifyRes = await fetch(`${API_URL}/auth/verify`, {
         method: 'POST',
@@ -176,7 +213,9 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
       termsModalShownRef.current = false
     } catch (err) {
       console.error('Sign-in error:', err)
-      const errorMessage = (err as Error).message
+      const errorMessage = isConnectorChainMismatchError(err)
+        ? `Your wallet is on an unsupported network. Please switch to ${DEFAULT_CHAIN.name} and try again.`
+        : (err as Error).message
       setSignatureError(`Signature denied or verification failed. ${errorMessage}`)
       setShowTermsModal(false)
       setPendingSignature(null)

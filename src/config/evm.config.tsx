@@ -1,9 +1,8 @@
 import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
-import { base, baseSepolia } from '@reown/appkit/networks'
+import { baseSepolia } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
 import { robinhoodChainTestnet } from './chains/robinhood/robinhoodChainTestnet'
-import { robinhoodChain } from './chains/robinhood/robinhoodChain'
 
 // ──────────────────────────────────────────────────────────────────────
 // Contract Addresses
@@ -33,7 +32,6 @@ const projectId = import.meta.env.VITE_PROJECT_ID || 'b56e18d47c72ab683b10814fe9
 const baseSepoliaRpcUrl = import.meta.env.VITE_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
 const robinhoodTestnetRpcUrl = import.meta.env.VITE_ROBINHOOD_TESTNET_RPC_URL
 const robinhoodMainnetRpcUrl = import.meta.env.VITE_ROBINHOOD_MAINNET_RPC_URL
-const baseMainnetRpcUrl = import.meta.env.VITE_BASE_RPC_URL || 'https://mainnet.base.org'
 
 
 if (!projectId) {
@@ -42,6 +40,29 @@ if (!projectId) {
 
 // Set networks - Base mainnet first (like working example)
 export const networks = [baseSepolia, robinhoodChainTestnet]
+
+/**
+ * Chain IDs registered with the wagmi/Reown config.
+ *
+ * Any chain outside this list sends AppKit down its "unsupported network" path
+ * (`CaipNetworksUtil.getUnsupportedNetwork`), which encodes the active network
+ * id as a CAIP id string (e.g. `"56"`) instead of a number. wagmi's
+ * `getConnectorClient` compares the connector chain id against the connection
+ * chain id with a strict `!==`, so a string id on an otherwise-matching chain
+ * throws `ConnectorChainMismatchError` and blocks signing. Keep the wallet on
+ * one of these chains before requesting a signature.
+ */
+export const SUPPORTED_CHAIN_IDS: readonly number[] = networks.map((network) => Number(network.id))
+
+/**
+ * Chain the app falls back to when the connected wallet is on an unconfigured chain.
+ */
+export const DEFAULT_CHAIN = robinhoodChainTestnet
+export const DEFAULT_CHAIN_ID = Number(DEFAULT_CHAIN.id)
+
+export function isSupportedChainId(chainId: number | undefined): boolean {
+  return typeof chainId === 'number' && SUPPORTED_CHAIN_IDS.includes(chainId)
+}
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
