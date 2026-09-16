@@ -1,6 +1,6 @@
 import { useWaitForTransactionReceipt } from 'wagmi'
 import { useEffect } from 'react'
-import { formatReceiptForLog } from '../utils/blockchain'
+import { formatReceiptForLog } from '../utils/evm.utils'
 import type { Hash } from 'viem'
 
 /**

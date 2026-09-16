@@ -1,4 +1,10 @@
-import { formatUnits, parseUnits, getAddress, type Address } from 'viem'
+import {
+  formatUnits,
+  parseUnits,
+  getAddress,
+  type Address,
+  type TransactionReceipt,
+} from 'viem'
 
 /**
  * Format address for display (0x1234...5678)
@@ -10,6 +16,14 @@ export function formatAddress(address: Address, chars = 4): string {
   } catch {
     return address
   }
+}
+
+/**
+ * Shorten any hash/value for display by keeping the first and last `chars`.
+ */
+export function shortenHash(value: string, chars = 6): string {
+  if (!value || value.length <= chars * 2) return value
+  return `${value.slice(0, chars)}...${value.slice(-chars)}`
 }
 
 /**
@@ -113,46 +127,6 @@ export function isValidAddress(address: string): boolean {
   } catch {
     return false
   }
-}
-
-/**
- * Check if chain ID is supported
- */
-export function isSupportedChain(chainId: number): boolean {
-   return chainId === 84532 || chainId === 8453 ||chainId === 46630 || chainId === 4663
-}
-
-/**
- * Format transaction hash for display
- */
-export function formatTxHash(hash: string, chars = 6): string {
-  return `${hash.slice(0, 2 + chars)}...${hash.slice(-chars)}`
-}
-
-/**
- * Get blockchain explorer URL for transaction
- */
-export function getExplorerUrl(hash: string, chainId: number): string {
-  const explorers: { [key: number]: string } = {
-    84532: 'https://sepolia.basescan.org', // Base Sepolia
-    8453: 'https://basescan.org', // Base
-  }
-
-  const explorer = explorers[chainId] || 'https://etherscan.io'
-  return `${explorer}/tx/${hash}`
-}
-
-/**
- * Get blockchain explorer URL for address
- */
-export function getAddressExplorerUrl(address: Address, chainId: number): string {
-  const explorers: { [key: number]: string } = {
-    84532: 'https://sepolia.basescan.org', // Base Sepolia
-    8453: 'https://basescan.org', // Base
-  }
-
-  const explorer = explorers[chainId] || 'https://etherscan.io'
-  return `${explorer}/address/${address}`
 }
 
 /**
@@ -282,4 +256,42 @@ export async function retryWithBackoff<T>(
     }
   }
   throw new Error('Max retries exceeded')
+}
+
+/**
+ * Format gas price from wei to Gwei
+ */
+export function formatGasPrice(gasPrice: bigint): string {
+  return formatUnits(gasPrice, 9)
+}
+
+/**
+ * Copy text to clipboard
+ */
+export async function copyToClipboard(text: string): Promise<boolean> {
+  try {
+    await navigator.clipboard.writeText(text)
+    return true
+  } catch (err) {
+    console.error('Failed to copy to clipboard:', err)
+    return false
+  }
+}
+
+/**
+ * Format transaction receipt data for console logging
+ */
+export function formatReceiptForLog(receipt: TransactionReceipt) {
+  return {
+    transactionHash: receipt.transactionHash,
+    blockNumber: receipt.blockNumber?.toString(),
+    blockHash: receipt.blockHash,
+    gasUsed: receipt.gasUsed?.toString(),
+    effectiveGasPrice: receipt.effectiveGasPrice?.toString(),
+    cumulativeGasUsed: receipt.cumulativeGasUsed?.toString(),
+    transactionIndex: receipt.transactionIndex,
+    status: receipt.status === 'success' ? 'success' : 'failed',
+    contractAddress: receipt.contractAddress,
+    logs: receipt.logs?.length || 0,
+  }
 }

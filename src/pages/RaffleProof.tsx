@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom'
 import { formatUnits } from 'viem'
 import { useRaffleDetail, parseBackendDate } from '../hooks/useRaffles'
 import type { BackendRaffle } from '../interfaces/BackendRaffle'
-import { EXPLORER_URL } from '../utils/constants'
+import { DEFAULT_EXPLORER_URL } from '../config/chains'
 
 const CONTRACT_ADDRESS = '0xc17eee20B4990021bE9cc8eCB7833706465bb8b9'
 
@@ -38,7 +38,7 @@ export default function RaffleProof() {
   const statusInfo = raffle
     ? (STATUS_STYLES[(raffle.status || '').toLowerCase()] ?? STATUS_STYLES.completed)
     : null
-  const explorerBase = EXPLORER_URL || 'https://sepolia.basescan.org'
+  const explorerBase = DEFAULT_EXPLORER_URL
 
   const prizeDisplay = raffle
     ? isNft(raffle)

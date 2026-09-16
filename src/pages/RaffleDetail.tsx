@@ -9,7 +9,7 @@ import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
 import { safeBigInt } from '../utils/safeBigInt'
-import { EXPLORER_URL } from '../utils/constants'
+import { DEFAULT_EXPLORER_URL } from '../config/chains'
 import { TaskItem } from '../interfaces/TaskItem'
 import { useRaffleContract } from '../hooks/useRaffleContract'
 import { useRaffleDetail, useRaffleLeaderboard } from '../hooks/useRaffles'
@@ -384,7 +384,7 @@ export function RaffleDetail() {
                   <div>
                     <p className="font-mono text-[10px] text-[#555555] mb-1">WINNING DRAW TRANSACTION</p>
                     <a
-                      href={`${EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
+                      href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
                       target="_blank"
                       rel="noreferrer"
                       className="font-mono text-[11px] text-green-500 hover:text-green-400 transition-colors underline underline-offset-2 break-all"
@@ -499,7 +499,7 @@ export function RaffleDetail() {
                   {raffle.prize_tx_hash && (
                     <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
                       <p className="font-mono text-[10px] text-[#555555] mb-1">RAFFLE_TRANSACTION</p>
-                      <a href={`${EXPLORER_URL}/tx/${raffle.prize_tx_hash}`} target="_blank" className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors" title={raffle.prize_tx_hash}>
+                      <a href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.prize_tx_hash}`} target="_blank" className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors" title={raffle.prize_tx_hash}>
                         {raffle.prize_tx_hash}
                       </a>
                     </div>
@@ -541,7 +541,7 @@ export function RaffleDetail() {
                             <div>
                               <p className="font-mono text-[10px] text-[#555555] mb-1">RETURN TRANSACTION</p>
                               <a
-                                href={`${EXPLORER_URL}/tx/${raffle.underfilled_return_tx_hash}`}
+                                href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.underfilled_return_tx_hash}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-mono text-[11px] text-amber-500 hover:text-amber-400 transition-colors underline underline-offset-2 break-all"
@@ -568,7 +568,7 @@ export function RaffleDetail() {
                             <div>
                               <p className="font-mono text-[10px] text-[#555555] mb-1">WINNER PICKING TRANSACTION</p>
                               <a
-                                href={`${EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
+                                href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-mono text-[11px] text-amber-500 hover:text-amber-400 transition-colors underline underline-offset-2 break-all"
@@ -581,7 +581,7 @@ export function RaffleDetail() {
                             <div>
                               <p className="font-mono text-[10px] text-[#555555] mb-1">PRIZE RETURNED TRANSACTION</p>
                               <a
-                                href={`${EXPLORER_URL}/tx/${raffle.underfilled_return_tx_hash}`}
+                                href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.underfilled_return_tx_hash}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-mono text-[11px] text-amber-500 hover:text-amber-400 transition-colors underline underline-offset-2 break-all"
@@ -611,7 +611,7 @@ export function RaffleDetail() {
                             <div>
                               <p className="font-mono text-[10px] text-[#555555] mb-1">DRAW TRANSACTION</p>
                               <a
-                                href={`${EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
+                                href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.winner_picked_tx_hash}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="font-mono text-[11px] text-green-500 hover:text-green-400 transition-colors underline underline-offset-2 break-all"

@@ -7,7 +7,7 @@ import { Layout } from '../components/evm/Layout'
 import { CreateRaffleModal } from '../components/evm/CreateRaffleModal'
 import { API_URL, apiFetch, getAuthToken } from '../config/index'
 import { getRaffleManagerAddress } from '../config/evm.config'
-import { EXPLORER_URL } from '../utils/constants'
+import { DEFAULT_EXPLORER_URL } from '../config/chains'
 import type { BackendRaffle } from '../interfaces/BackendRaffle'
 import RaffleManagerABI from '../abis/RaffledCore.json'
 
@@ -384,7 +384,7 @@ export default function RaffleAdminPage() {
                       <td className="px-4 py-3 font-mono text-xs">
                         {raffle.winner ? (
                           <a
-                            href={`${EXPLORER_URL}/address/${raffle.winner}`}
+                            href={`${DEFAULT_EXPLORER_URL}/address/${raffle.winner}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#3B82F6] hover:text-[#60A5FA] transition-colors"
@@ -398,7 +398,7 @@ export default function RaffleAdminPage() {
                       <td className="px-4 py-3 font-mono text-xs">
                         {raffle.winnerTx ? (
                           <a
-                            href={`${EXPLORER_URL}/tx/${raffle.winnerTx}`}
+                            href={`${DEFAULT_EXPLORER_URL}/tx/${raffle.winnerTx}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-[#3B82F6] hover:text-[#60A5FA] transition-colors"
@@ -722,7 +722,7 @@ export function AdminRaffleDetailPage() {
 
             {resolveTx && (
               <p className="font-mono text-xs text-[#22C55E] break-all">
-                Resolve tx: <a href={`${EXPLORER_URL}/tx/${resolveTx}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{resolveTx}</a>
+                Resolve tx: <a href={`${DEFAULT_EXPLORER_URL}/tx/${resolveTx}`} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">{resolveTx}</a>
               </p>
             )}
             {resolveError && (
@@ -801,7 +801,7 @@ export function AdminRaffleDetailPage() {
                 {/* Prize Asset */}
                 <div className="bg-[#0a0a0a] px-4 py-3">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Prize Asset</p>
-                  <a href={`${EXPLORER_URL}/token/${raffleData.prize_asset}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                  <a href={`${DEFAULT_EXPLORER_URL}/token/${raffleData.prize_asset}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                     {truncate(raffleData.prize_asset, 10, 6)}
                   </a>
                 </div>
@@ -825,7 +825,7 @@ export function AdminRaffleDetailPage() {
                 {/* Owner */}
                 <div className="bg-[#0a0a0a] px-4 py-3">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Owner</p>
-                  <a href={`${EXPLORER_URL}/address/${raffleData.owner_address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                  <a href={`${DEFAULT_EXPLORER_URL}/address/${raffleData.owner_address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                     {truncate(raffleData.owner_address, 10, 6)}
                   </a>
                 </div>
@@ -834,7 +834,7 @@ export function AdminRaffleDetailPage() {
                 <div className="bg-[#0a0a0a] px-4 py-3">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Winner</p>
                   {raffleData.winner_address ? (
-                    <a href={`${EXPLORER_URL}/address/${raffleData.winner_address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                    <a href={`${DEFAULT_EXPLORER_URL}/address/${raffleData.winner_address}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                       {truncate(raffleData.winner_address, 10, 6)}
                     </a>
                   ) : (
@@ -846,7 +846,7 @@ export function AdminRaffleDetailPage() {
                 <div className="bg-[#0a0a0a] px-4 py-3">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Raffle TX</p>
                   {raffleData.raffle_tx_hash ? (
-                    <a href={`${EXPLORER_URL}/tx/${raffleData.raffle_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                    <a href={`${DEFAULT_EXPLORER_URL}/tx/${raffleData.raffle_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                       {truncate(raffleData.raffle_tx_hash, 10, 6)}
                     </a>
                   ) : (
@@ -858,7 +858,7 @@ export function AdminRaffleDetailPage() {
                 <div className="bg-[#0a0a0a] px-4 py-3">
                   <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Winner Picked TX</p>
                   {raffleData.winner_picked_tx_hash ? (
-                    <a href={`${EXPLORER_URL}/tx/${raffleData.winner_picked_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                    <a href={`${DEFAULT_EXPLORER_URL}/tx/${raffleData.winner_picked_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                       {truncate(raffleData.winner_picked_tx_hash, 10, 6)}
                     </a>
                   ) : (
@@ -878,7 +878,7 @@ export function AdminRaffleDetailPage() {
                     <div className="bg-[#0a0a0a] px-4 py-3">
                       <p className="font-mono text-[9px] uppercase tracking-widest text-[#EF4444] mb-1">Underfilled Return TX</p>
                       {raffleData.underfilled_return_tx_hash ? (
-                        <a href={`${EXPLORER_URL}/tx/${raffleData.underfilled_return_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                        <a href={`${DEFAULT_EXPLORER_URL}/tx/${raffleData.underfilled_return_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                           {truncate(raffleData.underfilled_return_tx_hash, 10, 6)}
                         </a>
                       ) : (
@@ -900,7 +900,7 @@ export function AdminRaffleDetailPage() {
                     <div className="bg-[#0a0a0a] px-4 py-3">
                       <p className="font-mono text-[9px] uppercase tracking-widest text-[#444444] mb-1">Platform Fee TX</p>
                       {raffleData.platform_fee_collected_tx_hash ? (
-                        <a href={`${EXPLORER_URL}/tx/${raffleData.platform_fee_collected_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
+                        <a href={`${DEFAULT_EXPLORER_URL}/tx/${raffleData.platform_fee_collected_tx_hash}`} target="_blank" rel="noopener noreferrer" className="font-mono text-xs text-[#3B82F6] hover:text-[#60A5FA] transition-colors">
                           {truncate(raffleData.platform_fee_collected_tx_hash, 10, 6)}
                         </a>
                       ) : (

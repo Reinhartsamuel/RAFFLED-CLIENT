@@ -158,7 +158,18 @@ export function RaffleCard({
                     </div>
                 </div>
 
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-transparent opacity-60" />
+                {/* Prize image */}
+                {raffle.image_url && (
+                    <img
+                        src={raffle.image_url}
+                        alt={raffle.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }}
+                    />
+                )}
+
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050505]/90 via-transparent to-transparent pointer-events-none" />
 
                 {/* Status Ribbon */}
                 <div className="absolute top-0 left-0 right-0 z-20">

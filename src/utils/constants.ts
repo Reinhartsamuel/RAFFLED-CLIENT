@@ -1,1 +1,0 @@
-export const EXPLORER_URL=import.meta.env.VITE_EXPLORER_URL;

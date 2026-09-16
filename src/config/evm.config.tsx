@@ -2,7 +2,9 @@ import { createAppKit } from '@reown/appkit/react'
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi'
 import { baseSepolia } from '@reown/appkit/networks'
 import { QueryClient } from '@tanstack/react-query'
-import { robinhoodChainTestnet } from './chains/robinhood/robinhoodChainTestnet'
+import { robinhoodChain, robinhoodChainTestnet } from './chains'
+
+export { DEFAULT_CHAIN, DEFAULT_CHAIN_ID, getNetworkName } from './chains'
 
 // ──────────────────────────────────────────────────────────────────────
 // Contract Addresses
@@ -19,7 +21,7 @@ export const CONTRACTS = {
   MockUSDC: {
     baseSepolia: (import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA || '0x0000000000000000000000000000000000000000') as `0x${string}`,
     base: '0x49f49CfE89050a8F8E48d3A31E33a8e26Bc80D1d' as const,
-    robinhoodChain: '' as const,
+    robinhoodChain: (import.meta.env.VITE_MOCK_USDC_ADDRESS_ROBINHOOD_MAINNET || '0x0000000000000000000000000000000000000000') as `0x${string}`,
     robinhoodChainTestnet: import.meta.env.VITE_MOCK_USDC_ADDRESS_ROBINHOOD_TESTNET as `0x${string}`
   },
 } as const
@@ -56,9 +58,8 @@ export const SUPPORTED_CHAIN_IDS: readonly number[] = networks.map((network) => 
 
 /**
  * Chain the app falls back to when the connected wallet is on an unconfigured chain.
+ * `DEFAULT_CHAIN` / `DEFAULT_CHAIN_ID` are re-exported from `./chains`.
  */
-export const DEFAULT_CHAIN = robinhoodChainTestnet
-export const DEFAULT_CHAIN_ID = Number(DEFAULT_CHAIN.id)
 
 export function isSupportedChainId(chainId: number | undefined): boolean {
   return typeof chainId === 'number' && SUPPORTED_CHAIN_IDS.includes(chainId)
@@ -148,13 +149,11 @@ export const queryClient = new QueryClient({
  */
 export function getRaffleManagerAddress(chainId: number): `0x${string}` {
   switch (chainId) {
-    case 84532:
+    case baseSepolia.id:
       return CONTRACTS.RaffleManager.baseSepolia
-    case 8453:
-      return CONTRACTS.RaffleManager.base
-    case 46630:
+    case robinhoodChainTestnet.id:
       return CONTRACTS.WinrCore.robinhoodChainTestnet
-    case 4663:
+    case robinhoodChain.id:
       return CONTRACTS.WinrCore.robinhoodChain
     default:
       return CONTRACTS.WinrCore.robinhoodChainTestnet
@@ -166,31 +165,13 @@ export function getRaffleManagerAddress(chainId: number): `0x${string}` {
  */
 export function getMockUSDCAddress(chainId: number): `0x${string}` {
   switch (chainId) {
-    case 84532:
+    case baseSepolia.id:
       return CONTRACTS.MockUSDC.baseSepolia
-    case 8453:
-      return CONTRACTS.MockUSDC.base
-    case 46630:
+    case robinhoodChainTestnet.id:
       return CONTRACTS.MockUSDC.robinhoodChainTestnet
+    case robinhoodChain.id:
+      return CONTRACTS.MockUSDC.robinhoodChain
     default:
-      return CONTRACTS.MockUSDC.baseSepolia
-  }
-}
-
-/**
- * Get network name from chain ID
- */
-export function getNetworkName(chainId: number): string {
-  switch (chainId) {
-    case 84532:
-      return 'Base Sepolia'
-    case 8453:
-      return 'Base'
-    case 46630:
-      return 'Robinhood Chain Testnet'
-    case 4663:
-      return 'Robinhood Chain'
-    default:
-      return 'Unknown'
+      return CONTRACTS.MockUSDC.robinhoodChainTestnet
   }
 }

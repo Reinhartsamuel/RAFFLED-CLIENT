@@ -1,7 +1,7 @@
 import { useAppKit, useAppKitAccount } from '@reown/appkit/react'
 import { useChainId, useSwitchChain } from 'wagmi'
-import { formatAddress, isSupportedChain } from '../../utils/evm.utils'
-import { DEFAULT_CHAIN, DEFAULT_CHAIN_ID } from '../../config/evm.config'
+import { formatAddress } from '../../utils/evm.utils'
+import { DEFAULT_CHAIN, DEFAULT_CHAIN_ID, isSupportedChainId } from '../../config/evm.config'
 
 export function WalletConnect() {
   const appKit = useAppKit()
@@ -9,7 +9,7 @@ export function WalletConnect() {
   const chainId = useChainId()
   const { switchChain } = useSwitchChain()
 
-  const isSupported = isSupportedChain(chainId)
+  const isSupported = isSupportedChainId(chainId)
 
   // Simple direct call like working example
   const handleConnect = () => {
@@ -91,7 +91,7 @@ export function WalletConnectMinimal() {
 export function WalletStatus() {
   const { isConnected } = useAppKitAccount()
   const chainId = useChainId()
-  const isSupported = isSupportedChain(chainId)
+  const isSupported = isSupportedChainId(chainId)
 
   if (!isConnected) {
     return (

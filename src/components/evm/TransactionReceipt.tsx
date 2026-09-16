@@ -1,6 +1,7 @@
 import { useChainId } from 'wagmi'
 import { useTransactionReceipt } from '../../hooks/useTransactionReceipt'
-import { getBlockExplorerUrl, copyToClipboard, formatGasPrice, shortenHash } from '../../utils/blockchain'
+import { getTxExplorerUrl } from '../../config/chains'
+import { copyToClipboard, formatGasPrice, shortenHash } from '../../utils/evm.utils'
 import './TransactionReceipt.css'
 import type { Hash } from 'viem'
 
@@ -27,7 +28,7 @@ export function TransactionReceipt({ hash, onClose }: TransactionReceiptProps) {
     return null
   }
 
-  const blockExplorerUrl = getBlockExplorerUrl(chainId, hash)
+  const blockExplorerUrl = getTxExplorerUrl(chainId, hash)
 
   return (
     <div className="transaction-receipt">
