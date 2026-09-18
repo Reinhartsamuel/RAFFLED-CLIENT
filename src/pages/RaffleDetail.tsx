@@ -281,8 +281,8 @@ export function RaffleDetail() {
     }
     return {
       label: 'ACTIVE',
-      color: 'text-amber-500',
-      bgColor: 'bg-amber-500/10',
+      color: 'text-blue-500',
+      bgColor: 'bg-blue-500/10',
       borderColor: 'border-amber-500/30',
       dotColor: 'bg-amber-500',
     }
@@ -504,16 +504,25 @@ export function RaffleDetail() {
                       </a>
                     </div>
                   )}
+                  {/* Raffle Description */}
+                  {raffle.description && (
+                    <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
+                      <p className="font-mono text-[10px] text-[#555555] mb-1">DETAIL</p>
+                      <p className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors">
+                        {raffle.description}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Contract Address */}
-                  {raffle.contract_address && (
+                  {/*{raffle.contract_address && (
                     <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
                       <p className="font-mono text-[10px] text-[#555555] mb-1">CONTRACT_ADDRESS</p>
                       <p className="font-mono text-[11px] text-amber-500/80 break-all select-all cursor-pointer hover:text-amber-400 transition-colors" title={raffle.contract_address}>
                         {raffle.contract_address}
                       </p>
                     </div>
-                  )}
+                  )}*/}
 
                   {/* Status */}
                   <div className="bg-[#0a0a0a]/40 p-4 border border-[#1f1f1f]">
