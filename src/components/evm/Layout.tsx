@@ -44,7 +44,7 @@ export function Layout({ children, sidebar }: LayoutProps) {
               {/* Drawer header */}
               <div className="flex items-center justify-between px-4 py-4 border-b border-[#1f1f1f]">
                 <span className="font-sans font-bold text-base text-[#F5F5F5]">
-                  RAFFLED<span className="text-[#FFB800]">.</span>
+                  Winr<span className="text-[#FFB800]">.</span>fun
                 </span>
                 <button
                   onClick={() => setDrawerOpen(false)}
@@ -85,7 +85,7 @@ export function Layout({ children, sidebar }: LayoutProps) {
       <footer className="border-t border-[#1f1f1f] bg-[#050505] py-4 px-6">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <p className="font-mono text-xs text-[#555555]">
-            © 2026 Raffled · <a href="https://raffled.tuttilabs.xyz" className="hover:text-[#FFB800] transition-colors">raffled.tuttilabs.xyz</a>
+            © 2026 Winr · <a href="https://winr.fun" className="hover:text-[#FFB800] transition-colors">winr.fun</a>
           </p>
           <div className="flex items-center gap-4 font-mono text-xs">
             <a href="/docs/embed" className="text-[#555555] hover:text-[#FFB800] transition-colors">Embed Docs</a>

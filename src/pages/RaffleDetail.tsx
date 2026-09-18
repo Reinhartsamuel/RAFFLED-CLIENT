@@ -5,6 +5,7 @@ import { formatUnits } from 'viem'
 import { motion } from 'framer-motion'
 import { BuyTicketsModal } from '../components/evm/BuyTicketsModal'
 import { FreeRaffleModal } from '../components/evm/FreeRaffleModal'
+import { OfficialBadge } from '../components/evm/OfficialBadge'
 import { useConfig } from 'wagmi'
 import { readContract } from 'wagmi/actions'
 import { staggerContainer, fadeInUp } from '../utils/animations'
@@ -214,6 +215,7 @@ export function RaffleDetail() {
   const isExpired = now > endTime
   const isActive = !isSoldOut && !isExpired
   const isFree = raffle.free_raffle === true
+  const isOfficial = raffle.official_raffle === true
 
   const prizeAmountDisplay = raffle.prize_type === 'erc721'
     ? `#${raffle.prize_amount}`
@@ -341,6 +343,7 @@ export function RaffleDetail() {
               <span className="text-amber-500 truncate max-w-[180px] sm:max-w-none">{raffle.title.toUpperCase().replace(/[^A-Z0-9#]/g, '_')}</span>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              {isOfficial && <OfficialBadge showLabel />}
               <span className={`flex items-center gap-2 px-2 sm:px-3 py-1 ${statusInfo.bgColor} ${statusInfo.color} rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-widest border ${statusInfo.borderColor}`}>
                 <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 ${statusInfo.dotColor} rounded-full ${isActive ? 'animate-pulse' : ''}`} />
                 {statusInfo.label}
@@ -408,6 +411,7 @@ export function RaffleDetail() {
                 animate="animate"
                 className="border border-[#1f1f1f] bg-[#0a0a0a]/60 backdrop-blur-sm overflow-hidden relative group"
               >
+                {/* Terminal Header */}
                 {/* Terminal Header */}
                 <div className="bg-[#0a0a0a]/80 px-4 py-2 border-b border-[#1f1f1f] flex items-center justify-between">
                   <div className="flex gap-1.5">

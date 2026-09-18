@@ -16,8 +16,6 @@ import CreateRafflePage from './pages/CreateRafflePage'
 import MyTickets from './pages/MyTickets'
 import { useAllRaffles, useFilteredRaffles, useInvalidateRaffles, enrichRaffle } from './hooks/useRaffles'
 
-const OFFICIAL_HOST = '0xE13d4F4676A146564aB75bFd86E06ec38B9a7201'
-
 export function HomePage({ activeFilter }: {
   activeFilter: string
 }) {
@@ -39,7 +37,7 @@ export function HomePage({ activeFilter }: {
   const { invalidateAll } = useInvalidateRaffles()
 
   const officialFiltered = activeFilter === 'official'
-    ? filteredRaffles.filter((r) => (r.owner_address ?? '').toLowerCase() === OFFICIAL_HOST.toLowerCase())
+    ? filteredRaffles.filter((r) => r.official_raffle === true)
     : filteredRaffles
 
   const raffles = officialFiltered.map((r) => enrichRaffle(r))

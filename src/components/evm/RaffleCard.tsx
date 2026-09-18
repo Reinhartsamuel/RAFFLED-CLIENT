@@ -3,6 +3,7 @@ import { formatUnits } from 'viem'
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { staggerItem } from '../../utils/animations'
+import { OfficialBadge } from './OfficialBadge'
 import type { EnrichedRaffle } from '../../hooks/useRaffles'
 
 interface TimeUnitProps {
@@ -69,6 +70,7 @@ export function RaffleCard({
     const [isHovered, setIsHovered] = useState(false)
 
     const isNft = raffle.prizeType === 'ERC721'
+    const isOfficial = Boolean(raffle.official_raffle)
     const decimals = raffle.prizeDecimals || 6
     const symbol = raffle.prizeSymbol || (isNft ? 'NFT' : 'TOKEN')
     const soldTickets = Number(raffle.totalTickets ?? 0)
@@ -173,11 +175,17 @@ export function RaffleCard({
 
                 {/* Status Ribbon */}
                 <div className="absolute top-0 left-0 right-0 z-20">
-                    <div className={`py-1 px-2 flex items-center justify-center gap-1.5 bg-[#050505]/85 backdrop-blur-sm border-b border-[#1f1f1f] ${statusColor.border}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${statusColor.bg} ${raffle.status === 'OPEN' && !isEnded ? 'animate-pulse' : ''}`} />
-                        <span className={`font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${statusColor.text}`}>
-                            {raffle.status === 'PENDING_VRF' ? 'PENDING VRF' : raffle.status}
-                        </span>
+                    <div className={`grid grid-cols-[1fr_auto_1fr] items-center gap-1 py-1 px-2 bg-[#050505]/85 backdrop-blur-sm border-b border-[#1f1f1f] ${statusColor.border}`}>
+                        <div className="flex items-center justify-start">
+                            {isOfficial && <OfficialBadge />}
+                        </div>
+                        <div className="flex items-center justify-center gap-1.5">
+                            <span className={`w-1.5 h-1.5 rounded-full ${statusColor.bg} ${raffle.status === 'OPEN' && !isEnded ? 'animate-pulse' : ''}`} />
+                            <span className={`font-mono text-[10px] sm:text-[11px] font-bold uppercase tracking-wider ${statusColor.text}`}>
+                                {raffle.status === 'PENDING_VRF' ? 'PENDING VRF' : raffle.status}
+                            </span>
+                        </div>
+                        <div />
                     </div>
                 </div>
 
