@@ -21,55 +21,81 @@ interface PresetCoin {
   icon: string
 }
 
+// Preset assets for Robinhood Chain (robinhood-first: tokenized stocks).
+//
+// Every address below is the Robinhood Chain TESTNET contract (chainId 46630).
+// The matching MAINNET address (chainId 4663) is kept in a comment directly
+// below each one.
+//
+// TODO: REMOVE THIS BEFORE MAINNET LAUNCH — when deploying to Robinhood Chain
+// mainnet, replace every testnet `address` with its commented mainnet address
+// and delete the testnet comments.
+//
+// Canonical sources (verified):
+//   - Stocks:  https://api.robinhood.com/rhj/assets  (Robinhood's own registry)
+//   - WETH/USDG: https://docs.robinhood.com/chain/contracts/
+//
+// Tokens removed because they have NO canonical Robinhood Chain deployment
+// (only unrelated/spam ERC-20s share the ticker): BNB, WBTC, SOL, XRP.
 const PRESET_COINS: PresetCoin[] = [
+  // ── Tokenized stocks ─────────────────────────────────────────────────────
   {
-    symbol: 'BNB',
-    name: 'BNB',
-    address: '0xeCDFa7Ba60Bd2D0e7B2278E4B17F27df9Fe2D7a0',
-    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23F3BA2F"/><path d="M12.116 13.515L16 9.63l3.886 3.886 2.26-2.26L16 5.11l-6.144 6.144 2.26 2.26zM5.11 16l2.26-2.26 2.26 2.26-2.26 2.26L5.11 16zm7.006.884L16 20.769l3.884-3.885 2.261 2.259L16 25.285l-6.144-6.142-.003-.003 2.263-2.256zm9.513-.884l2.26-2.26 2.26 2.26-2.26 2.26-2.26-2.26zM18.292 16l-2.29-2.291L14 15.706l-.239.238-.488.488-.003.003.003.003L16 18.729l2.292-2.291.001-.438z" fill="%23fff"/></svg>',
+    symbol: 'AMD',
+    name: 'AMD • Robinhood Token',
+    // Robinhood Chain Testnet (46630)
+    address: '0x71178BAc73cBeb415514eB542a8995b82669778d',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x86923f96303D656E4aa86D9d42D1e57ad2023fdC
+    icon: '/stocks/amd.svg',
   },
   {
-    symbol: 'WBTC',
-    name: 'Wrapped Bitcoin',
-    address: '0x1ceA84203673764244E05693e42E6Ace62bE9BA5',
-    icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%23F7931A"/><path d="M22.56 14.17c.31-2.07-1.27-3.18-3.43-3.93l.7-2.8-1.71-.43-.68 2.72c-.45-.11-.91-.22-1.37-.32l.69-2.74-1.71-.43-.7 2.8c-.37-.08-.73-.17-1.08-.26v-.01l-2.36-.59-.45 1.82s1.27.29 1.24.31c.69.17.82.63.8 1l-.8 3.21c.05.01.11.03.17.06l-.17-.04-1.12 4.49c-.08.21-.29.52-.76.4.02.03-1.24-.31-1.24-.31l-.85 1.95 2.23.56c.41.1.82.21 1.22.31l-.71 2.84 1.71.43.7-2.81c.47.13.93.24 1.38.35l-.7 2.79 1.71.43.71-2.83c2.93.55 5.13.33 6.06-2.32.75-2.13-.04-3.36-1.58-4.16 1.12-.26 1.97-1 2.19-2.53zm-3.92 5.5c-.53 2.13-4.12.98-5.28.69l.94-3.77c1.16.29 4.88.86 4.34 3.08zm.53-5.53c-.49 1.94-3.48.96-4.46.71l.85-3.42c.98.25 4.13.71 3.61 2.71z" fill="%23fff"/></svg>',
+    symbol: 'AMZN',
+    name: 'Amazon • Robinhood Token',
+    // Robinhood Chain Testnet (46630)
+    address: '0x5884aD2f920c162CFBbACc88C9C51AA75eC09E02',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x12f190a9F9d7D37a250758b26824B97CE941bF54
+    icon: '/stocks/amzn.svg',
   },
+  {
+    symbol: 'NFLX',
+    name: 'Netflix • Robinhood Token',
+    // Robinhood Chain Testnet (46630)
+    address: '0x3b8262A63d25f0477c4DDE23F83cfe22Cb768C93',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0xE0444EF8BF4eD74f74FD73686e2ddF4C1c5591E8
+    icon: '/stocks/nflx.svg',
+  },
+  {
+    symbol: 'PLTR',
+    name: 'Palantir Technologies • Robinhood Token',
+    // Robinhood Chain Testnet (46630)
+    address: '0x1FBE1a0e43594b3455993B5dE5Fd0A7A266298d0',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x894E1EC2D74FFE5AEF8Dc8A9e84686acCB964F2A
+    icon: '/stocks/pltr.svg',
+  },
+  {
+    symbol: 'TSLA',
+    name: 'Tesla • Robinhood Token',
+    // Robinhood Chain Testnet (46630)
+    address: '0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x322F0929c4625eD5bAd873c95208D54E1c003b2d
+    icon: '/stocks/tsla.svg',
+  },
+  // ── Canonical base assets ────────────────────────────────────────────────
   {
     symbol: 'ETH',
     name: 'Wrapped Ether',
-    address: '0x4200000000000000000000000000000000000006',
+    // Robinhood Chain Testnet (46630)
+    address: '0x33e4191705c386532ba27cBF171Db86919200B94',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x0Bd7D308f8E1639FAb988df18A8011f41EAcAD73
     icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><g fill="none"><circle cx="16" cy="16" r="16" fill="%23627EEA"/><path d="M16.498 4v8.87l7.497 3.35z" fill="%23fff" opacity=".6"/><path d="M16.498 4L9 16.22l7.498-3.35z" fill="%23fff"/><path d="M16.498 21.968v6.027L24 17.616z" fill="%23fff" opacity=".6"/><path d="M16.498 27.995v-6.028L9 17.616z" fill="%23fff"/><path d="M16.498 20.573l7.497-4.353-7.497-3.348z" fill="%23fff" opacity=".2"/><path d="M9 16.22l7.498 4.353v-7.701z" fill="%23fff" opacity=".6"/></g></svg>',
   },
   {
-    symbol: 'SOL',
-    name: 'Solana',
-    address: '0x311935Cd80B76769bF2ecC9D8Ab7635b2139cf82',
-    icon: '/solana.svg',
+    symbol: 'USDG',
+    name: 'USD Global Dollar',
+    // Robinhood Chain Testnet (46630)
+    address: '0x915Ef7c9F9f80a69e3BE47A38EE0Bb47607103ec',
+    // TODO: REMOVE THIS BEFORE MAINNET LAUNCH — mainnet (4663): 0x5fc5360D0400a0Fd4f2af552ADD042D716F1d168
+    icon: '/USDG.webp',
   },
-  {
-    symbol: 'USDC',
-    name: 'USD Coin',
-    address: import.meta.env.VITE_MOCK_USDC_ADDRESS_SEPOLIA,
-    icon: '/USDC.svg',
-  },
-  {
-    symbol: 'USDT',
-    name: 'USD Tether',
-    address: '0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2',
-    icon: '/tether-usdt-1.svg',
-  },
-  {
-    symbol: 'XRP',
-    name: 'XRP',
-    address: '0x2615a94df961278dcbc41fb0a54fec5f10a693ae',
-    icon: '/xrp-logo.svg',
-  },
-  // {
-  //   symbol: 'Custom',
-  //   name: 'Custom Token',
-  //   address: '',
-  //   icon: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%231f1f1f" stroke="%23444" stroke-width="1"/><text x="50%25" y="55%25" dominant-baseline="middle" text-anchor="middle" font-family="monospace" font-weight="bold" font-size="18" fill="%23888">?</text></svg>',
-  // },
 ]
 
 type ApprovalStep = 'not_started' | 'approving' | 'approved' | 'failed'
@@ -87,7 +113,7 @@ export default function CreateRafflePage() {
 
   const [wizardStep, setWizardStep] = useState<WizardStep>('asset_details')
   const [prizeType, setPrizeType] = useState<PrizeType>(PrizeType.ERC20)
-  const [selectedCoin, setSelectedCoin] = useState<string>('WBTC')
+  const [selectedCoin, setSelectedCoin] = useState<string>('TSLA')
   const [description, setDescription] = useState('')
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -107,7 +133,8 @@ export default function CreateRafflePage() {
   const [duration, setDuration] = useState('')
 
   const usdcAddress = getMockUSDCAddress(chainId)
-  const [prizeAsset, setPrizeAsset] = useState<Address>('0x1ceA84203673764244E05693e42E6Ace62bE9BA5' as Address)
+  // Defaults to TSLA (Robinhood Chain testnet). TODO: REMOVE THIS BEFORE MAINNET LAUNCH — swap for mainnet 0x322F0929c4625eD5bAd873c95208D54E1c003b2d
+  const [prizeAsset, setPrizeAsset] = useState<Address>('0xC9f9c86933092BbbfFF3CCb4b105A4A94bf3Bd4E' as Address)
   const [prizeAmount, setPrizeAmount] = useState('')
   const [nftAsset, setNftAsset] = useState<Address>('' as Address)
   const [tokenId, setTokenId] = useState('')
