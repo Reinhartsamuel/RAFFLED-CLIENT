@@ -347,7 +347,7 @@ export function Navbar({ onMenuClick }: { onMenuClick?: () => void }) {
               {/* Header */}
               <div className="px-6 py-4 border-b border-[#1f1f1f] flex items-center gap-3">
                 <img
-                  src="/useWinr.fun.webp"
+                  src="/useRaffled.webp"
                   alt="Winr.fun"
                   className="w-8 h-8 rounded-md object-cover"
                 />

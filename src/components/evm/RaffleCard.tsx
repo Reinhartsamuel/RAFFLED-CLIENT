@@ -80,6 +80,7 @@ export function RaffleCard({
     const isEnded = raffle.isExpired || raffle.status === 'COMPLETED' || raffle.status === 'CANCELLED'
     const ticketPrice = formatUnits(BigInt(raffle.ticketPrice || 0n), 6)
     const progressPct = raffle.progressPercent
+    const isFree = raffle.free_raffle === true
 
     const { timeLeft, isEnded: countdownEnded } = useCountdown(raffle.expiryNum)
     const isAlmostSoldOut = progressPct >= 70
@@ -283,8 +284,11 @@ export function RaffleCard({
                         </p>
                     </div>
                     <div className="text-right flex-shrink-0">
-                        <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Ticket</p>
-                        <p className="text-white text-sm sm:text-lg font-mono font-semibold">${Number(ticketPrice).toFixed(2)}</p>
+              <p className="text-[#666] text-[9px] sm:text-xs font-mono uppercase tracking-wider mb-0.5 sm:mb-1">Ticket</p>
+              <p className={`${isFree ? 'text-[#22C55E] font-bold' : 'text-white font-semibold'} text-sm sm:text-lg font-mono`}>
+                {isFree ? 'FREE' : `$${Number(ticketPrice).toFixed(2)}`}
+                {/*${Number(ticketPrice).toFixed(2)}*/}
+              </p>
                     </div>
                 </div>
 
